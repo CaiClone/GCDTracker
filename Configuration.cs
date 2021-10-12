@@ -31,7 +31,6 @@ namespace GCDTracker
         public void Initialize(DalamudPluginInterface pluginInterface)
         {
             this.pluginInterface = pluginInterface;
-            configEnabled = true;
         }
 
         public void Save()
@@ -40,6 +39,7 @@ namespace GCDTracker
         }
         public void DrawConfig()
         {
+            if (!this.configEnabled) return;
             ImGui.Begin("GCDTracker_Config",ref configEnabled,ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize);
 
 

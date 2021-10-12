@@ -54,9 +54,10 @@ namespace GCDTracker
 
 
             this.ui = new PluginUI(this.config);
-            this.ui.IsVisible = true;
             this.ui.conf = this.config;
+            this.ui.IsVisible = true;
             PluginInterface.UiBuilder.Draw += this.ui.Draw;
+            PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
 
             modules = new List<Module>(){
                 new GCDWheel()
@@ -79,8 +80,9 @@ namespace GCDTracker
 
             return ret;
         }
+        private void OpenConfig() { this.config.configEnabled = true; }
 
-        [Command("/GCDTracker")]
+        [Command("/gcdtracker")]
         [HelpMessage("Open GCDTracker settings.")]
         public void GCDTrackerCommand(string command, string args)
         {
@@ -89,7 +91,7 @@ namespace GCDTracker
             // var world = ClientState.LocalPlayer?.CurrentWorld.GameData;
             //Chat.Print($"Hello {world?.Name}!");
             //PluginLog.Log("Message sent successfully.2");
-            config.configEnabled = !config.configEnabled;
+            this.OpenConfig();
         }
 
         #region IDisposable Support
@@ -104,6 +106,7 @@ namespace GCDTracker
             PluginInterface.SavePluginConfig(this.config);
 
             PluginInterface.UiBuilder.Draw -= this.ui.Draw;
+            PluginInterface.UiBuilder.OpenConfigUi -= OpenConfig;
         }
 
         public void Dispose()
