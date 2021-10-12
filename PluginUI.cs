@@ -64,7 +64,7 @@ namespace GCDTracker
             foreach (var (ogcd,anlock) in gcd.ogcds)
             {
                 DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * this.scale, conf.anLockCol * new Vector4(1, 1, 1, Math.Min(1.5f - ((gcdTime - ogcd) / 3f), 1f)));
-                DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.02f) / gcdTotal, 23f*this.scale, conf.ogcdCol);
+                DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f*this.scale, conf.ogcdCol);
             }
             if (gcdTime > gcdTotal)
                 DrawCircSegment(0f, (gcdTime - gcdTotal) / gcdTotal, 21f * this.scale, conf.clipCol);

@@ -31,32 +31,26 @@ namespace GCDTracker
 
             var newGCD = *(float*)recastGCD;
             var ctime = (float)ImGui.GetTime();
+            var actionTime = ctime - lastGCDtime;
+
             if (newGCD > 0.001f && elapsedGCD<0.001f)
             {
-                PluginLog.Log("Weapon");
                 //WeaponSkill
                 totalGCD = newGCD;
                 lastGCDtime = ctime;
 
                 ogcds.Clear();
             }
-            ogcds.Add((ctime - lastGCDtime, animationLock));
-            /*
-            PluginLog.Log($"Hello {lastGCDtime}");
-            PluginLog.Log($"Anlock {animationLock}");
-            PluginLog.Log($"isQueued {isQueued}");
-            PluginLog.Log($"comboTimerPtr {*(float*)comboTimerPtr }");
-            PluginLog.Log($"isGCDRecastActivePtr {*(bool*)isGCDRecastActivePtr }");
-            PluginLog.Log($"skill {*(int*)skill }");;
-            PluginLog.Log($"ActionManager 0x{(ulong)(actionManager):x}");
-            PluginLog.Log($"newGCD {newGCD}");
-            PluginLog.Log($"elapsedGCD {elapsedGCD}");
-            PluginLog.Log($"TotalGCD {totalGCD }"); 
-            PluginLog.Log($"ret {ret}");
-            PluginLog.Log($"inQueue {inQueue}");
-            */
+            var (logcd, lanlock) = ogcds.Count>0? ogcds[ogcds.Count-1]: (-1,-1);
 
-            PluginLog.Log($"-----------------------");
+            //Ignore repeats
+            if (Math.Abs(actionTime - logcd) < 0.2f)
+                return;
+            //Handle Queue
+            if (logcd + lanlock > actionTime)
+                ogcds.Add((logcd + lanlock, 0.6f));
+            else
+                ogcds.Add((ctime - lastGCDtime, animationLock));
         }
     }
 }
