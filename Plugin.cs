@@ -53,9 +53,8 @@ namespace GCDTracker
             this.config.Initialize(PluginInterface);
 
 
-            this.ui = new PluginUI(this.config);
+            this.ui = new PluginUI(this.config,this.ClientState);
             this.ui.conf = this.config;
-            this.ui.IsVisible = true;
             PluginInterface.UiBuilder.Draw += this.ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
 

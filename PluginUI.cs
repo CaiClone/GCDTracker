@@ -1,9 +1,7 @@
-﻿using Dalamud.Interface;
-using Dalamud.Interface.Colors;
-using Dalamud.Logging;
+﻿using Dalamud.Game.ClientState;
+using GCDTracker.Data;
 using ImGuiNET;
 using System;
-using System.Collections.Generic;
 using System.Numerics;
 
 namespace GCDTracker
@@ -17,18 +15,21 @@ namespace GCDTracker
         private Vector2 w_cent;
         private Vector2 w_size;
         private float scale;
-        public PluginUI(Configuration conf)
+        private ClientState cs;
+
+        public PluginUI(Configuration conf,ClientState cs)
         {
             this.conf = conf;
+            this.cs = cs;
         }
         public void Draw()
         {
-            if (!IsVisible)
+            if (cs.LocalPlayer==null)
                 return;
 
             conf.DrawConfig();
             var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoTitleBar;
-            if (conf.GCDWheelLocked)
+            if (conf.WindowLocked)
             {
                 flags |= ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoInputs;
             }
@@ -41,6 +42,10 @@ namespace GCDTracker
             this.w_cent = new Vector2(w_pos.X + w_size.X * 0.5f, w_pos.Y + w_size.Y * 0.5f);
             this.scale = this.w_size.X / 200f;
             DrawGCDWheel();
+            if (conf.ComboEnabled)
+            {
+                DrawComboLines();
+            }
             ImGui.End();
         }
 
@@ -48,7 +53,7 @@ namespace GCDTracker
         {
 
             float gcdTotal = gcd.totalGCD;
-            //PluginLog.Log($"{gcdTotal}");
+
             float gcdTime = (float)ImGui.GetTime() - gcd.lastGCDtime;
 
             if (gcdTime > gcdTotal * 1.25f)
@@ -76,6 +81,9 @@ namespace GCDTracker
             int n_segments = (int)Math.Round((end_rad-start_rad)*30);
             draw.PathArcTo(this.w_cent, this.w_size.X*0.3f , start_rad*2*(float)Math.PI - 1.57f, end_rad * 2 * (float)Math.PI - 1.57f, n_segments);
             draw.PathStroke(ImGui.GetColorU32(col), ImDrawFlags.None, thickness);
+        }
+        private void DrawComboLines()
+        {
         }
     }
 }
