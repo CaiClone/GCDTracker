@@ -24,7 +24,7 @@ namespace GCDTracker
 
         [PluginService]
         [RequiredVersion("1.0")]
-        private ChatGui Chat { get; init; }
+        public static Framework Framework { get; private set; }
 
         [PluginService]
         [RequiredVersion("1.0")]
@@ -55,14 +55,17 @@ namespace GCDTracker
 
             this.ui = new PluginUI(this.config,this.ClientState);
             this.ui.conf = this.config;
-            PluginInterface.UiBuilder.Draw += this.ui.Draw;
-            PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
-
             modules = new List<Module>(){
-                new GCDWheel()
+                new GCDWheel(),
+                new ComboTracker(SigScanner.GetStaticAddressFromSig("48 89 2D ?? ?? ?? ?? 85 C0"),ClientState)
             };
 
             ui.gcd = (GCDWheel)modules.Find(e => e is GCDWheel);
+            ui.ct = (ComboTracker)modules.Find(e => e is ComboTracker);
+            PluginInterface.UiBuilder.Draw += this.ui.Draw;
+            PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
+            Framework.Update += this.ui.ct.Update;
+
 
             this.commandManager = new PluginCommandManager<Plugin>(this, Commands);
 
@@ -106,6 +109,7 @@ namespace GCDTracker
 
             PluginInterface.UiBuilder.Draw -= this.ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi -= OpenConfig;
+            Framework.Update -= this.ui.ct.Update;
         }
 
         public void Dispose()

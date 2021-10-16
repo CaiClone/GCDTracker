@@ -13,6 +13,7 @@ namespace GCDTracker
     {
         public bool IsVisible { get; set; }
         public GCDWheel gcd;
+        public ComboTracker ct;
         public Configuration conf;
 
         private Vector2 w_cent;
@@ -85,12 +86,11 @@ namespace GCDTracker
             draw.PathArcTo(this.w_cent, this.w_size.X*0.3f , start_rad*2*(float)Math.PI - 1.57f, end_rad * 2 * (float)Math.PI - 1.57f, n_segments);
             draw.PathStroke(ImGui.GetColorU32(col), ImDrawFlags.None, thickness);
         }
-        private void DrawComboLines()
+        private unsafe void DrawComboLines()
         {
-            ImGui.Text($"{cs.LocalPlayer.ClassJob.Id}");
             var xsep = 30*this.scale;
             var ysep = 30 * this.scale;
-            int[][] combos;
+            uint[][] combos;
             var circRad = 8* this.scale;
 
             if (ComboStore.COMBOS.TryGetValue(cs.LocalPlayer.ClassJob.Id, out combos))
@@ -115,7 +115,7 @@ namespace GCDTracker
                                 bifurc = false;
                             }
                             cpos += new Vector2(xsep, 0);
-                            DrawActionCircle(draw, cpos, circRad);
+                            DrawActionCircle(draw, cpos, circRad,combo[j]);
                             if (j < (combo.Length - 1))
                                 DrawFrontLine(draw, cpos, xsep, ysep, circRad);
                             cpos += new Vector2(circRad*2, 0);
@@ -134,8 +134,16 @@ namespace GCDTracker
             draw.AddLine(cpos + new Vector2(circRad, 0), cpos + new Vector2(circRad+xsep, 0), ImGui.GetColorU32(conf.backColBorder), 5f * this.scale);
             draw.AddLine(cpos + new Vector2(circRad, 0), cpos + new Vector2(circRad + xsep, 0), ImGui.GetColorU32(conf.backCol), 3f * this.scale);
         }
-        private void DrawActionCircle(ImDrawListPtr draw, Vector2 cpos,float circRad)
+        private unsafe void DrawActionCircle(ImDrawListPtr draw, Vector2 cpos,float circRad,uint action)
         {
+            if (ct.combo->Action == action)
+            {
+                draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.frontCol));
+            }
+            else if (ct.ComboUsed.Contains(action))
+            {
+                draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.backColBorder));
+            }
             draw.AddCircle(cpos, circRad, ImGui.GetColorU32(conf.backColBorder),20,5f*this.scale);
             draw.AddCircle(cpos, circRad, ImGui.GetColorU32(conf.backCol), 20, 3f * this.scale);
         }

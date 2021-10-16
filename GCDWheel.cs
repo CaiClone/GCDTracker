@@ -19,13 +19,11 @@ namespace GCDTracker
         public override unsafe void onActionUse(byte ret,IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
             var animationLock = *(float*) (actionManager + 0x8);
-            var isQueued = *(bool*) (actionManager + 0x68);
-            var comboTimerPtr = actionManager + 0x60;
-            var isGCDRecastActivePtr = actionManager + 0x610;
-            var skill = actionManager + 0x614;
+            //var isQueued = *(bool*) (actionManager + 0x68);
+            //var skill = actionManager + 0x614;
             var elapsedGCD = *(float*) (actionManager + 0x618);
             var recastGCD = actionManager + 0x61c;
-            var inQueue = *(bool*)(actionManager + 0xBC0);
+            //var inQueue = *(bool*)(actionManager + 0xBC0);
 
             if (ret != 1 || animationLock <= 0.001f) return;
 
