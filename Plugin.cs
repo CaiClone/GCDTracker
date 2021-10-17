@@ -3,10 +3,8 @@ using System.Collections.Generic;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
-using Dalamud.Game.Gui;
 using Dalamud.Hooking;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
 using GCDTracker.Attributes;
 

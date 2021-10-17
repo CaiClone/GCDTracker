@@ -26,7 +26,7 @@ namespace GCDTracker
             this.conf = conf;
             this.cs = cs;
         }
-        public void Draw()
+        public unsafe void Draw()
         {
             if (cs.LocalPlayer==null)
                 return;
@@ -45,15 +45,15 @@ namespace GCDTracker
             this.w_size = ImGui.GetWindowSize();
             this.w_cent = new Vector2(w_pos.X + w_size.X * 0.5f, w_pos.Y + w_size.Y * 0.5f);
             this.scale = this.w_size.X / 200f;
-            DrawGCDWheel();
-            if (conf.ComboEnabled)
+            bool wheeldrawn = DrawGCDWheel();
+            if (conf.ComboEnabled & (this.ct.combo->Timer>0f || wheeldrawn))
             {
                 DrawComboLines();
             }
             ImGui.End();
         }
 
-        private void DrawGCDWheel()
+        private bool DrawGCDWheel()
         {
 
             float gcdTotal = gcd.totalGCD;
@@ -61,7 +61,7 @@ namespace GCDTracker
             float gcdTime = (float)ImGui.GetTime() - gcd.lastGCDtime;
 
             if (gcdTime > gcdTotal * 1.25f)
-                return;
+                return false;
 
             DrawCircSegment(0f, 1f, 6f * this.scale, conf.backColBorder);//Background
             DrawCircSegment(0f, 1f, 3f * this.scale, conf.backCol); 
@@ -77,6 +77,7 @@ namespace GCDTracker
             }
             if (gcdTime > gcdTotal)
                 DrawCircSegment(0f, (gcdTime - gcdTotal) / gcdTotal, 21f * this.scale, conf.clipCol);
+            return true;
         }
         private void DrawCircSegment(float start_rad, float end_rad, float thickness,Vector4 col)
         {
