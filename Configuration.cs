@@ -24,6 +24,11 @@ namespace GCDTracker
         public Vector4 clipCol;
         //Combo
         public bool ComboEnabled=true;
+        public Vector4 ctComboUsed;
+        public Vector4 ctComboActive;
+        public int ctxsep;
+        public int ctysep;
+
 
 
 
@@ -54,9 +59,13 @@ namespace GCDTracker
                 ImGui.ColorEdit4("Animation lock Color", ref anLockCol);
                 ImGui.ColorEdit4("Clipping Color", ref clipCol);
             }
-            if (ImGui.TreeNode("ComboTrack"))
+            else if (ImGui.TreeNode("ComboTrack"))
             {
                 ImGui.Checkbox("Combo track enabled", ref ComboEnabled);
+                ImGui.ColorEdit4("Abilities used Color", ref ctComboUsed);
+                ImGui.ColorEdit4("Active Ability Color", ref ctComboActive);
+                ImGui.SliderInt("X Separation", ref ctxsep, 5, 100);
+                ImGui.SliderInt("Y Separation", ref ctysep, 5, 100);
             }
             ImGui.End();
         }

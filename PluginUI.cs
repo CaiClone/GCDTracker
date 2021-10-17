@@ -81,15 +81,15 @@ namespace GCDTracker
         private void DrawCircSegment(float start_rad, float end_rad, float thickness,Vector4 col)
         {
 
-            var draw = ImGui.GetForegroundDrawList();
+            var draw = ImGui.GetBackgroundDrawList();
             int n_segments = (int)Math.Round((end_rad-start_rad)*30);
             draw.PathArcTo(this.w_cent, this.w_size.X*0.3f , start_rad*2*(float)Math.PI - 1.57f, end_rad * 2 * (float)Math.PI - 1.57f, n_segments);
             draw.PathStroke(ImGui.GetColorU32(col), ImDrawFlags.None, thickness);
         }
         private unsafe void DrawComboLines()
         {
-            var xsep = 30*this.scale;
-            var ysep = 30 * this.scale;
+            var xsep = conf.ctxsep*this.scale;
+            var ysep = conf.ctysep * this.scale;
             uint[][] combos;
             var circRad = 8* this.scale;
 
@@ -138,11 +138,11 @@ namespace GCDTracker
         {
             if (ct.combo->Action == action)
             {
-                draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.frontCol));
+                draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.ctComboActive));
             }
             else if (ct.ComboUsed.Contains(action))
             {
-                draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.backColBorder));
+                draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.ctComboUsed));
             }
             draw.AddCircle(cpos, circRad, ImGui.GetColorU32(conf.backColBorder),20,5f*this.scale);
             draw.AddCircle(cpos, circRad, ImGui.GetColorU32(conf.backCol), 20, 3f * this.scale);

@@ -13,8 +13,8 @@ namespace GCDTracker.Data
             }},
             //Paladin
             {19,new uint[][] {
-                new uint[] {9,15,3538},
                 new uint[] {9,15,3638},
+                new uint[] {9,15,3538},
                 new uint[] {7381,16457},
             }}
         };
