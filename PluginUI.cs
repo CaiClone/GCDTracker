@@ -50,6 +50,7 @@ namespace GCDTracker
             {
                 DrawComboLines();
             }
+            ImGui.Text($"{this.ct.combo->Action}");
             ImGui.End();
         }
 
