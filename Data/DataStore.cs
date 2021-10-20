@@ -36,17 +36,10 @@ namespace GCDTracker.Data
         [FieldOffset(0x68)] public bool InQueue1;
         [FieldOffset(0x68)] public bool InQueue2;
         [FieldOffset(0x70)] public uint QueuedAction;
-        //[FieldOffset(0x98)] public float dunno; //always 2.01 when queuing stuff
+        [FieldOffset(0x78)] public float dunno; //always 2.01 when queuing stuff
+        [FieldOffset(0x618)] public float ElapsedGCD;
+        [FieldOffset(0x61C)] public float TotalGCD;
         [FieldOffset(0x810)] public float AnimationTimer;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x14)]
-    public unsafe struct RecastTimer
-    {
-        [FieldOffset(0x0)] public byte IsActive;
-        [FieldOffset(0x4)] public uint ActionID;
-        [FieldOffset(0x8)] public float Elapsed;
-        [FieldOffset(0xC)] public float Total;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x8)]

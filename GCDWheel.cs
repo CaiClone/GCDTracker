@@ -19,69 +19,43 @@ namespace GCDTracker
             totalGCD = 3.5f;
             ogcds = new List<(float,float)>();
         }
-        public unsafe void onActionUse2(byte ret, IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
-        {
-            PluginLog.Log($"{actionID}->{HelperMethods.GetAdjustedActionId(actionID)}");
-            PluginLog.Log($"{actionType}->{HelperMethods.GetRecastGroup(actionType, actionID)}");
-            var animationLock = *(float*)(actionManager + 0x8);
-            var isQueued = *(bool*)(actionManager + 0x68);
-            //var skill = actionManager + 0x614;
-            var elapsedGCD = *(float*)(actionManager + 0x618);
-            var recastGCD = actionManager + 0x61c;
-            //var inQueue = *(bool*)(actionManager + 0xBC0);
 
-            if (ret != 1 || animationLock <= 0.001f) return;
-
-            var newGCD = *(float*)recastGCD;
-            var ctime = (float)ImGui.GetTime();
-            var actionTime = ctime - lastGCDtime;
-
-            if (newGCD > 0.001f && elapsedGCD < 0.001f)
-            {
-                //WeaponSkill
-                totalGCD = newGCD;
-                lastGCDtime = ctime;
-
-                ogcds.Clear();
-            }
-            var (logcd, lanlock) = ogcds.Count > 0 ? ogcds[ogcds.Count - 1] : (-1, -1);
-            //Ignore repeats
-            if (Math.Abs(actionTime - logcd) < 0.2f)
-                return;
-            //Handle Queue
-            // PluginLog.Log($"-{param},{isQueued}");
-            if (logcd + lanlock > actionTime)
-            {
-                ogcds.Add((logcd + lanlock, 0.6f));
-                //PluginLog.Log($"{param},{useType},{actionType},{logcd},{lanlock},{isQueued}");
-            }
-            else
-                ogcds.Add((ctime - lastGCDtime, animationLock));
-        }
         public override unsafe void onActionUse(byte ret,IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
             if (ret != 1) return;
-            PluginLog.Log($"{HelperMethods.IsWeaponSkill(actionType, actionID)}");
+            Data.Action* act = DataStore.action;
 
-            if(HelperMethods.IsWeaponSkill(actionType, actionID))
-            {
-                //Configure gcd
-            }
+            var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
+            var AddingToQueue = act->InQueue1 && (
+                                    (isWeaponSkill && act->ElapsedGCD < act->TotalGCD && act->ElapsedGCD!=0)
+                                    || (!isWeaponSkill && act->AnimationLock < 0.5f));
+            var ExecutingQueued = (act->InQueue1 && !AddingToQueue);
+
+            if (AddingToQueue)
+                ogcds.Add((isWeaponSkill? act->TotalGCD: act->ElapsedGCD+act->AnimationLock, 0.6f));
             else
             {
-
+                if (isWeaponSkill)
+                {
+                    totalGCD = act->TotalGCD; //Store it in a variable in order to cache it when it goes back to 0
+                    lastGCDtime = (float)ImGui.GetTime();
+                    ogcds.Clear();
+                    ogcds.Add((act->ElapsedGCD, act->AnimationLock));
+                }
+                else if (!ExecutingQueued)
+                    ogcds.Add((act->ElapsedGCD, act->AnimationLock));
             }
         }
 
         public bool DrawGCDWheel(PluginUI ui,Configuration conf)
         {
             float gcdTotal = totalGCD;
-            float gcdTime = (float)ImGui.GetTime() - lastGCDtime;
+            float gcdTime = (float)ImGui.GetTime()-lastGCDtime;
 
             if (gcdTime > gcdTotal * 1.25f)
                 return false;
 
-            ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder);//Background
+            ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); //Background
             ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, conf.backCol);
             ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); //Queue lock
             ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, conf.backCol);
