@@ -1,12 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
 using Dalamud.Hooking;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using Dalamud.Plugin;
 using GCDTracker.Attributes;
+using GCDTracker.Data;
 
 namespace GCDTracker
 {
@@ -31,7 +35,11 @@ namespace GCDTracker
 
         [PluginService]
         [RequiredVersion("1.0")]
-        private SigScanner SigScanner { get; init; }
+        private SigScanner Scanner { get; init; }
+
+        [PluginService]
+        [RequiredVersion("1.0")]
+        private DataManager Data { get; init; }
 
         private readonly PluginCommandManager<Plugin> commandManager;
         private readonly Configuration config;
@@ -39,9 +47,7 @@ namespace GCDTracker
 
         public string Name => "GCDTracker";
 
-        private Hook<UseActionDelegate> UseActionHook;
-
-        public delegate byte UseActionDelegate(IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp);
+        private Hook<HelperMethods.UseActionDelegate> UseActionHook;
 
         private List<Module> modules;
 
@@ -50,24 +56,24 @@ namespace GCDTracker
             this.config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             this.config.Initialize(PluginInterface);
 
+            DataStore.Init(Scanner,ClientState);
+            HelperMethods.Init(Scanner);
 
-            this.ui = new PluginUI(this.config,this.ClientState);
+            this.ui = new PluginUI(this.config);
             this.ui.conf = this.config;
             modules = new List<Module>(){
                 new GCDWheel(),
-                new ComboTracker(SigScanner.GetStaticAddressFromSig("48 89 2D ?? ?? ?? ?? 85 C0"),ClientState)
+                new ComboTracker()
             };
-
             ui.gcd = (GCDWheel)modules.Find(e => e is GCDWheel);
             ui.ct = (ComboTracker)modules.Find(e => e is ComboTracker);
             PluginInterface.UiBuilder.Draw += this.ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
             Framework.Update += this.ui.ct.Update;
 
-
             this.commandManager = new PluginCommandManager<Plugin>(this, Commands);
 
-            UseActionHook = new Hook<UseActionDelegate>(SigScanner.ScanText("E8 ?? ?? ?? ?? 89 9F BC 76 02 00"), UseActionDetour);
+            UseActionHook = new Hook<HelperMethods.UseActionDelegate>(Scanner.ScanText("E8 ?? ?? ?? ?? 89 9F BC 76 02 00"), UseActionDetour);
             UseActionHook.Enable();
         }
         public unsafe byte UseActionDetour(IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
@@ -77,7 +83,6 @@ namespace GCDTracker
             {
                 mod.onActionUse(ret,actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
             }
-
             return ret;
         }
         private void OpenConfig() { this.config.configEnabled = true; }
