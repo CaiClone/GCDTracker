@@ -13,30 +13,39 @@ namespace GCDTracker
     {
         public List<uint> ComboUsed;
 
+        private DateTime actTime;
+
         public ComboTracker()
         {
             this.ComboUsed = new List<uint>();
         }
         public override unsafe void onActionUse(byte ret, IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
-            uint[][] combos;
-            if (!ComboStore.COMBOS.TryGetValue(DataStore.clientState.LocalPlayer.ClassJob.Id, out combos) || DataStore.action->ElapsedGCD> 0.001f || ret!=1)
+            var comboDict = ComboStore.GetCombos();
+
+            Data.Action* act = DataStore.action;
+            var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
+            var AddingToQueue = act->InQueue1 && (
+                                    (isWeaponSkill && act->ElapsedGCD < act->TotalGCD && act->ElapsedGCD != 0)
+                                    || (!isWeaponSkill && act->AnimationLock < 0.59f));
+            var ExecutingQueued = (act->InQueue1 && !AddingToQueue);
+
+            if (comboDict.Count == 0 || ExecutingQueued || ret != 1)
                 return;
 
-            if (DataStore.combo->Timer > 0 && DataStore.combo->Action != 0 && actionType==1)
+            if (actionType == 1 && isWeaponSkill)
             {
-                //If combo Start delete previous combo
-                if (!combos.Any(x => x.Skip(1).Any(y => y == actionID))){ 
+                //If it's not any continuation let's first clear the combo
+                if (!comboDict.Any(comb => comb.Value.Contains(actionID)))
                     ComboUsed.Clear();
-                }
                 ComboUsed.Add(actionID);
+                actTime = DateTime.Now + TimeSpan.FromMilliseconds(10);
             }
-            else
-                ComboUsed.Clear();
         }
+
         public void Update(Framework framework)
         {
-            if (DataStore.combo->Timer <= 0)
+            if (ComboUsed.Count>1 && framework.LastUpdate > actTime && DataStore.combo->Timer <= 0)
                 ComboUsed.Clear();
         }
 

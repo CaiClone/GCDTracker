@@ -28,7 +28,7 @@ namespace GCDTracker
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var AddingToQueue = act->InQueue1 && (
                                     (isWeaponSkill && act->ElapsedGCD < act->TotalGCD && act->ElapsedGCD!=0)
-                                    || (!isWeaponSkill && act->AnimationLock < 0.5f));
+                                    || (!isWeaponSkill && act->AnimationLock < 0.59f));
             var ExecutingQueued = (act->InQueue1 && !AddingToQueue);
 
             if (AddingToQueue)

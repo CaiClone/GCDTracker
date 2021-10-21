@@ -1,5 +1,4 @@
-﻿using Dalamud.Logging;
-using GCDTracker.Data;
+﻿using GCDTracker.Data;
 using ImGuiNET;
 using System;
 using System.Numerics;
