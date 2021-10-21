@@ -16,6 +16,7 @@ namespace GCDTracker
         public Vector2 w_size;
         public float Scale;
 
+        private ImDrawListPtr draw;
         public PluginUI(Configuration conf)
         {
             this.conf = conf;
@@ -36,6 +37,7 @@ namespace GCDTracker
             ImGui.SetNextWindowBgAlpha(0.45f);
             ImGui.Begin("GCDTracker_UI", flags);
             getWindowsInfo();
+            draw = ImGui.GetBackgroundDrawList();
 
             bool wheeldrawn = gcd.DrawGCDWheel(this,conf);
             if (conf.ComboEnabled && ((DataStore.combo->Timer>0f && DataStore.combo->Action!=0) || wheeldrawn))
@@ -53,23 +55,23 @@ namespace GCDTracker
         }
         public void DrawCircSegment(float start_rad, float end_rad, float thickness,Vector4 col)
         {
-
-            var draw = ImGui.GetBackgroundDrawList();
             int n_segments = (int)Math.Round((end_rad-start_rad)*30);
             draw.PathArcTo(this.w_cent, this.w_size.X*0.3f , start_rad*2*(float)Math.PI - 1.57f, end_rad * 2 * (float)Math.PI - 1.57f, n_segments);
             draw.PathStroke(ImGui.GetColorU32(col), ImDrawFlags.None, thickness);
         }
-        public void DrawBackLine(ImDrawListPtr draw,Vector2 cpos,float xsep, float ysep,float circRad)
+
+        public void DrawBackLine(Vector2 cpos,float xsep, float ysep,float circRad)
         {
             draw.AddLine(cpos + new Vector2(xsep - circRad, 0), cpos - new Vector2(circRad + (circRad / 2), ysep - (circRad / 2)), ImGui.GetColorU32(conf.backColBorder), 5f * this.Scale);
             draw.AddLine(cpos + new Vector2(xsep - circRad, 0), cpos - new Vector2(circRad + (circRad / 2), ysep - (circRad / 2)), ImGui.GetColorU32(conf.backCol), 3f * this.Scale);
         }
-        public void DrawFrontLine(ImDrawListPtr draw, Vector2 cpos, float xsep, float ysep, float circRad)
+        public void DrawFrontLine(Vector2 cpos, float xsep, float ysep, float circRad)
         {
             draw.AddLine(cpos + new Vector2(circRad, 0), cpos + new Vector2(circRad+xsep, 0), ImGui.GetColorU32(conf.backColBorder), 5f * this.Scale);
             draw.AddLine(cpos + new Vector2(circRad, 0), cpos + new Vector2(circRad + xsep, 0), ImGui.GetColorU32(conf.backCol), 3f * this.Scale);
         }
-        public unsafe void DrawActionCircle(ImDrawListPtr draw, Vector2 cpos,float circRad,uint action)
+
+        public unsafe void DrawActionCircle(Vector2 cpos,float circRad,uint action)
         {
             if (DataStore.combo->Action == action)
             {
@@ -81,6 +83,12 @@ namespace GCDTracker
             }
             draw.AddCircle(cpos, circRad, ImGui.GetColorU32(conf.backColBorder),20,5f*this.Scale);
             draw.AddCircle(cpos, circRad, ImGui.GetColorU32(conf.backCol), 20, 3f * this.Scale);
+        }
+
+        public void DrawConnectingLine(Vector2 from, Vector2 to, float circRad)
+        {
+            draw.AddLine(from + new Vector2(circRad, 0), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backColBorder), 5f * this.Scale);
+            draw.AddLine(from + new Vector2(circRad, 0), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backCol), 3f * this.Scale);
         }
     }
 }
