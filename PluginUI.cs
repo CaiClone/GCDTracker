@@ -1,4 +1,5 @@
-﻿using GCDTracker.Data;
+﻿using Dalamud.Logging;
+using GCDTracker.Data;
 using ImGuiNET;
 using System;
 using System.Numerics;
@@ -60,17 +61,6 @@ namespace GCDTracker
             draw.PathStroke(ImGui.GetColorU32(col), ImDrawFlags.None, thickness);
         }
 
-        public void DrawBackLine(Vector2 cpos,float xsep, float ysep,float circRad)
-        {
-            draw.AddLine(cpos + new Vector2(xsep - circRad, 0), cpos - new Vector2(circRad + (circRad / 2), ysep - (circRad / 2)), ImGui.GetColorU32(conf.backColBorder), 5f * this.Scale);
-            draw.AddLine(cpos + new Vector2(xsep - circRad, 0), cpos - new Vector2(circRad + (circRad / 2), ysep - (circRad / 2)), ImGui.GetColorU32(conf.backCol), 3f * this.Scale);
-        }
-        public void DrawFrontLine(Vector2 cpos, float xsep, float ysep, float circRad)
-        {
-            draw.AddLine(cpos + new Vector2(circRad, 0), cpos + new Vector2(circRad+xsep, 0), ImGui.GetColorU32(conf.backColBorder), 5f * this.Scale);
-            draw.AddLine(cpos + new Vector2(circRad, 0), cpos + new Vector2(circRad + xsep, 0), ImGui.GetColorU32(conf.backCol), 3f * this.Scale);
-        }
-
         public unsafe void DrawActionCircle(Vector2 cpos,float circRad,uint action)
         {
             if (DataStore.combo->Action == action)
@@ -81,14 +71,18 @@ namespace GCDTracker
             {
                 draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.ctComboUsed));
             }
-            draw.AddCircle(cpos, circRad, ImGui.GetColorU32(conf.backColBorder),20,5f*this.Scale);
+            draw.AddCircle(cpos, circRad, ImGui.GetColorU32(conf.backColBorder), 20, 5f * this.Scale);
             draw.AddCircle(cpos, circRad, ImGui.GetColorU32(conf.backCol), 20, 3f * this.Scale);
         }
 
         public void DrawConnectingLine(Vector2 from, Vector2 to, float circRad)
         {
-            draw.AddLine(from + new Vector2(circRad, 0), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backColBorder), 5f * this.Scale);
-            draw.AddLine(from + new Vector2(circRad, 0), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backCol), 3f * this.Scale);
+            //We can only go either 0º or 45º. Sorry for maths but this is probably more efficient
+            var vx = circRad + (from.Y.CompareTo(to.Y) * (circRad / 2));
+            var vy = (from.Y.CompareTo(to.Y) * (circRad / 2));
+
+            draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backColBorder), 5f * this.Scale);
+            draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backCol), 3f * this.Scale);
         }
     }
 }
