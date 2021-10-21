@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
 using Dalamud.Hooking;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
 using GCDTracker.Attributes;
 using GCDTracker.Data;
@@ -58,6 +56,7 @@ namespace GCDTracker
 
             DataStore.Init(Scanner,ClientState);
             HelperMethods.Init(Scanner);
+            ComboStore.Init(Data);
 
             this.ui = new PluginUI(this.config);
             this.ui.conf = this.config;
