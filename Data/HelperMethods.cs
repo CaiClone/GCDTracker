@@ -1,5 +1,6 @@
 ﻿using Dalamud.Game;
 using System;
+using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace GCDTracker.Data
@@ -28,7 +29,7 @@ namespace GCDTracker.Data
 
         public static bool IsWeaponSkill(uint actionType, uint actionID)
         {
-            return GetRecastGroup(actionType, actionID) == 57;
+            return new ulong[] { 57, 9 }.Contains(GetRecastGroup(actionType, actionID)); 
         }
     }
 }
