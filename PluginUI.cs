@@ -40,7 +40,7 @@ namespace GCDTracker
             draw = ImGui.GetBackgroundDrawList();
 
             bool wheeldrawn = gcd.DrawGCDWheel(this,conf);
-            if (conf.ComboEnabled && ((DataStore.combo->Timer>0f && DataStore.combo->Action!=0) || wheeldrawn))
+            if (conf.ComboEnabled && (ct.ComboUsed.Count>0 || wheeldrawn))
             {
                 ct.DrawComboLines(this,conf);
             }
