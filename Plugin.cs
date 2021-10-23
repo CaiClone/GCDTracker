@@ -6,6 +6,7 @@ using Dalamud.Game.ClientState;
 using Dalamud.Game.Command;
 using Dalamud.Hooking;
 using Dalamud.IoC;
+using Dalamud.Logging;
 using Dalamud.Plugin;
 using GCDTracker.Attributes;
 using GCDTracker.Data;
@@ -46,8 +47,10 @@ namespace GCDTracker
         public string Name => "GCDTracker";
 
         private Hook<HelperMethods.UseActionDelegate> UseActionHook;
+        private Hook<HelperMethods.ReceiveActionEffectDetour> ReceiveActionEffectHook;
 
-        private List<Module> modules;
+        private GCDWheel gcd;
+        private ComboTracker ct;
 
         public Plugin()
         {
@@ -60,12 +63,13 @@ namespace GCDTracker
 
             this.ui = new PluginUI(this.config);
             this.ui.conf = this.config;
-            modules = new List<Module>(){
-                new GCDWheel(),
-                new ComboTracker()
-            };
-            ui.gcd = (GCDWheel)modules.Find(e => e is GCDWheel);
-            ui.ct = (ComboTracker)modules.Find(e => e is ComboTracker);
+
+            this.gcd = new GCDWheel();
+            this.ct = new ComboTracker();
+
+            ui.gcd = this.gcd;
+            ui.ct = this.ct;
+
             PluginInterface.UiBuilder.Draw += this.ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
             Framework.Update += this.ui.ct.Update;
@@ -73,16 +77,25 @@ namespace GCDTracker
             this.commandManager = new PluginCommandManager<Plugin>(this, Commands);
 
             UseActionHook = new Hook<HelperMethods.UseActionDelegate>(Scanner.ScanText("E8 ?? ?? ?? ?? 89 9F BC 76 02 00"), UseActionDetour);
+            ReceiveActionEffectHook = new Hook<HelperMethods.ReceiveActionEffectDetour>(Scanner.ScanText("E8 ?? ?? ?? ?? 48 8B 8D F0 03 00 00"), ReceiveActionEffect);
             UseActionHook.Enable();
+            ReceiveActionEffectHook.Enable();
         }
-        public unsafe byte UseActionDetour(IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
+        private byte UseActionDetour(IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
             var ret = UseActionHook.Original(actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
-            foreach (var mod in modules)
-            {
-                mod.onActionUse(ret,actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
-            }
+            gcd.onActionUse(ret, actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
+            ct.onActionUse(ret,actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
             return ret;
+        }
+        private unsafe void ReceiveActionEffect(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail)
+        {
+            var oldLock = DataStore.action->AnimationLock;
+            ReceiveActionEffectHook.Original(sourceActorID, sourceActor, vectorPosition, effectHeader, effectArray, effectTrail);
+            var newLock = DataStore.action->AnimationLock;
+
+            if (oldLock == newLock) return; //Ignore autoattacks
+            this.gcd.UpdateAnlock(oldLock, newLock);
         }
         private void OpenConfig() { this.config.configEnabled = true; }
 
@@ -104,6 +117,7 @@ namespace GCDTracker
             if (!disposing) return;
 
             UseActionHook?.Disable();
+            ReceiveActionEffectHook?.Disable();
 
             this.commandManager.Dispose();
 
@@ -120,10 +134,5 @@ namespace GCDTracker
             GC.SuppressFinalize(this);
         }
         #endregion
-    }
-    public abstract class Module {
-        public PluginUI ui;
-        public abstract void onActionUse(byte ret,IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp);
-
     }
 }

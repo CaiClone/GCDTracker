@@ -9,7 +9,7 @@ using System.Numerics;
 
 namespace GCDTracker
 {
-    public unsafe class ComboTracker : Module
+    public unsafe class ComboTracker
     {
         public List<uint> ComboUsed;
 
@@ -19,13 +19,14 @@ namespace GCDTracker
         {
             this.ComboUsed = new List<uint>();
         }
-        public override unsafe void onActionUse(byte ret, IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
+        public unsafe void onActionUse(byte ret, IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
             var comboDict = ComboStore.GetCombos();
 
             Data.Action* act = DataStore.action;
-            var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
-            var AddingToQueue = act->InQueue1 && act->AnimationLock != 0.6f;
+            var cAct = HelperMethods.GetAdjustedActionId(actionID);
+            var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, cAct);
+            var AddingToQueue = HelperMethods.IsAddingToQueue();
             var ExecutingQueued = (act->InQueue1 && !AddingToQueue);
 
             if (comboDict.Count == 0 || ExecutingQueued || ret != 1)
@@ -34,9 +35,9 @@ namespace GCDTracker
             if (actionType == 1 && isWeaponSkill)
             {
                 //If it's not any continuation let's first clear the combo
-                if (!comboDict.Any(comb => comb.Value.Contains(actionID)))
+                if (!comboDict.Any(comb => comb.Value.Contains(cAct)))
                     ComboUsed.Clear();
-                ComboUsed.Add(actionID);
+                ComboUsed.Add(cAct);
                 actTime = DateTime.Now + TimeSpan.FromMilliseconds(10);
             }
         }
@@ -67,7 +68,7 @@ namespace GCDTracker
             var combos = ComboStore.GetCombos();
             var nodepos = new Dictionary<uint, Vector2>();
 
-            var startpos = ui.w_cent + new Vector2((ui.w_size.X * 0.3f) + circRad*3, -(3 * ysep) / 2); //assume average 3 combos, hard to know how many beforehand
+            var startpos = ui.w_cent + new Vector2((ui.w_size.X * 0.3f) + circRad*4, -(3 * ysep) / 2); //assume average 3 combos, hard to know how many beforehand
             Vector2 cpos;
             foreach (var (node, follows) in combos)
             {

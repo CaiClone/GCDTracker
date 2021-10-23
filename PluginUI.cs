@@ -1,4 +1,5 @@
-﻿using GCDTracker.Data;
+﻿using Dalamud.Logging;
+using GCDTracker.Data;
 using ImGuiNET;
 using System;
 using System.Numerics;
@@ -76,9 +77,10 @@ namespace GCDTracker
 
         public void DrawConnectingLine(Vector2 from, Vector2 to, float circRad)
         {
+            var comparison = Math.Sign(from.Y.CompareTo(to.Y));
             //We can only go either 0º or 45º. Sorry for maths but this is probably more efficient
-            var vx = circRad + (from.Y.CompareTo(to.Y) * (circRad / 2));
-            var vy = (from.Y.CompareTo(to.Y) * (circRad / 2));
+            var vx = circRad + (Math.Abs(comparison)*-1 * (circRad / 2));
+            var vy = (comparison * (circRad / 2));
 
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backColBorder), 5f * this.Scale);
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backCol), 3f * this.Scale);

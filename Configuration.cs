@@ -15,19 +15,19 @@ namespace GCDTracker
         [JsonIgnore]
         public bool configEnabled;
         //GCDWheel
-        public bool WindowLocked;
-        public Vector4 backCol; 
-        public Vector4 backColBorder;
-        public Vector4 frontCol;
-        public Vector4 ogcdCol;
-        public Vector4 anLockCol;
-        public Vector4 clipCol;
+        public bool WindowLocked = false;
+        public Vector4 backCol = new Vector4(0.376f, 0.376f, 0.376f, 1);
+        public Vector4 backColBorder = new Vector4(0f, 0f, 0f, 1f);
+        public Vector4 frontCol = new Vector4(1f, 0.99f, 0.99f, 1f);
+        public Vector4 ogcdCol = new Vector4(1f, 0.99f, 0.99f, 1f);
+        public Vector4 anLockCol = new Vector4(0.334f, 0.334f, 0.334f, 0.49f);
+        public Vector4 clipCol = new Vector4(1f, 0f, 0f, 1f);
         //Combo
-        public bool ComboEnabled=true;
-        public Vector4 ctComboUsed;
-        public Vector4 ctComboActive;
-        public int ctxsep;
-        public int ctysep;
+        public bool ComboEnabled = true;
+        public Vector4 ctComboUsed = new Vector4(0.431f, 0.431f, 0.431f,1f);
+        public Vector4 ctComboActive = new Vector4(1f, 1f, 1f, 1f);
+        public int ctxsep = 23;
+        public int ctysep = 23;
 
 
 

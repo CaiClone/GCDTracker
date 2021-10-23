@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game;
+using Dalamud.Logging;
 using System;
 using System.Linq;
 using System.Runtime.InteropServices;
@@ -16,6 +17,7 @@ namespace GCDTracker.Data
         public static ulong GetRecastGroup(uint actionType, uint actionID) { return getRecastGroup(DataStore.action->ActionManager, actionType, actionID); }
 
         public delegate byte UseActionDelegate(IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp);
+        public delegate void ReceiveActionEffectDetour(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail);
 
         public static void Init(SigScanner scanner)
         {
@@ -29,7 +31,17 @@ namespace GCDTracker.Data
 
         public static bool IsWeaponSkill(uint actionType, uint actionID)
         {
-            return new ulong[] { 57, 9 }.Contains(GetRecastGroup(actionType, actionID)); 
+            return new ulong[] { 57, 9, 0}.Contains(GetRecastGroup(actionType, actionID)); 
+        }
+
+        /// <summary>
+        /// Describes if a skill is being added to the Queue, 0.5 and 0.6 are the default Animation locks with and without noclippy respectively
+        /// </summary>
+        /// <returns></returns>
+        public static bool IsAddingToQueue()
+        {
+            var act = DataStore.action;
+            return act->InQueue1 && act->AnimationLock != 0.5f && act->AnimationLock != 0.6f;
         }
     }
 }

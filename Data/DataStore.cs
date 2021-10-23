@@ -31,6 +31,7 @@ namespace GCDTracker.Data
     {
         [FieldOffset(0x0)] public void* ActionManager;
         [FieldOffset(0x8)] public float AnimationLock;
+        [FieldOffset(0x28)] public bool IsCast;
         [FieldOffset(0x60)] public float ComboTimer;
         [FieldOffset(0x64)] public uint ComboID;
         [FieldOffset(0x68)] public bool InQueue1;
