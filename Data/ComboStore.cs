@@ -12,13 +12,16 @@ namespace GCDTracker.Data
         public static ExcelSheet<Lumina.Excel.GeneratedSheets.Action> ActionSheet;
         public static ExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob> ClassSheet;
 
-        private static Dictionary<(uint, uint, bool), Dictionary<uint, List<uint>>> comboCache;
-        public static void Init(DataManager data)
+        private static Dictionary<(uint, uint, bool,Dictionary<uint,bool>), Dictionary<uint, List<uint>>> comboCache;
+        private static Configuration conf;
+        public static void Init(DataManager data,Configuration config)
         {
             ActionSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>();
             ClassSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ClassJob>();
 
-            comboCache = new Dictionary<(uint, uint, bool), Dictionary<uint, List<uint>>>();
+            conf = config;
+
+            comboCache = new Dictionary<(uint, uint, bool, Dictionary<uint, bool>), Dictionary<uint, List<uint>>>();
         }
 
         //TODO: Cache
@@ -28,7 +31,6 @@ namespace GCDTracker.Data
             //PluginLog.Log($"{ActionSheet.GetRow(3538).Name.RawString}");
             //PluginLog.Log($"{HelperMethods.GetAdjustedActionId(21)}");
             PluginLog.Log($"Get combos for class: {jobclass} at level {level}");
-
             return ActionSheet
                 .Where(row => row.ActionCombo.Value.RowId != 0
                               && (row.ClassJobCategory.Value?.Name.RawString.Contains(ClassSheet.GetRow(jobclass).Abbreviation) ?? false)
@@ -40,12 +42,19 @@ namespace GCDTracker.Data
         }
         public static Dictionary<uint, List<uint>> GetCombos()
         {
-            var par = (DataStore.clientState.LocalPlayer.ClassJob.Id, DataStore.clientState.LocalPlayer.Level, false);
+            var par = (DataStore.clientState.LocalPlayer.ClassJob.Id, DataStore.clientState.LocalPlayer.Level, false,conf.EnabledCTJobs);
+            if (!par.EnabledCTJobs[par.Id]) return new Dictionary<uint, List<uint>>();
             if(comboCache.TryGetValue(par, out var comboDict))
                 return comboDict;
             comboDict = getCombos(par.Id, par.Level, par.Item3);
             comboCache.Add(par, comboDict);
             return comboDict;
         }
+
+        public static uint? GetParentJob(uint jobId)
+        {
+            return ClassSheet.GetRow(jobId).ClassJobParent.Value?.RowId;
+        }
+
     }
 }

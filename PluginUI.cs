@@ -24,10 +24,11 @@ namespace GCDTracker
         }
         public unsafe void Draw()
         {
-            if (DataStore.clientState.LocalPlayer==null)
-                return;
 
             conf.DrawConfig();
+
+            if (DataStore.clientState.LocalPlayer == null)
+                return;
             var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoTitleBar;
             if (conf.WindowLocked)
             {
@@ -39,12 +40,11 @@ namespace GCDTracker
             ImGui.Begin("GCDTracker_UI", flags);
             getWindowsInfo();
             draw = ImGui.GetBackgroundDrawList();
-
-            bool wheeldrawn = gcd.DrawGCDWheel(this,conf);
+            bool wheeldrawn = true;
+            if(conf.WheelEnabled)
+                wheeldrawn = gcd.DrawGCDWheel(this,conf);
             if (conf.ComboEnabled && (ct.ComboUsed.Count>0 || wheeldrawn))
-            {
                 ct.DrawComboLines(this,conf);
-            }
             ImGui.End();
         }
         private void getWindowsInfo()

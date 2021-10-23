@@ -61,8 +61,8 @@ namespace GCDTracker
         ///</summary>
         public void DrawComboLines(PluginUI ui, Configuration conf)
         {
-            var xsep = conf.ctxsep * ui.Scale;
-            var ysep = conf.ctysep * ui.Scale;
+            var xsep = conf.ctsep.X * ui.Scale;
+            var ysep = conf.ctsep.Y* ui.Scale;
             var circRad = 8 * ui.Scale;
 
             var combos = ComboStore.GetCombos();

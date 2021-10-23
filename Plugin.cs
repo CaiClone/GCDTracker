@@ -59,7 +59,7 @@ namespace GCDTracker
 
             DataStore.Init(Scanner,ClientState);
             HelperMethods.Init(Scanner);
-            ComboStore.Init(Data);
+            ComboStore.Init(Data,config);
 
             this.ui = new PluginUI(this.config);
             this.ui.conf = this.config;
