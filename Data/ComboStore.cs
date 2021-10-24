@@ -24,13 +24,9 @@ namespace GCDTracker.Data
             comboCache = new Dictionary<(uint, uint, bool, Dictionary<uint, bool>), Dictionary<uint, List<uint>>>();
         }
 
-        //TODO: Cache
-        //TODO: Use Data and ignore parameters
         private static Dictionary<uint,List<uint>> getCombos(uint jobclass, uint level, bool isPvp)
         {
-            //PluginLog.Log($"{ActionSheet.GetRow(3538).Name.RawString}");
-            //PluginLog.Log($"{HelperMethods.GetAdjustedActionId(21)}");
-            PluginLog.Log($"Get combos for class: {jobclass} at level {level}");
+            PluginLog.Verbose($"Get combos for class: {jobclass} at level {level}");
             return ActionSheet
                 .Where(row => row.ActionCombo.Value.RowId != 0
                               && (row.ClassJobCategory.Value?.Name.RawString.Contains(ClassSheet.GetRow(jobclass).Abbreviation) ?? false)
@@ -48,7 +44,7 @@ namespace GCDTracker.Data
                 return comboDict;
             comboDict = getCombos(par.Id, par.Level, par.Item3);
             comboCache.Add(par, comboDict);
-            return comboDict;
+            return comboDict; 
         }
 
         public static uint? GetParentJob(uint jobId)

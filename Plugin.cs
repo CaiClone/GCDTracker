@@ -103,11 +103,6 @@ namespace GCDTracker
         [HelpMessage("Open GCDTracker settings.")]
         public void GCDTrackerCommand(string command, string args)
         {
-            // You may want to assign these references to private variables for convenience.
-            // Keep in mind that the local player does not exist until after logging in.
-            // var world = ClientState.LocalPlayer?.CurrentWorld.GameData;
-            //Chat.Print($"Hello {world?.Name}!");
-            //PluginLog.Log("Message sent successfully.2");
             this.OpenConfig();
         }
 
@@ -117,7 +112,9 @@ namespace GCDTracker
             if (!disposing) return;
 
             UseActionHook?.Disable();
+            UseActionHook?.Dispose();
             ReceiveActionEffectHook?.Disable();
+            ReceiveActionEffectHook?.Dispose();
 
             this.commandManager.Dispose();
 

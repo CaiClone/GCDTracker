@@ -29,6 +29,8 @@ namespace GCDTracker
             var AddingToQueue = HelperMethods.IsAddingToQueue();
             var ExecutingQueued = (act->InQueue1 && !AddingToQueue);
 
+            if(ret ==1 &&  isWeaponSkill && (ExecutingQueued || !act->InQueue1))
+                actTime = DateTime.Now + TimeSpan.FromMilliseconds(300);
             if (comboDict.Count == 0 || ExecutingQueued || ret != 1)
                 return;
 
@@ -38,13 +40,12 @@ namespace GCDTracker
                 if (!comboDict.Any(comb => comb.Value.Contains(cAct)))
                     ComboUsed.Clear();
                 ComboUsed.Add(cAct);
-                actTime = DateTime.Now + TimeSpan.FromMilliseconds(10);
             }
         }
 
         public void Update(Framework framework)
         {
-            if (ComboUsed.Count>1 && framework.LastUpdate > actTime && DataStore.combo->Timer <= 0)
+            if (ComboUsed.Count>0 && framework.LastUpdate > actTime && DataStore.combo->Timer <= 0)
                 ComboUsed.Clear();
         }
 

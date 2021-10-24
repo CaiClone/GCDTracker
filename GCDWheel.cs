@@ -29,7 +29,6 @@ namespace GCDTracker
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var AddingToQueue = HelperMethods.IsAddingToQueue();
             var ExecutingQueued = (act->InQueue1 && !AddingToQueue);
-            //PluginLog.Log($"{isWeaponSkill},{AddingToQueue},{ExecutingQueued},{act->AnimationLock},{act->ElapsedGCD},{act->TotalGCD},{act->QueuedAction},{act->dunno},{act->IsCast}");
 
             if (AddingToQueue)
                 ogcds[isWeaponSkill? Math.Max(act->TotalGCD, act->ElapsedGCD + act->AnimationLock): act->ElapsedGCD+act->AnimationLock] = 0.6f;

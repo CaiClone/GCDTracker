@@ -129,12 +129,11 @@ namespace GCDTracker
                         for (int i = 0; i < infoJobs.Length; i++)
                         {
                             ImGui.TableNextColumn();
-                            //var newval =  ImGui.Selectable(infoJobs[i].Item2, oldval);
+
                             var enabled = EnabledCTJobs[infoJobs[i].Item1];
                             if (ImGui.Checkbox(infoJobs[i].Item2, ref enabled))
                             {
                                 EnabledCTJobs[infoJobs[i].Item1] = enabled;
-                                PluginLog.Log($"{ComboStore.GetParentJob(infoJobs[i].Item1)},{infoJobs[i].Item1}");
                                 EnabledCTJobs[ComboStore.GetParentJob(infoJobs[i].Item1) ?? 0] = enabled;
                             }
                         }
