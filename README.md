@@ -1,8 +1,9 @@
+![Header](images/header.png)
 # GCDTracker
 A plugin for goat's [XIVLauncher](https://github.com/goaaats/FFXIVQuickLauncher) designed to help familiarize yourself with basic combats such as GCD and animation lock in the game.
 Once you install the plugin and start attacking the nearest thing a circle showing the current status of your weaponskill GCD will be displayed as well as a graph showing your combo position. OGCDs will be added to the wheel with their correspondent animation locks as they get pressed.
- 
-![GCDTracker at work](Images/example.gif)
+
+![GCDTracker at work](images/example.gif)
 
 ## FAQ
 

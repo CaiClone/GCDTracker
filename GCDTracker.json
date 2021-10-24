@@ -1,7 +1,18 @@
 ﻿{
-  "Name": "GCDTracker",
-  "Author": "Caiclone",
-  "Description": "Shows a wheel with the current GCD and OGCD",
-  "RepoUrl": "",
-  "Tags": []
+    "Name": "GCDTracker",
+    "Author": "Cai",
+    "Description": "Tracks GCD, OGCDs and combo status. Instantly isualizing what is happening with queue, animation lock and helping you get familiar with the concepts.",
+    "RepoUrl": "https://github.com/CaiClone/GCDTracker",
+    "Tags": [
+        "combat",
+        "gcd"
+    ],
+    "ImageUrls": [
+        "https://github.com/CaiClone/GCDTracker/raw/main/images/image1.png"
+    ],
+    "IconUrl": "https://github.com/CaiClone/GCDTracker/raw/main/images/icon.png",
+    "ApplicableVersion": "any",
+    "PunchLine": "Is my DRG still jumping?",
+    "DalamudApiLevel": 4,
+    "LoadPriority": 0
 }
