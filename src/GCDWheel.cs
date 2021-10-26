@@ -25,7 +25,7 @@ namespace GCDTracker
         {
             Data.Action* act = DataStore.action;
             if (ret != 1 || act->IsCast) return;
-
+            
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var AddingToQueue = HelperMethods.IsAddingToQueue();
             var ExecutingQueued = (act->InQueue1 && !AddingToQueue);

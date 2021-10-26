@@ -40,10 +40,11 @@ namespace GCDTracker
             ImGui.Begin("GCDTracker_UI", flags);
             getWindowsInfo();
             draw = ImGui.GetBackgroundDrawList();
-            bool wheeldrawn = true;
-            if(conf.WheelEnabled)
-                wheeldrawn = gcd.DrawGCDWheel(this,conf);
-            if (conf.ComboEnabled && (ct.ComboUsed.Count>0 || wheeldrawn))
+            bool inCombat = DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
+            PluginLog.Log(inCombat.ToString());
+            if (conf.WheelEnabled && inCombat)
+                gcd.DrawGCDWheel(this,conf);
+            if (conf.ComboEnabled && (ct.ComboUsed.Count>0 || inCombat))
                 ct.DrawComboLines(this,conf);
             ImGui.End();
         }

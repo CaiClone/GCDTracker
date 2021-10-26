@@ -1,5 +1,6 @@
 ﻿using Dalamud.Game;
 using Dalamud.Game.ClientState;
+using Dalamud.Game.ClientState.Conditions;
 using System.Runtime.InteropServices;
 
 namespace GCDTracker.Data
@@ -9,8 +10,9 @@ namespace GCDTracker.Data
         public static Combo* combo;
         public static Action* action;
         public static ClientState clientState;
+        public static Condition condition;
 
-        public static void Init(SigScanner scanner,ClientState cs)
+        public static void Init(SigScanner scanner,ClientState cs,Condition cond)
         {
             var comboPtr = scanner.GetStaticAddressFromSig("48 89 2D ?? ?? ?? ?? 85 C0");
             var ActionManagerPtr = scanner.GetStaticAddressFromSig("E8 ?? ?? ?? ?? 33 C0 E9 ?? ?? ?? ?? 8B 7D 0C");
@@ -18,6 +20,7 @@ namespace GCDTracker.Data
             combo = (Combo*)comboPtr;
             action = (Action*)ActionManagerPtr;
             clientState = cs;
+            condition = cond;
         }
     }
 

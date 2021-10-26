@@ -30,7 +30,7 @@ namespace GCDTracker
             var ExecutingQueued = (act->InQueue1 && !AddingToQueue);
 
             if(ret ==1 &&  isWeaponSkill && (ExecutingQueued || !act->InQueue1))
-                actTime = DateTime.Now + TimeSpan.FromMilliseconds(300);
+                actTime = DateTime.Now + TimeSpan.FromMilliseconds(500);
             if (comboDict.Count == 0 || ExecutingQueued || ret != 1)
                 return;
 

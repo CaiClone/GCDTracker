@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
+using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Command;
 using Dalamud.Hooking;
 using Dalamud.IoC;
@@ -40,6 +41,10 @@ namespace GCDTracker
         [RequiredVersion("1.0")]
         private DataManager Data { get; init; }
 
+        [PluginService]
+        [RequiredVersion("1.0")]
+        private Condition condition { get; init; }
+
         private readonly PluginCommandManager<Plugin> commandManager;
         private readonly Configuration config;
         private readonly PluginUI ui;
@@ -57,7 +62,7 @@ namespace GCDTracker
             this.config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             this.config.Initialize(PluginInterface);
 
-            DataStore.Init(Scanner,ClientState);
+            DataStore.Init(Scanner,ClientState,condition);
             HelperMethods.Init(Scanner);
             ComboStore.Init(Data,config);
 
