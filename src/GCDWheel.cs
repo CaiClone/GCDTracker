@@ -52,7 +52,10 @@ namespace GCDTracker
             float gcdTime = (float)ImGui.GetTime()-lastGCDtime;
 
             if (gcdTime > gcdTotal * 1.25f)
-                return false;
+            {
+                gcdTime = 0;
+                if (ogcds.Count > 0) ogcds.Clear();
+            }
 
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); //Background
             ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, conf.backCol);

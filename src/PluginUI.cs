@@ -41,8 +41,7 @@ namespace GCDTracker
             getWindowsInfo();
             draw = ImGui.GetBackgroundDrawList();
             bool inCombat = DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
-            PluginLog.Log(inCombat.ToString());
-            if (conf.WheelEnabled && inCombat)
+            if (conf.WheelEnabled && (DataStore.action->ElapsedGCD>0 || inCombat))
                 gcd.DrawGCDWheel(this,conf);
             if (conf.ComboEnabled && (ct.ComboUsed.Count>0 || inCombat))
                 ct.DrawComboLines(this,conf);
