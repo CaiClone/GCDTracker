@@ -77,7 +77,8 @@ namespace GCDTracker
 
             PluginInterface.UiBuilder.Draw += this.ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
-            Framework.Update += this.ui.ct.Update;
+            Framework.Update += this.ct.Update;
+            Framework.Update += this.gcd.Update;
 
             this.commandManager = new PluginCommandManager<Plugin>(this, Commands);
 
@@ -127,7 +128,8 @@ namespace GCDTracker
 
             PluginInterface.UiBuilder.Draw -= this.ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi -= OpenConfig;
-            Framework.Update -= this.ui.ct.Update;
+            Framework.Update -= this.ct.Update;
+            Framework.Update -= this.gcd.Update;
         }
 
         public void Dispose()

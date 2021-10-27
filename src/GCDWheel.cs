@@ -1,4 +1,5 @@
 ﻿
+using Dalamud.Game;
 using Dalamud.Logging;
 using GCDTracker.Data;
 using ImGuiNET;
@@ -24,14 +25,14 @@ namespace GCDTracker
         public unsafe void onActionUse(byte ret,IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
             Data.Action* act = DataStore.action;
-            if (ret != 1 || act->IsCast) return;
+            if (ret != 1) return;
             
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
-            var AddingToQueue = HelperMethods.IsAddingToQueue();
+            var AddingToQueue = HelperMethods.IsAddingToQueue(actionType, actionID);
             var ExecutingQueued = (act->InQueue1 && !AddingToQueue);
 
             if (AddingToQueue)
-                ogcds[isWeaponSkill? Math.Max(act->TotalGCD, act->ElapsedGCD + act->AnimationLock): act->ElapsedGCD+act->AnimationLock] = 0.6f;
+                ogcds[Math.Max(isWeaponSkill ? act->TotalGCD:0 , act->ElapsedGCD + act->AnimationLock)] = !act->IsCast? 0.6f:0.01f;
             else
             {
                 if (isWeaponSkill)
@@ -42,21 +43,24 @@ namespace GCDTracker
                     ogcds[act->ElapsedGCD]=act->AnimationLock;
                 }
                 else if (!ExecutingQueued)
-                    ogcds[act->ElapsedGCD]=act->AnimationLock;
+                {
+                    ogcds[act->ElapsedGCD] = act->AnimationLock;
+                    PluginLog.Log($"ADD {ogcds.Count()}");
+                }
             }
         }
 
-        public bool DrawGCDWheel(PluginUI ui,Configuration conf)
+        public bool DrawGCDWheel(PluginUI ui, Configuration conf)
         {
             float gcdTotal = totalGCD;
-            float gcdTime = (float)ImGui.GetTime()-lastGCDtime;
+            float gcdTimePrecise = (float)ImGui.GetTime() - lastGCDtime;
+            float gcdTime = DataStore.action->ElapsedGCD;
 
-            if (gcdTime > gcdTotal * 1.25f)
+            if (gcdTimePrecise > gcdTotal * 1.25f)
             {
                 gcdTime = 0;
                 if (ogcds.Count > 0) ogcds.Clear();
             }
-
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); //Background
             ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, conf.backCol);
             ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); //Queue lock

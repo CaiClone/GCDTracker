@@ -38,10 +38,11 @@ namespace GCDTracker.Data
         /// Describes if a skill is being added to the Queue, 0.5 and 0.6 are the default Animation locks with and without noclippy respectively
         /// </summary>
         /// <returns></returns>
-        public static bool IsAddingToQueue()
+        public static bool IsAddingToQueue(uint actionType, uint actionID)
         {
+            var weaponSkill = IsWeaponSkill(actionType, actionID);
             var act = DataStore.action;
-            return act->InQueue1 && act->AnimationLock != 0.5f && act->AnimationLock != 0.6f;
+            return (weaponSkill && act->ElapsedGCD>0 && act->ElapsedGCD<act->TotalGCD) || (!weaponSkill && act->AnimationLock!= 0.5f && act->AnimationLock!= 0.6f);
         }
     }
 }
