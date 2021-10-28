@@ -105,15 +105,15 @@ namespace GCDTracker
 
             var items = ogcds.Where(x => x.Key <= ctime && ctime < x.Key + x.Value);
             if (items.Count() == 0) return;
-            var item = items.First();
+            var item = items.First(); //Should always be one
 
-            ogcds[item.Key] = ctime- item.Key+ newLock;
+            ogcds[item.Key] = ctime - item.Key + newLock;
             var diff = newLock - oldLock;
-            foreach(var ogcd in ogcds.Where(x => x.Key > ctime))
-            {
-                ogcds[ogcd.Key] = ogcd.Value + diff;
-            }
-
+            var toSlide = ogcds.Where(x => x.Key > ctime).ToList();
+            foreach (var ogcd in toSlide)
+                ogcds[ogcd.Key + diff] = ogcd.Value;
+            foreach (var ogcd in toSlide)
+                ogcds.Remove(ogcd.Key);
         }
     }
 }

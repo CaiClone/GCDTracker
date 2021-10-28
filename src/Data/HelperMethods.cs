@@ -42,9 +42,9 @@ namespace GCDTracker.Data
         {
             var weaponSkill = IsWeaponSkill(actionType, actionID);
             var act = DataStore.action;
-            return (weaponSkill && (
+            return act->InQueue1 && ((weaponSkill && (
                     (act->ElapsedGCD<act->TotalGCD && act->ElapsedGCD > 0) || (act->AnimationLock!=0f && act->AnimationLock!=0.5f && act->AnimationLock!=0.6f))) || //Weaponskills
-                    (!weaponSkill && act->AnimationLock!= 0.5f && act->AnimationLock!= 0.6f); //OGCDS
+                    (!weaponSkill && act->AnimationLock!= 0.5f && act->AnimationLock!= 0.6f)); //OGCDS
         }
     }
 }
