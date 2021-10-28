@@ -43,30 +43,52 @@ namespace GCDTracker
                     ogcds[act->ElapsedGCD]=act->AnimationLock;
                 }
                 else if (!ExecutingQueued)
-                {
                     ogcds[act->ElapsedGCD] = act->AnimationLock;
-                    PluginLog.Log($"ADD {ogcds.Count()}");
-                }
             }
         }
 
+        public void Update(Framework framework)
+        {
+            if (DataStore.action->ElapsedGCD < 0.0001f) //no gcd
+                SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001),false);
+            else if (Math.Abs(DataStore.action->ElapsedGCD - DataStore.action->TotalGCD) < 0.01f) //end gcd
+                SlideGCDs(DataStore.action->TotalGCD, true);
+        }
+
+        /// <summary>
+        /// This function slides all the GCDs forward by a delta and deletes the ones that reach 0
+        /// </summary>
+        private void SlideGCDs(float delta, bool isOver)
+        {
+            var ogcdsNew = new Dictionary<float, float>();
+            foreach (var (k, v) in ogcds)
+            {
+                if (k < delta && v > delta)
+                    ogcdsNew[k] = v - delta;
+                else if (isOver && k + v > totalGCD)
+                    ogcdsNew[0f] = k + v - totalGCD;
+                else if (k > delta) 
+                    ogcdsNew[k - delta] = v;
+            }
+            ogcds = ogcdsNew;
+        }
         public bool DrawGCDWheel(PluginUI ui, Configuration conf)
         {
             float gcdTotal = totalGCD;
             float gcdTimePrecise = (float)ImGui.GetTime() - lastGCDtime;
             float gcdTime = DataStore.action->ElapsedGCD;
+            var isover = gcdTimePrecise > gcdTotal && gcdTimePrecise < gcdTotal * 1.25f;
 
-            if (gcdTimePrecise > gcdTotal * 1.25f)
-            {
-                gcdTime = 0;
-                if (ogcds.Count > 0) ogcds.Clear();
-            }
+            if (isover)
+                gcdTime = DataStore.action->AnimationLock > 0f ? gcdTotal + (gcdTimePrecise - gcdTotal) * 0.5f: gcdTimePrecise;
+
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); //Background
             ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, conf.backCol);
             ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); //Queue lock
             ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, conf.backCol);
 
-            ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
+            if(!isover)
+                ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
 
             foreach (var (ogcd, anlock) in ogcds)
             {
