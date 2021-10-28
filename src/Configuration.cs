@@ -33,26 +33,27 @@ namespace GCDTracker
         public Vector4 ctComboActive = new Vector4(1f, 1f, 1f, 1f);
         public Vector2 ctsep = new Vector2(23, 23);
 
+        // ID Main Class, Name, Supported in CT, Supportd in GW
         [JsonIgnore]
-        private readonly (uint, string)[] infoJobs = new (uint, string)[]
+        private readonly (uint, string,bool,bool)[] infoJobs = new (uint, string, bool, bool)[]
         {
-            (19,"PLD"),
-            (21,"WAR"),
-            (32,"DRK"),
-            (37,"GNB"),
-            (28,"SCH"),
-            (24,"WHM"),
-            (33,"AST"),
-            (20,"MNK"),
-            (22,"DRG"),
-            (30,"NIN"),
-            (34,"SAM"),
-            (25,"BLM"),
-            (27,"SMN"),
-            (35,"RDM"),
-            (23,"BRD"),
-            (31,"MCH"),
-            (38,"DNC")
+            (19,"PLD",true,true),
+            (21,"WAR",true,true),
+            (32,"DRK",true,true),
+            (37,"GNB",true,true),
+            (28,"SCH",true,false),
+            (24,"WHM",true,false),
+            (33,"AST",true,false),
+            (20,"MNK",true,true),
+            (22,"DRG",true,true),
+            (30,"NIN",true,true),
+            (34,"SAM",true,true),
+            (25,"BLM",true,false),
+            (27,"SMN",true,false),
+            (35,"RDM",true,false),
+            (23,"BRD",true,false),
+            (31,"MCH",true,true),
+            (38,"DNC",true,true)
         };
 
         public Dictionary<uint,bool> EnabledCTJobs = new()
@@ -84,7 +85,35 @@ namespace GCDTracker
             {31,true},
             {38,false}
         };
-
+        public Dictionary<uint, bool> EnabledGWJobs = new()
+        {
+            { 1, true },
+            { 19, true },
+            { 3, true },
+            { 21, true },
+            { 32, true },
+            { 37, true },
+            { 26, true },
+            { 28, true },
+            { 6, true },
+            { 24, true },
+            { 33, true },
+            { 2, true },
+            { 20, true },
+            { 4, true },
+            { 22, true },
+            { 29, true },
+            { 30, true },
+            { 34, true },
+            { 7, true },
+            { 25, true },
+            { 27, true },
+            { 35, true },
+            { 5, true },
+            { 23, true },
+            { 31, true },
+            { 38, true }
+        };
 
 
         // Add any other properties or methods here.
@@ -115,6 +144,8 @@ namespace GCDTracker
                     ImGui.ColorEdit4("Action tick Color", ref ogcdCol, ImGuiColorEditFlags.NoInputs);
                     ImGui.ColorEdit4("Animation lock Color", ref anLockCol, ImGuiColorEditFlags.NoInputs);
                     ImGui.ColorEdit4("Clipping Color", ref clipCol, ImGuiColorEditFlags.NoInputs);
+
+                    DrawJobGrid(ref EnabledGWJobs, true);
                     ImGui.EndTabItem();
                 }
                 if (ImGui.BeginTabItem("ComboTrack"))
@@ -124,25 +155,35 @@ namespace GCDTracker
                     ImGui.ColorEdit4("Active Ability Color", ref ctComboActive, ImGuiColorEditFlags.NoInputs);
                     ImGui.SliderFloat2("Separation", ref ctsep, 0, 100);
 
-                    if (ImGui.BeginTable("Classes CT", 3, ImGuiTableFlags.Borders |ImGuiTableFlags.SizingStretchSame))
-                    {
-                        for (int i = 0; i < infoJobs.Length; i++)
-                        {
-                            ImGui.TableNextColumn();
-
-                            var enabled = EnabledCTJobs[infoJobs[i].Item1];
-                            if (ImGui.Checkbox(infoJobs[i].Item2, ref enabled))
-                            {
-                                EnabledCTJobs[infoJobs[i].Item1] = enabled;
-                                EnabledCTJobs[ComboStore.GetParentJob(infoJobs[i].Item1) ?? 0] = enabled;
-                            }
-                        }
-                        ImGui.EndTable();
-                    }
+                    DrawJobGrid(ref EnabledCTJobs,false);
                     ImGui.EndTabItem();
                 }
             }
             ImGui.End();
+        }
+
+        private void DrawJobGrid(ref Dictionary<uint, bool> enabledDict,bool colorPos)
+        {
+            var redCol = ImGui.GetColorU32(new Vector4(1f, 0, 0, 1f));
+            if (ImGui.BeginTable("Job Grid", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchSame))
+            {
+                for (int i = 0; i < infoJobs.Length; i++)
+                {
+                    ImGui.TableNextColumn();
+
+                    var enabled = enabledDict[infoJobs[i].Item1];
+                    var supported = colorPos ? infoJobs[i].Item3 : infoJobs[i].Item4;
+                    if (!supported) ImGui.PushStyleColor(ImGuiCol.Text, redCol);
+                    if (ImGui.Checkbox(infoJobs[i].Item2, ref enabled))
+                    {
+                        enabledDict[infoJobs[i].Item1] = enabled;
+                        enabledDict[ComboStore.GetParentJob(infoJobs[i].Item1) ?? 0] = enabled;
+                    }
+                    if (!supported) ImGui.PopStyleColor();
+                }
+                ImGui.EndTable();
+                ImGui.TextColored(new Vector4(1f,0,0,1f), "Jobs in red are not currently supported, may have bugs");
+            }
         }
     }
 }
