@@ -23,13 +23,13 @@ namespace GCDTracker
         public bool WindowLockedGW = false;
         public Vector4 backCol = new Vector4(0.376f, 0.376f, 0.376f, 1);
         public Vector4 backColBorder = new Vector4(0f, 0f, 0f, 1f);
-        public Vector4 frontCol = new Vector4(1f, 0.99f, 0.99f, 1f);
-        public Vector4 ogcdCol = new Vector4(1f, 0.99f, 0.99f, 1f);
-        public Vector4 anLockCol = new Vector4(0.334f, 0.334f, 0.334f, 0.49f);
+        public Vector4 frontCol = new Vector4(0.9f, 0.9f, 0.9f, 1f);
+        public Vector4 ogcdCol = new Vector4(1f, 1f, 1f, 1f);
+        public Vector4 anLockCol = new Vector4(0.334f, 0.334f, 0.334f, 0.667f);
         public Vector4 clipCol = new Vector4(1f, 0f, 0f, 0.667f);
         //Combo
-        public bool WindowLockedCT = false;
         public bool ComboEnabled = true;
+        public bool WindowLockedCT = false;
         public Vector4 ctComboUsed = new Vector4(0.431f, 0.431f, 0.431f, 1f);
         public Vector4 ctComboActive = new Vector4(1f, 1f, 1f, 1f);
         public Vector2 ctsep = new Vector2(23, 23);
@@ -54,7 +54,7 @@ namespace GCDTracker
             (35,"RDM",true,false),
             (23,"BRD",true,false),
             (31,"MCH",true,true),
-            (38,"DNC",true,true)
+            (38,"DNC",true,false)
         };
 
         public Dictionary<uint,bool> EnabledCTJobs = new()
@@ -82,7 +82,7 @@ namespace GCDTracker
             {27,false},
             {35,false},
             {5,true},
-            {23,true},
+            {23,false},
             {31,true},
             {38,false}
         };
@@ -184,7 +184,7 @@ namespace GCDTracker
                     if (!supported) ImGui.PopStyleColor();
                 }
                 ImGui.EndTable();
-                ImGui.TextColored(new Vector4(1f,0,0,1f), "Jobs in red are not currently supported, may have bugs");
+                ImGui.TextColored(new Vector4(1f,0,0,1f), "Jobs in red are not currently supported and may have bugs");
             }
         }
     }
