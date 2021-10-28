@@ -26,7 +26,7 @@ namespace GCDTracker
         public Vector4 frontCol = new Vector4(1f, 0.99f, 0.99f, 1f);
         public Vector4 ogcdCol = new Vector4(1f, 0.99f, 0.99f, 1f);
         public Vector4 anLockCol = new Vector4(0.334f, 0.334f, 0.334f, 0.49f);
-        public Vector4 clipCol = new Vector4(1f, 0f, 0f, 1f);
+        public Vector4 clipCol = new Vector4(1f, 0f, 0f, 0.667f);
         //Combo
         public bool ComboEnabled = true;
         public Vector4 ctComboUsed = new Vector4(0.431f, 0.431f, 0.431f, 1f);

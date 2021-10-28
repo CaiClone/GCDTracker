@@ -65,7 +65,7 @@ namespace GCDTracker
             {
                 if (k < delta && v > delta)
                     ogcdsNew[k] = v - delta;
-                else if (isOver && k + v > totalGCD)
+                else if (isOver && k < delta && k + v > totalGCD)
                     ogcdsNew[0f] = k + v - totalGCD;
                 else if (k > delta) 
                     ogcdsNew[k - delta] = v;
@@ -75,28 +75,20 @@ namespace GCDTracker
         public bool DrawGCDWheel(PluginUI ui, Configuration conf)
         {
             float gcdTotal = totalGCD;
-            float gcdTimePrecise = (float)ImGui.GetTime() - lastGCDtime;
             float gcdTime = DataStore.action->ElapsedGCD;
-            var isover = gcdTimePrecise > gcdTotal && gcdTimePrecise < gcdTotal * 1.25f;
-
-            if (isover)
-                gcdTime = DataStore.action->AnimationLock > 0f ? gcdTotal + (gcdTimePrecise - gcdTotal) * 0.5f: gcdTimePrecise;
 
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); //Background
             ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, conf.backCol);
             ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); //Queue lock
             ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, conf.backCol);
 
-            if(!isover)
-                ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
+            ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
 
             foreach (var (ogcd, anlock) in ogcds)
             {
-                ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * ui.Scale, conf.anLockCol * new Vector4(1, 1, 1, Math.Min(1.5f - ((gcdTime - ogcd) / 3f), 1f)));
+                ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * ui.Scale, ((ogcd<(gcdTotal-0.01f) && ogcd+anlock>gcdTotal) || gcdTime<0.001f)? conf.clipCol : conf.anLockCol);
                 ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * ui.Scale, conf.ogcdCol);
             }
-            if (gcdTime > gcdTotal)
-                ui.DrawCircSegment(0f, (gcdTime - gcdTotal) / gcdTotal, 21f * ui.Scale, conf.clipCol);
             return true;
         }
 
