@@ -20,7 +20,7 @@ namespace GCDTracker
         public bool configEnabled;
         //GCDWheel
         public bool WheelEnabled = true;
-        public bool WindowLocked = false;
+        public bool WindowLockedGW = false;
         public Vector4 backCol = new Vector4(0.376f, 0.376f, 0.376f, 1);
         public Vector4 backColBorder = new Vector4(0f, 0f, 0f, 1f);
         public Vector4 frontCol = new Vector4(1f, 0.99f, 0.99f, 1f);
@@ -28,6 +28,7 @@ namespace GCDTracker
         public Vector4 anLockCol = new Vector4(0.334f, 0.334f, 0.334f, 0.49f);
         public Vector4 clipCol = new Vector4(1f, 0f, 0f, 0.667f);
         //Combo
+        public bool WindowLockedCT = false;
         public bool ComboEnabled = true;
         public Vector4 ctComboUsed = new Vector4(0.431f, 0.431f, 0.431f, 1f);
         public Vector4 ctComboActive = new Vector4(1f, 1f, 1f, 1f);
@@ -133,10 +134,10 @@ namespace GCDTracker
             if (!this.configEnabled) return;
             ImGui.Begin("GCDTracker_Config",ref configEnabled,ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize);
 
-            ImGui.Checkbox("Lock window", ref WindowLocked);
             if (ImGui.BeginTabBar("GCDConfig")){
                 if (ImGui.BeginTabItem("GCDWheel"))
                 {
+                    ImGui.Checkbox("Lock window", ref WindowLockedGW);
                     ImGui.Checkbox("GCD Wheel enabled", ref WheelEnabled);
                     ImGui.ColorEdit4("Background Color", ref backCol, ImGuiColorEditFlags.NoInputs);
                     ImGui.ColorEdit4("Background border Color", ref backColBorder, ImGuiColorEditFlags.NoInputs);
@@ -150,6 +151,7 @@ namespace GCDTracker
                 }
                 if (ImGui.BeginTabItem("ComboTrack"))
                 {
+                    ImGui.Checkbox("Lock window", ref WindowLockedCT);
                     ImGui.Checkbox("Combo track enabled", ref ComboEnabled);
                     ImGui.ColorEdit4("Abilities used Color", ref ctComboUsed, ImGuiColorEditFlags.NoInputs);
                     ImGui.ColorEdit4("Active Ability Color", ref ctComboActive, ImGuiColorEditFlags.NoInputs);

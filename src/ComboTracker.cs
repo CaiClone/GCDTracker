@@ -69,7 +69,7 @@ namespace GCDTracker
             var combos = ComboStore.GetCombos();
             var nodepos = new Dictionary<uint, Vector2>();
 
-            var startpos = ui.w_cent + new Vector2((ui.w_size.X * 0.3f) + circRad*4, -(3 * ysep) / 2); //assume average 3 combos, hard to know how many beforehand
+            var startpos = ui.w_cent - (ui.w_size/3);
             Vector2 cpos;
             foreach (var (node, follows) in combos)
             {
