@@ -16,10 +16,12 @@ namespace GCDTracker
         public float totalGCD;
         public Dictionary<float, float> ogcds;
 
+        private DateTime nextAllowedGCDEnd;
         public GCDWheel() {
             lastGCDtime = 0f;
             totalGCD = 3.5f;
             ogcds = new Dictionary<float, float>();
+            nextAllowedGCDEnd = DateTime.Now;
         }
 
         public unsafe void onActionUse(byte ret,IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
@@ -50,9 +52,12 @@ namespace GCDTracker
         public void Update(Framework framework)
         {
             if (DataStore.action->ElapsedGCD < 0.0001f) //no gcd
-                SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001),false);
-            else if (Math.Abs(DataStore.action->ElapsedGCD - DataStore.action->TotalGCD) < 0.01f) //end gcd
+                SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
+            else if (Math.Abs(DataStore.action->ElapsedGCD - DataStore.action->TotalGCD) < 0.01f && framework.LastUpdate >= nextAllowedGCDEnd)
+            {
                 SlideGCDs(DataStore.action->TotalGCD, true);
+                nextAllowedGCDEnd = framework.LastUpdate + new TimeSpan(0, 0, 0, 0, 100);
+            }
         }
 
         /// <summary>
@@ -86,7 +91,8 @@ namespace GCDTracker
 
             foreach (var (ogcd, anlock) in ogcds)
             {
-                ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * ui.Scale, ((ogcd<(gcdTotal-0.01f) && ogcd+anlock>gcdTotal) || gcdTime<0.001f)? conf.clipCol : conf.anLockCol);
+                var isClipping = (ogcd < (gcdTotal - 0.01f) && ogcd + anlock > gcdTotal) || (gcdTime < 0.001f && ogcd < 0.001f) ;
+                ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * ui.Scale, (isClipping)? conf.clipCol : conf.anLockCol);
                 ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * ui.Scale, conf.ogcdCol);
             }
             return true;
@@ -97,7 +103,7 @@ namespace GCDTracker
             if (ogcds.Count == 0) return;
             var ctime = DataStore.action->ElapsedGCD;
 
-            var items = ogcds.Where(x => x.Key < ctime && ctime < x.Key + x.Value);
+            var items = ogcds.Where(x => x.Key <= ctime && ctime < x.Key + x.Value);
             if (items.Count() == 0) return;
             var item = items.First();
 

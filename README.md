@@ -7,8 +7,9 @@ Once you install the plugin and start attacking the nearest thing a circle showi
 
 ## FAQ
 
-### Does the gcd tracking work for casters?
-Not for now, need to think a little more on how to make it useful for them.
+### X action does not trigger the combo tracker?
+Combos are automatically extracted from the game files so that means that whatever the game doesn't consider strictly as a combo won't be detected as one. Trying yet to find a balance between major classes working and not having to add exceptions for every possible combo.
 
-### Why does the animation lock get longer inmediately after appearing?
+### Why does the animation lock get longer immediately after appearing?
 All animation locks start equal, then they get an update from the server indicating their remaining length accounting for the ability animation lock+lag.
+

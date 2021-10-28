@@ -25,26 +25,26 @@ namespace GCDTracker.Data
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    public unsafe struct Action
+    public readonly unsafe struct Action
     {
-        [FieldOffset(0x0)] public void* ActionManager;
-        [FieldOffset(0x8)] public float AnimationLock;
-        [FieldOffset(0x28)] public bool IsCast;
-        [FieldOffset(0x60)] public float ComboTimer;
-        [FieldOffset(0x64)] public uint ComboID;
-        [FieldOffset(0x68)] public bool InQueue1;
-        [FieldOffset(0x68)] public bool InQueue2;
-        [FieldOffset(0x70)] public uint QueuedAction;
-        [FieldOffset(0x78)] public float dunno; //always 2.01 when queuing stuff
-        [FieldOffset(0x618)] public float ElapsedGCD;
-        [FieldOffset(0x61C)] public float TotalGCD;
-        [FieldOffset(0x810)] public float AnimationTimer;
+        [FieldOffset(0x0)] public readonly void* ActionManager;
+        [FieldOffset(0x8)] public readonly float AnimationLock;
+        [FieldOffset(0x28)] public readonly bool IsCast;
+        [FieldOffset(0x60)] public readonly float ComboTimer;
+        [FieldOffset(0x64)] public readonly uint ComboID;
+        [FieldOffset(0x68)] public readonly bool InQueue1;
+        [FieldOffset(0x68)] public readonly bool InQueue2;
+        [FieldOffset(0x70)] public readonly uint QueuedAction;
+        [FieldOffset(0x78)] public readonly float dunno; //always 2.01 when queuing stuff
+        [FieldOffset(0x618)] public readonly float ElapsedGCD;
+        [FieldOffset(0x61C)] public readonly float TotalGCD;
+        [FieldOffset(0x810)] public readonly float AnimationTimer;
     }
 
     [StructLayout(LayoutKind.Explicit, Size = 0x8)]
-    public struct Combo
+    public readonly struct Combo
     {
-        [FieldOffset(0x00)] public float Timer;
-        [FieldOffset(0x04)] public uint Action;
+        [FieldOffset(0x00)] public readonly float Timer;
+        [FieldOffset(0x04)] public readonly uint Action;
     }
 }
