@@ -29,8 +29,10 @@ namespace GCDTracker
 
             if (DataStore.clientState.LocalPlayer == null)
                 return;
-            
-            bool inCombat = DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
+
+            bool inCombat = DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat]
+                            & !DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.OccupiedInQuestEvent]
+                            & !DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas];
             if ((conf.WheelEnabled && (DataStore.action->ElapsedGCD>0 || inCombat)) || !conf.WindowLockedGW)
             {
                 SetupWindow("GCDTracker_GCDWheel", getFlags(conf.WindowLockedGW));

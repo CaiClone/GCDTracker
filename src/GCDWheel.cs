@@ -91,7 +91,7 @@ namespace GCDTracker
 
             foreach (var (ogcd, anlock) in ogcds)
             {
-                var isClipping = (ogcd < (gcdTotal - 0.01f) && ogcd + anlock > gcdTotal) || (gcdTime < 0.001f && ogcd < 0.001f) ;
+                var isClipping = (ogcd < (gcdTotal - 0.01f) && ogcd + anlock > gcdTotal) || (gcdTime < 0.001f && ogcd < 0.001f && !(anlock % 0.1f < 10e-4)) ;
                 ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * ui.Scale, (isClipping)? conf.clipCol : conf.anLockCol);
                 ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * ui.Scale, conf.ogcdCol);
             }
