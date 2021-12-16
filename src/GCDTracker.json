@@ -13,9 +13,6 @@
     "IconUrl": "https://github.com/CaiClone/GCDTracker/raw/main/images/icon.png",
     "ApplicableVersion": "any",
     "PunchLine": "Is my DRG still jumping?",
-    "DownloadLinkInstall": "https://gist.githubusercontent.com/CaiClone/1d4f281fbb48c405a2ef9bf36d1c0299/raw/869d1747bcc76c3903c725223783227f7083a225/latest.zip",
-    "DownloadLinkTesting": "https://gist.githubusercontent.com/CaiClone/1d4f281fbb48c405a2ef9bf36d1c0299/raw/869d1747bcc76c3903c725223783227f7083a225/latest.zip",
-    "DownloadLinkUpdate": "https://gist.githubusercontent.com/CaiClone/1d4f281fbb48c405a2ef9bf36d1c0299/raw/869d1747bcc76c3903c725223783227f7083a225/latest.zip",
-    "DalamudApiLevel": 4,
+    "DalamudApiLevel": 5,
     "LoadPriority": 0
 }

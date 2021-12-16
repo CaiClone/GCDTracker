@@ -16,7 +16,7 @@ namespace GCDTracker.Data
         private static GetRecastGroupDelegate getRecastGroup;
         public static ulong GetRecastGroup(uint actionType, uint actionID) { return getRecastGroup(DataStore.action->ActionManager, actionType, actionID); }
 
-        public delegate byte UseActionDelegate(IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp);
+        public delegate byte UseActionDelegate(IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp, IntPtr a7);
         public delegate void ReceiveActionEffectDetour(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail);
 
         public static void Init(SigScanner scanner)

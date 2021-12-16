@@ -82,14 +82,14 @@ namespace GCDTracker
 
             this.commandManager = new PluginCommandManager<Plugin>(this, Commands);
 
-            UseActionHook = new Hook<HelperMethods.UseActionDelegate>(Scanner.ScanText("E8 ?? ?? ?? ?? 89 9F BC 76 02 00"), UseActionDetour);
+            UseActionHook = new Hook<HelperMethods.UseActionDelegate>(Scanner.ScanText("E8 ?? ?? ?? ?? EB 64 B1 01"), UseActionDetour);
             ReceiveActionEffectHook = new Hook<HelperMethods.ReceiveActionEffectDetour>(Scanner.ScanText("E8 ?? ?? ?? ?? 48 8B 8D F0 03 00 00"), ReceiveActionEffect);
             UseActionHook.Enable();
             ReceiveActionEffectHook.Enable();
         }
-        private byte UseActionDetour(IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
+        private byte UseActionDetour(IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp, IntPtr a7)
         {
-            var ret = UseActionHook.Original(actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
+            var ret = UseActionHook.Original(actionManager, actionType, actionID, targetedActorID, param, useType, pvp, a7);
             gcd.onActionUse(ret, actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
             ct.onActionUse(ret,actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
             return ret;
