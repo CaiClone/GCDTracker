@@ -6,6 +6,7 @@ using ImGuiNET;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Numerics;
 
 namespace GCDTracker
@@ -35,7 +36,7 @@ namespace GCDTracker
 
         // ID Main Class, Name, Supported in CT, Supportd in GW
         [JsonIgnore]
-        private readonly (uint, string,bool,bool)[] infoJobs = new (uint, string, bool, bool)[]
+        private readonly List<(uint, string,bool,bool)> infoJobs = new List<(uint, string, bool, bool)>()
         {
             (19,"PLD",true,true),
             (21,"WAR",true,true),
@@ -166,9 +167,10 @@ namespace GCDTracker
         private void DrawJobGrid(ref Dictionary<uint, bool> enabledDict,bool colorPos)
         {
             var redCol = ImGui.GetColorU32(new Vector4(1f, 0, 0, 1f));
+            ImGui.Text("Enabled jobs:");
             if (ImGui.BeginTable("Job Grid", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchSame))
             {
-                for (int i = 0; i < infoJobs.Length; i++)
+                for (int i = 0; i < infoJobs.Count; i++)
                 {
                     ImGui.TableNextColumn();
 
@@ -183,7 +185,8 @@ namespace GCDTracker
                     if (!supported) ImGui.PopStyleColor();
                 }
                 ImGui.EndTable();
-                ImGui.TextColored(new Vector4(1f,0,0,1f), "Jobs in red are not currently supported and may have bugs");
+                if(infoJobs.Any(x=>colorPos? !x.Item3: !x.Item4))
+                    ImGui.TextColored(new Vector4(1f,0,0,1f), "Jobs in red are not currently supported and may have bugs");
             }
         }
     }
