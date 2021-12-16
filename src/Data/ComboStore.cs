@@ -79,7 +79,11 @@ namespace GCDTracker.Data
         {
             {19,new List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>{ //PLD
                 (lvl=>lvl>=60,comboDict=> {comboDict[15].Remove(21);comboDict[15].Reverse();}), //Delete Rage of Halone after Royal Authority
-            }}
+            }},
+            {22,new List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>{ //DRG
+                (lvl=>lvl>=56,comboDict=>comboDict[84]= new List<uint>(){3554}),                //Add Fang and Claw
+                (lvl=>lvl>=58,comboDict=>comboDict[3554]= new List<uint>(){3556}),              //Add Wheeling Thrust
+            }},
         };
     }
 }
