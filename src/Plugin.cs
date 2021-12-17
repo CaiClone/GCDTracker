@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using Dalamud.Data;
 using Dalamud.Game;
 using Dalamud.Game.ClientState;
@@ -7,7 +6,6 @@ using Dalamud.Game.ClientState.Conditions;
 using Dalamud.Game.Command;
 using Dalamud.Hooking;
 using Dalamud.IoC;
-using Dalamud.Logging;
 using Dalamud.Plugin;
 using GCDTracker.Attributes;
 using GCDTracker.Data;

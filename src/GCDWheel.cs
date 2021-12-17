@@ -1,12 +1,10 @@
 ﻿
 using Dalamud.Game;
-using Dalamud.Logging;
 using GCDTracker.Data;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 
 namespace GCDTracker
 {

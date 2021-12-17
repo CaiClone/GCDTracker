@@ -31,7 +31,7 @@ namespace GCDTracker.Data
 
         public static bool IsWeaponSkill(uint actionType, uint actionID)
         {
-            return new ulong[] { 57, 9}.Contains(GetRecastGroup(actionType, actionID)); 
+            return new ulong[] { 57, 7}.Contains(GetRecastGroup(actionType, actionID)); 
         }
 
         public static bool IsComboPreserving(uint actionID)
