@@ -35,7 +35,7 @@ namespace GCDTracker
             if (comboDict.Count == 0 || ExecutingQueued || ret != 1)
                 return;
 
-            if (actionType == 1 && isWeaponSkill)
+            if (!HelperMethods.IsComboPreserving(actionID))
             {
                 //If it's not any continuation let's first clear the combo
                 if (!comboDict.Any(comb => comb.Value.Contains(cAct)))

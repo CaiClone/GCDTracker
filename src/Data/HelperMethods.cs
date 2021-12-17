@@ -34,6 +34,11 @@ namespace GCDTracker.Data
             return new ulong[] { 57, 9}.Contains(GetRecastGroup(actionType, actionID)); 
         }
 
+        public static bool IsComboPreserving(uint actionID)
+        {
+            return ComboStore.ComboPreserving.ContainsKey((int)actionID);
+        }
+
         /// <summary>
         /// Describes if a skill is being added to the Queue, 0.5 and 0.6 are the default Animation locks with and without noclippy respectively
         /// </summary>

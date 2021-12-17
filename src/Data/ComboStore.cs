@@ -10,6 +10,7 @@ namespace GCDTracker.Data
 {
     public static class ComboStore
     {
+        public static Dictionary<int,bool> ComboPreserving;
         public static ExcelSheet<Lumina.Excel.GeneratedSheets.Action> ActionSheet;
         public static ExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob> ClassSheet;
 
@@ -18,10 +19,10 @@ namespace GCDTracker.Data
         public static void Init(DataManager data,Configuration config)
         {
             ActionSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>();
-            ClassSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ClassJob>();
+            ClassSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ClassJob>()
+            ComboPreserving = ActionSheet.Where(row => row.PreservesCombo).ToDictionary(row=>(int)row.RowId,row=>true);
 
             conf = config;
-
             comboCache = new Dictionary<(uint, uint, bool, Dictionary<uint, bool>), Dictionary<uint, List<uint>>>();
         }
 
