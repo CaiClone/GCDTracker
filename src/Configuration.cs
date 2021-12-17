@@ -21,22 +21,22 @@ namespace GCDTracker
         //GCDWheel
         public bool WheelEnabled = true;
         public bool WindowLockedGW = false;
-        public Vector4 backCol = new Vector4(0.376f, 0.376f, 0.376f, 1);
-        public Vector4 backColBorder = new Vector4(0f, 0f, 0f, 1f);
-        public Vector4 frontCol = new Vector4(0.9f, 0.9f, 0.9f, 1f);
-        public Vector4 ogcdCol = new Vector4(1f, 1f, 1f, 1f);
-        public Vector4 anLockCol = new Vector4(0.334f, 0.334f, 0.334f, 0.667f);
-        public Vector4 clipCol = new Vector4(1f, 0f, 0f, 0.667f);
+        public Vector4 backCol = new(0.376f, 0.376f, 0.376f, 1);
+        public Vector4 backColBorder = new(0f, 0f, 0f, 1f);
+        public Vector4 frontCol = new(0.9f, 0.9f, 0.9f, 1f);
+        public Vector4 ogcdCol = new(1f, 1f, 1f, 1f);
+        public Vector4 anLockCol = new(0.334f, 0.334f, 0.334f, 0.667f);
+        public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
         //Combo
         public bool ComboEnabled = true;
         public bool WindowLockedCT = false;
-        public Vector4 ctComboUsed = new Vector4(0.431f, 0.431f, 0.431f, 1f);
-        public Vector4 ctComboActive = new Vector4(1f, 1f, 1f, 1f);
-        public Vector2 ctsep = new Vector2(23, 23);
+        public Vector4 ctComboUsed = new(0.431f, 0.431f, 0.431f, 1f);
+        public Vector4 ctComboActive = new(1f, 1f, 1f, 1f);
+        public Vector2 ctsep = new(23, 23);
 
         // ID Main Class, Name, Supported in CT, Supportd in GW
         [JsonIgnore]
-        private readonly List<(uint, string,bool,bool)> infoJobs = new List<(uint, string, bool, bool)>()
+        private readonly List<(uint, string,bool,bool)> infoJobs = new()
         {
             (19,"PLD",true,true),
             (21,"WAR",true,true),

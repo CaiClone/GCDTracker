@@ -43,7 +43,7 @@ namespace GCDTracker
 
         [PluginService]
         [RequiredVersion("1.0")]
-        private Condition condition { get; init; }
+        private Condition Condition { get; init; }
 
         private readonly PluginCommandManager<Plugin> commandManager;
         private readonly Configuration config;
@@ -62,13 +62,11 @@ namespace GCDTracker
             this.config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             this.config.Initialize(PluginInterface);
 
-            DataStore.Init(Scanner,ClientState,condition);
+            DataStore.Init(Scanner,ClientState,Condition);
             HelperMethods.Init(Scanner);
             ComboStore.Init(Data,config);
 
             this.ui = new PluginUI(this.config);
-            this.ui.conf = this.config;
-
             this.gcd = new GCDWheel();
             this.ct = new ComboTracker();
 

@@ -11,15 +11,15 @@ namespace GCDTracker.Data
     public static class ComboStore
     {
         public static Dictionary<int,bool> ComboPreserving;
-        public static ExcelSheet<Lumina.Excel.GeneratedSheets.Action> ActionSheet;
-        public static ExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob> ClassSheet;
 
+        private static ExcelSheet<Lumina.Excel.GeneratedSheets.Action> ActionSheet;
+        private static ExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob> ClassSheet;
         private static Dictionary<(uint, uint, bool,Dictionary<uint,bool>), Dictionary<uint, List<uint>>> comboCache;
         private static Configuration conf;
         public static void Init(DataManager data,Configuration config)
         {
             ActionSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>();
-            ClassSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ClassJob>()
+            ClassSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ClassJob>();
             ComboPreserving = ActionSheet.Where(row => row.PreservesCombo).ToDictionary(row=>(int)row.RowId,row=>true);
 
             conf = config;
@@ -65,8 +65,8 @@ namespace GCDTracker.Data
                     try {
                         if (condition(level)) effect(comboDict);
                     }
-                    catch(Exception e){
-                        PluginLog.Log("Couldn't apply modification: " + e);
+                    catch(Exception e) { 
+                        PluginLog.Error("Couldn't apply modification: " + e);
                     }
                 }
             }
@@ -76,10 +76,10 @@ namespace GCDTracker.Data
          * Dict of manual changes with the structure
          * (jobClass, List<condition(level), action>)
         */
-        private static Dictionary<uint, List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>> manualMods = new Dictionary<uint, List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>>()
+        private static readonly Dictionary<uint, List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>> manualMods = new()
         {
             {19,new List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>{ //PLD
-                (lvl=>lvl>=60,comboDict=> {comboDict[15].Remove(21);comboDict[15].Reverse();}), //Delete Rage of Halone after Royal Authority
+                (lvl=>lvl>=60,comboDict=> {comboDict[15].Remove(21);comboDict[15].Reverse();}), //Delete Rage of Halone after Royal Authority (also reverse to keep consistency with RoH position)
             }},
             {22,new List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>{ //DRG
                 (lvl=>lvl>=56,comboDict=>comboDict[84]= new List<uint>(){3554}),                //Add Fang and Claw
