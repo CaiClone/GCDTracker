@@ -20,7 +20,9 @@ namespace GCDTracker
         public bool configEnabled;
         //GCDWheel
         public bool WheelEnabled = true;
-        public bool WindowLockedGW = false;
+        [JsonIgnore]
+        public bool WindowMoveableGW = false;
+        public bool ShowOutOfCombatGW = false;
         public Vector4 backCol = new(0.376f, 0.376f, 0.376f, 1);
         public Vector4 backColBorder = new(0f, 0f, 0f, 1f);
         public Vector4 frontCol = new(0.9f, 0.9f, 0.9f, 1f);
@@ -29,10 +31,14 @@ namespace GCDTracker
         public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
         //Combo
         public bool ComboEnabled = true;
-        public bool WindowLockedCT = false;
+        [JsonIgnore]
+        public bool WindowMoveableCT = false;
+        public bool ShowOutOfCombatCT = false;
         public Vector4 ctComboUsed = new(0.431f, 0.431f, 0.431f, 1f);
         public Vector4 ctComboActive = new(1f, 1f, 1f, 1f);
         public Vector2 ctsep = new(23, 23);
+
+
 
         // ID Main Class, Name, Supported in CT, Supportd in GW
         [JsonIgnore]
@@ -132,32 +138,51 @@ namespace GCDTracker
         public void DrawConfig()
         {
             if (!this.configEnabled) return;
-            ImGui.Begin("GCDTracker_Config",ref configEnabled,ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize);
+            var scale = ImGui.GetIO().FontGlobalScale;
+            ImGui.SetNextWindowSizeConstraints(new Vector2(500 * scale, 100 * scale),new Vector2(500 * scale,1000 * scale));
+            ImGui.Begin("GCDTracker Settings",ref configEnabled,ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize);
 
             if (ImGui.BeginTabBar("GCDConfig")){
                 if (ImGui.BeginTabItem("GCDWheel"))
                 {
-                    ImGui.Checkbox("Lock window", ref WindowLockedGW);
-                    ImGui.Checkbox("GCD Wheel enabled", ref WheelEnabled);
-                    ImGui.ColorEdit4("Background Color", ref backCol, ImGuiColorEditFlags.NoInputs);
-                    ImGui.ColorEdit4("Background border Color", ref backColBorder, ImGuiColorEditFlags.NoInputs);
-                    ImGui.ColorEdit4("Front bar color Color", ref frontCol, ImGuiColorEditFlags.NoInputs);
-                    ImGui.ColorEdit4("Action tick Color", ref ogcdCol, ImGuiColorEditFlags.NoInputs);
-                    ImGui.ColorEdit4("Animation lock Color", ref anLockCol, ImGuiColorEditFlags.NoInputs);
-                    ImGui.ColorEdit4("Clipping Color", ref clipCol, ImGuiColorEditFlags.NoInputs);
+                    ImGui.Checkbox("Enable GCDWheel", ref WheelEnabled);
+                    if (WheelEnabled) { 
+                        ImGui.Checkbox("Move/resize window", ref WindowMoveableGW);
+                        if (WindowMoveableGW)
+                            ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
+                        ImGui.Checkbox("Show out of combat", ref ShowOutOfCombatGW);
+                        ImGui.Separator();
 
-                    DrawJobGrid(ref EnabledGWJobs, true);
+                        ImGui.ColorEdit4("Background bar color", ref backCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("Background border color", ref backColBorder, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("GCD bar color", ref frontCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("GCD start indicator color", ref ogcdCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("Animation lock bar color", ref anLockCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("Clipping color", ref clipCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.Separator();
+
+                        DrawJobGrid(ref EnabledGWJobs, true);
+                    }
                     ImGui.EndTabItem();
                 }
                 if (ImGui.BeginTabItem("ComboTrack"))
                 {
-                    ImGui.Checkbox("Lock window", ref WindowLockedCT);
-                    ImGui.Checkbox("Combo track enabled", ref ComboEnabled);
-                    ImGui.ColorEdit4("Abilities used Color", ref ctComboUsed, ImGuiColorEditFlags.NoInputs);
-                    ImGui.ColorEdit4("Active Ability Color", ref ctComboActive, ImGuiColorEditFlags.NoInputs);
-                    ImGui.SliderFloat2("Separation", ref ctsep, 0, 100);
+                    ImGui.Checkbox("Enable ComboTrack", ref ComboEnabled);
+                    if (ComboEnabled)
+                    {
+                        ImGui.Checkbox("Move/resize window", ref WindowMoveableCT);
+                        if (WindowMoveableCT)
+                            ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
+                        ImGui.Checkbox("Show out of combat", ref ShowOutOfCombatCT);
+                        ImGui.Separator();
 
-                    DrawJobGrid(ref EnabledCTJobs,false);
+                        ImGui.ColorEdit4("Actions used color", ref ctComboUsed, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("Active combo action color", ref ctComboActive, ImGuiColorEditFlags.NoInputs);
+                        ImGui.SliderFloat2("Separation betwen actions", ref ctsep, 0, 100);
+                        ImGui.Separator();
+
+                        DrawJobGrid(ref EnabledCTJobs, false);
+                    }
                     ImGui.EndTabItem();
                 }
             }

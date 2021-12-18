@@ -33,32 +33,32 @@ namespace GCDTracker
             bool inCombat = DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat]
                             & !DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.OccupiedInQuestEvent]
                             & !DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas];
-            if ((conf.WheelEnabled && (DataStore.action->ElapsedGCD>0 || inCombat)) || !conf.WindowLockedGW)
+            if (conf.WheelEnabled && (DataStore.action->ElapsedGCD>0 || inCombat || conf.ShowOutOfCombatGW || conf.WindowMoveableGW))
             {
-                SetupWindow("GCDTracker_GCDWheel", getFlags(conf.WindowLockedGW));
+                SetupWindow("GCDTracker_GCDWheel", conf.WindowMoveableGW);
                 gcd.DrawGCDWheel(this, conf);
                 ImGui.End();
             }
 
-            if ((conf.ComboEnabled && (ct.ComboUsed.Count>0 || inCombat)) || !conf.WindowLockedCT)
+            if (conf.ComboEnabled && (ct.ComboUsed.Count>0 || inCombat || conf.ShowOutOfCombatCT || conf.WindowMoveableCT))
             {
-                SetupWindow("GCDTracker_ComboTracker", getFlags(conf.WindowLockedCT));
+                SetupWindow("GCDTracker_ComboTracker", conf.WindowMoveableCT);
                 ct.DrawComboLines(this, conf);
                 ImGui.End();
             }
         }
-        private void SetupWindow(string name,ImGuiWindowFlags flags)
+        private void SetupWindow(string name,bool windowMovable)
         {
             ImGui.SetNextWindowSize(new Vector2(100, 100), ImGuiCond.FirstUseEver);
             ImGui.SetNextWindowBgAlpha(0.45f);
-            ImGui.Begin(name, flags);
+            ImGui.Begin(name, getFlags(windowMovable));
             getWindowsInfo();
             draw = ImGui.GetBackgroundDrawList();
         }
-        private ImGuiWindowFlags getFlags(bool windowLocked)
+        private ImGuiWindowFlags getFlags(bool windowMovable)
         {
             var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoTitleBar;
-            if (windowLocked) flags |= ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoInputs;
+            if (!windowMovable) flags |= ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoInputs;
             return flags;
         }
         private void getWindowsInfo()
