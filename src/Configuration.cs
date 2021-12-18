@@ -38,9 +38,7 @@ namespace GCDTracker
         public Vector4 ctComboActive = new(1f, 1f, 1f, 1f);
         public Vector2 ctsep = new(23, 23);
 
-
-
-        // ID Main Class, Name, Supported in CT, Supportd in GW
+        // ID Main Class, Name, Supported in CT, Supported in GW
         [JsonIgnore]
         private readonly List<(uint, string,bool,bool)> infoJobs = new()
         {
@@ -60,7 +58,9 @@ namespace GCDTracker
             (35,"RDM",true,false),
             (23,"BRD",true,false),
             (31,"MCH",true,true),
-            (38,"DNC",true,false)
+            (38,"DNC",true,false),
+            (39,"RPR",false,false),
+            (40,"SGE",false,false)
         };
 
         public Dictionary<uint,bool> EnabledCTJobs = new()
@@ -90,36 +90,40 @@ namespace GCDTracker
             {5,true},
             {23,false},
             {31,true},
-            {38,false}
+            {38,false},
+            {39,false},
+            {40,false}
         };
         public Dictionary<uint, bool> EnabledGWJobs = new()
         {
-            { 1, true },
-            { 19, true },
-            { 3, true },
-            { 21, true },
-            { 32, true },
-            { 37, true },
-            { 26, true },
-            { 28, true },
-            { 6, true },
-            { 24, true },
-            { 33, true },
-            { 2, true },
-            { 20, true },
-            { 4, true },
-            { 22, true },
-            { 29, true },
-            { 30, true },
-            { 34, true },
-            { 7, true },
-            { 25, true },
-            { 27, true },
-            { 35, true },
-            { 5, true },
-            { 23, true },
-            { 31, true },
-            { 38, true }
+            {1,true},
+            {19,true},
+            {3,true},
+            {21,true},
+            {32,true},
+            {37,true},
+            {26,true},
+            {28,true},
+            {6,true},
+            {24,true},
+            {33,true},
+            {2,true},
+            {20,true},
+            {4,true},
+            {22,true},
+            {29,true},
+            {30,true},
+            {34,true},
+            {7,true},
+            {25,true},
+            {27,true},
+            {35,true},
+            {5,true},
+            {23,true},
+            {31,true},
+            {38,true},
+            {39,false},
+            {40,false}
         };
 
 
