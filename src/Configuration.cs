@@ -38,7 +38,7 @@ namespace GCDTracker
         public Vector4 ctComboActive = new(1f, 1f, 1f, 1f);
         public Vector2 ctsep = new(23, 23);
 
-        // ID Main Class, Name, Supported in CT, Supported in GW
+        // ID Main Class, Name, Supported in GW, Supported in CT
         [JsonIgnore]
         private readonly List<(uint, string,bool,bool)> infoJobs = new()
         {
@@ -49,51 +49,20 @@ namespace GCDTracker
             (28,"SCH",true,false),
             (24,"WHM",true,false),
             (33,"AST",true,false),
-            (20,"MNK",true,true),
+            (20,"MNK",true,false),
             (22,"DRG",true,true),
             (30,"NIN",true,true),
             (34,"SAM",true,true),
             (25,"BLM",true,false),
-            (27,"SMN",true,false),
+            (27,"SMN",true,true),
             (35,"RDM",true,false),
             (23,"BRD",true,false),
-            (31,"MCH",true,true),
+            (31,"MCH",true,false),
             (38,"DNC",true,false),
-            (39,"RPR",false,false),
-            (40,"SGE",false,false)
+            (39,"RPR",true,true),
+            (40,"SGE",true,false)
         };
 
-        public Dictionary<uint,bool> EnabledCTJobs = new()
-        {
-            {1,true},
-            {19,true},
-            {3,true},
-            {21,true},
-            {32,true},
-            {37,true},
-            {26,false},
-            {28,false},
-            {6,false},
-            {24,false},
-            {33,false},
-            {2,true},
-            {20,true},
-            {4,true},
-            {22,true},
-            {29,true},
-            {30,true},
-            {34,true},
-            {7,false},
-            {25,false},
-            {27,false},
-            {35,false},
-            {5,true},
-            {23,false},
-            {31,true},
-            {38,false},
-            {39,false},
-            {40,false}
-        };
         public Dictionary<uint, bool> EnabledGWJobs = new()
         {
             {1,true},
@@ -122,10 +91,41 @@ namespace GCDTracker
             {23,true},
             {31,true},
             {38,true},
-            {39,false},
-            {40,false}
+            {39,true},
+            {40,true}
         };
 
+        public Dictionary<uint, bool> EnabledCTJobs = new()
+        {
+            { 1, true },
+            { 19, true },
+            { 3, true },
+            { 21, true },
+            { 32, true },
+            { 37, true },
+            { 26, false },
+            { 28, false },
+            { 6, false },
+            { 24, false },
+            { 33, false },
+            { 2, true },
+            { 20, false },
+            { 4, true },
+            { 22, true },
+            { 29, true },
+            { 30, true },
+            { 34, true },
+            { 7, false },
+            { 25, false },
+            { 27, true },
+            { 35, false },
+            { 5, true },
+            { 23, false },
+            { 31, true },
+            { 38, false },
+            { 39, true },
+            { 40, false }
+        };
 
         // Add any other properties or methods here.
         [JsonIgnore] private DalamudPluginInterface pluginInterface;

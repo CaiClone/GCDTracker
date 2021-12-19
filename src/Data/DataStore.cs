@@ -1,6 +1,8 @@
 ﻿using Dalamud.Game;
 using Dalamud.Game.ClientState;
 using Dalamud.Game.ClientState.Conditions;
+using System;
+using System.Collections.Generic;
 using System.Runtime.InteropServices;
 
 namespace GCDTracker.Data
@@ -22,6 +24,42 @@ namespace GCDTracker.Data
             clientState = cs;
             condition = cond;
         }
+
+        /*
+        * Dict of manual changes to combo dict with the structure
+        * (jobClass, List<condition(level), action>)
+        */
+        public static readonly Dictionary<uint, List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>> ManualCombo = new()
+        {
+            {
+                19,
+                new List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>{ //PLD
+                (lvl=>lvl>=60,comboDict=> {comboDict[15].Remove(21);comboDict[15].Reverse();}), //Delete Rage of Halone after Royal Authority (also reverse to keep consistency with RoH position)
+            }
+            },
+            {
+                22,
+                new List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>{ //DRG
+                (lvl=>lvl>=56,comboDict=>comboDict[84]= new List<uint>(){3554}),                //Add Fang and Claw
+                (lvl=>lvl>=58,comboDict=>comboDict[3554]= new List<uint>(){3556}),              //Add Wheeling Thrust
+            }
+            },
+        };
+
+        /*
+         * Dict of cooldown groups considered weapon skills(which have a gcd) on each class other than 57
+         */
+        public static readonly Dictionary<uint, List<ulong>> WS_CooldownGroups = new()
+        {
+            //SAM
+            {34, new() {10} },
+            //MCH
+            {31, new() {6,7,8,11,12} },
+            //DNC
+            {38, new() {8} },
+            //RPR
+            {39, new() {4} }
+        };
     }
 
     [StructLayout(LayoutKind.Explicit)]
