@@ -32,27 +32,34 @@ namespace GCDTracker
             var ExecutingQueued = (act->InQueue1 && !AddingToQueue);
 
             if(ret ==1 &&  isWeaponSkill && (ExecutingQueued || !act->InQueue1))
-                actTime = DateTime.Now + TimeSpan.FromMilliseconds(500);
+                actTime = new[] {DateTime.Now + TimeSpan.FromMilliseconds(500),actTime}.Max();
 
             if (comboDict.Count == 0 || ExecutingQueued || ret != 1)
                 return;
 
             if (!HelperMethods.IsComboPreserving(cAct))
             {
-                //If it's not any continuation let's first clear the combo
-                if (!comboDict.Any(comb => comb.Value.Contains(cAct) || comb.Value.Contains(actionID)))
+                actTime = DateTime.Now + TimeSpan.FromMilliseconds(5000);
+                //If it's not the current continuation let's first clear the combo
+                var CCombo = LastComboActionUsed.Where(comboDict.ContainsKey).Select(x => comboDict[x]).FirstOrDefault();
+                if (CCombo is null || !(CCombo.Contains(cAct) || CCombo.Contains(actionID)))
+                {
                     ComboUsed.Clear();
+                    actTime = DateTime.Now + TimeSpan.FromMilliseconds(500);
+                }
+                this.LastComboActionUsed = new() { cAct, actionID };
                 ComboUsed.Add(cAct);
                 ComboUsed.Add(actionID);
-                this.LastComboActionUsed = new(){cAct,actionID};
-                actTime = DateTime.Now + TimeSpan.FromMilliseconds(500);
             }
         }
 
         public void Update(Framework framework)
         {
             if (ComboUsed.Count>0 && framework.LastUpdate > actTime && DataStore.combo->Timer <= 0)
+            {
                 ComboUsed.Clear();
+                this.LastComboActionUsed = new() {0,0};
+            }
         }
 
         /// <summary>
