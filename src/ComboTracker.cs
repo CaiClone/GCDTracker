@@ -13,9 +13,11 @@ namespace GCDTracker
 
         private DateTime actTime;
 
+        public uint LastComboActionUsed;
         public ComboTracker()
         {
             this.ComboUsed = new List<uint>();
+            this.LastComboActionUsed = 0;
         }
         public unsafe void onActionUse(byte ret, IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
@@ -33,12 +35,13 @@ namespace GCDTracker
             if (comboDict.Count == 0 || ExecutingQueued || ret != 1)
                 return;
 
-            if (!HelperMethods.IsComboPreserving(actionID))
+            if (!HelperMethods.IsComboPreserving(cAct))
             {
                 //If it's not any continuation let's first clear the combo
                 if (!comboDict.Any(comb => comb.Value.Contains(cAct)))
                     ComboUsed.Clear();
                 ComboUsed.Add(cAct);
+                this.LastComboActionUsed = cAct;
             }
         }
 
@@ -70,7 +73,7 @@ namespace GCDTracker
 
             var startpos = ui.w_cent - (ui.w_size/3);
             Vector2 cpos;
-            foreach (var (node, follows) in combos)
+            foreach (var (node, follows) in combos.OrderBy(x=>x.Key))
             {
                 if (!nodepos.TryGetValue(node, out cpos)) {
                     startpos += new Vector2(0, ysep); //New combo, advance position

@@ -33,17 +33,26 @@ namespace GCDTracker.Data
         {
             {
                 19,
-                new List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>{ //PLD
+                new(){ //PLD
                 (lvl=>lvl>=60,comboDict=> {comboDict[15].Remove(21);comboDict[15].Reverse();}), //Delete Rage of Halone after Royal Authority (also reverse to keep consistency with RoH position)
-            }
+                }
             },
             {
                 22,
-                new List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>{ //DRG
+                new(){ //DRG
                 (lvl=>lvl>=56,comboDict=>comboDict[84]= new List<uint>(){3554}),                //Add Fang and Claw
                 (lvl=>lvl>=58,comboDict=>comboDict[3554]= new List<uint>(){3556}),              //Add Wheeling Thrust
-            }
+                }
             },
+            {
+                31, //MCH
+                new()
+                {
+                (lvl => lvl >= 54, comboDict => {comboDict[7411]=comboDict[2866]; comboDict.Remove(2866); }),
+                (lvl => lvl >= 60, comboDict => {comboDict[7412]=comboDict[2868]; comboDict.Remove(2868); comboDict[7411].Remove(2868); }),
+                (lvl => lvl >= 64, comboDict => comboDict[7412].Remove(2873))
+                }
+            }
         };
 
         /*

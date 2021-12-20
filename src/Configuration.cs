@@ -57,7 +57,7 @@ namespace GCDTracker
             (27,"SMN",true,true),
             (35,"RDM",true,false),
             (23,"BRD",true,false),
-            (31,"MCH",true,false),
+            (31,"MCH",true,true),
             (38,"DNC",true,false),
             (39,"RPR",true,true),
             (40,"SGE",true,false)
