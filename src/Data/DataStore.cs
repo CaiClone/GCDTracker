@@ -72,12 +72,14 @@ namespace GCDTracker.Data
         {
             //SAM
             {34, new() {10} },
+            //NIN
+            {30, new() {8} },
             //MCH
             {31, new() {6,7,8,11,12} },
             //DNC
             {38, new() {8} },
             //RPR
-            {39, new() {4} }
+            {39, new() {4} },
         };
     }
 
