@@ -13,11 +13,12 @@ namespace GCDTracker
 
         private DateTime actTime;
 
-        public uint LastComboActionUsed;
+        //list because last combo actio might have multiple ids (empowered/not empowered)
+        public List<uint> LastComboActionUsed;
         public ComboTracker()
         {
             this.ComboUsed = new List<uint>();
-            this.LastComboActionUsed = 0;
+            this.LastComboActionUsed = new(){0,0};
         }
         public unsafe void onActionUse(byte ret, IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
@@ -38,10 +39,11 @@ namespace GCDTracker
             if (!HelperMethods.IsComboPreserving(cAct))
             {
                 //If it's not any continuation let's first clear the combo
-                if (!comboDict.Any(comb => comb.Value.Contains(cAct)))
+                if (!comboDict.Any(comb => comb.Value.Contains(cAct) || comb.Value.Contains(actionID)))
                     ComboUsed.Clear();
                 ComboUsed.Add(cAct);
-                this.LastComboActionUsed = cAct;
+                ComboUsed.Add(actionID);
+                this.LastComboActionUsed = new(){cAct,actionID};
             }
         }
 

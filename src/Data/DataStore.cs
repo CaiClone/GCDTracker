@@ -40,17 +40,27 @@ namespace GCDTracker.Data
             {
                 22,
                 new(){ //DRG
-                (lvl=>lvl>=56,comboDict=>comboDict[84]= new List<uint>(){3554}),                //Add Fang and Claw
-                (lvl=>lvl>=58,comboDict=>comboDict[3554]= new List<uint>(){3556}),              //Add Wheeling Thrust
+                (lvl=>lvl>=56,comboDict=>comboDict[84]= new(){3554}),                //Add Fang and Claw
+                (lvl=>lvl>=58,comboDict=>comboDict[3554]= new(){3556}),              //Add Wheeling Thrust
                 }
             },
             {
                 31, //MCH
                 new()
                 {
+                ///Replace with heated
                 (lvl => lvl >= 54, comboDict => {comboDict[7411]=comboDict[2866]; comboDict.Remove(2866); }),
                 (lvl => lvl >= 60, comboDict => {comboDict[7412]=comboDict[2868]; comboDict.Remove(2868); comboDict[7411].Remove(2868); }),
                 (lvl => lvl >= 64, comboDict => comboDict[7412].Remove(2873))
+                }
+            },
+            {
+                35, //RDM
+                new()
+                {
+                //Remove enchanted
+                (lvl => lvl >= 35, comboDict => comboDict[7504].Remove(7528)),
+                (lvl => lvl >= 50, comboDict => comboDict[7512].Remove(7529)),
                 }
             }
         };

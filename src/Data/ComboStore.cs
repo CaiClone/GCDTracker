@@ -59,7 +59,7 @@ namespace GCDTracker.Data
 
         private static void applyManual(ref Dictionary<uint, List<uint>> comboDict, uint jobclass, uint level)
         {
-            if(DataStore.ManualCombo.TryGetValue(jobclass,out var modifications))
+            if (DataStore.ManualCombo.TryGetValue(jobclass,out var modifications))
             {
                 foreach (var (condition, effect) in modifications) { 
                     try {
