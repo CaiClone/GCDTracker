@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game;
+using Dalamud.Logging;
 using GCDTracker.Data;
 using System;
 using System.Collections.Generic;
@@ -44,6 +45,7 @@ namespace GCDTracker
                 ComboUsed.Add(cAct);
                 ComboUsed.Add(actionID);
                 this.LastComboActionUsed = new(){cAct,actionID};
+                actTime = DateTime.Now + TimeSpan.FromMilliseconds(500);
             }
         }
 
