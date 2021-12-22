@@ -43,6 +43,11 @@ namespace GCDTracker.Data
             return ComboStore.ComboPreserving.ContainsKey((int)actionID);
         }
 
+        public static bool IsCasting()
+        {
+            return DataStore.clientState.LocalPlayer.CurrentCastTime > 0;
+        }
+
         /// <summary>
         /// Describes if a skill is being added to the Queue, 0.5 and 0.6 are the default Animation locks with and without noclippy respectively
         /// </summary>

@@ -49,9 +49,9 @@ namespace GCDTracker
 
         public void Update(Framework framework)
         {
-            if (DataStore.action->ElapsedGCD < 0.0001f) //no gcd
+            if (DataStore.action->ElapsedGCD < 0.0001f && !HelperMethods.IsCasting()) //no gcd
                 SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
-            else if (Math.Abs(DataStore.action->ElapsedGCD - DataStore.action->TotalGCD) < 0.01f && framework.LastUpdate >= nextAllowedGCDEnd)
+            else if (Math.Abs(DataStore.action->ElapsedGCD - DataStore.action->TotalGCD) < 0.01f && framework.LastUpdate >= nextAllowedGCDEnd && !HelperMethods.IsCasting())
             {
                 SlideGCDs(DataStore.action->TotalGCD, true);
                 nextAllowedGCDEnd = framework.LastUpdate + new TimeSpan(0, 0, 0, 0, 100);
