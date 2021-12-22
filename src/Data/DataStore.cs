@@ -80,6 +80,8 @@ namespace GCDTracker.Data
             {38, new() {8} },
             //RPR
             {39, new() {4} },
+            //SGE
+            {40, new() {18} },
         };
     }
 
