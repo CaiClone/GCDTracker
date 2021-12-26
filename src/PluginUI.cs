@@ -30,20 +30,20 @@ namespace GCDTracker
             if (DataStore.clientState.LocalPlayer == null)
                 return;
 
-            bool inCombat = DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat]
-                            & !DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.OccupiedInQuestEvent]
-                            & !DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas];
+            bool inCombat = DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
+            bool noUI = DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.OccupiedInQuestEvent]
+                        || DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas];
 
             conf.EnabledGWJobs.TryGetValue(DataStore.clientState.LocalPlayer.ClassJob.Id, out var enabledJobGW);
             conf.EnabledCTJobs.TryGetValue(DataStore.clientState.LocalPlayer.ClassJob.Id, out var enabledJobCT);
-            if (conf.WheelEnabled && (conf.WindowMoveableGW || (enabledJobGW && (conf.ShowOutOfCombatGW || inCombat))))
+            if (conf.WheelEnabled && !noUI && (conf.WindowMoveableGW || (enabledJobGW && (conf.ShowOutOfCombatGW || inCombat))))
             {
                 SetupWindow("GCDTracker_GCDWheel", conf.WindowMoveableGW);
                 gcd.DrawGCDWheel(this, conf);
                 ImGui.End();
             }
 
-            if (conf.ComboEnabled && (conf.WindowMoveableCT || (enabledJobCT && (conf.ShowOutOfCombatCT || inCombat))))
+            if (conf.ComboEnabled && !noUI && (conf.WindowMoveableCT || (enabledJobCT && (conf.ShowOutOfCombatCT || inCombat))))
             {
                 SetupWindow("GCDTracker_ComboTracker", conf.WindowMoveableCT);
                 ct.DrawComboLines(this, conf);
