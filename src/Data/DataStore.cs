@@ -77,7 +77,7 @@ namespace GCDTracker.Data
             //MCH
             {31, new() {6,7,8,11,12} },
             //DNC
-            {38, new() {8} },
+            {38, new() {8, 19} },
             //RPR
             {39, new() {4} },
             //SGE
