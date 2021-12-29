@@ -1,37 +1,19 @@
-﻿using Dalamud.Game;
-using Dalamud.Logging;
+﻿using Dalamud.Logging;
+using FFXIVClientStructs.Attributes;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using System;
-using System.Linq;
-using System.Runtime.InteropServices;
+using System.Reflection;
 
 namespace GCDTracker.Data
 {
     static unsafe class HelperMethods
     {
-        private delegate uint GetAdjustedActionIdDelegate(void* actionManager, uint actionID);
-        private static GetAdjustedActionIdDelegate getAdjustedActionId;
-        public static uint GetAdjustedActionId(uint actionID) { return getAdjustedActionId(DataStore.action->ActionManager, actionID); }
-
-        private delegate ulong GetRecastGroupDelegate(void* actionManager, uint actionType, uint actionID);
-        private static GetRecastGroupDelegate getRecastGroup;
-        public static ulong GetRecastGroup(uint actionType, uint actionID) { return getRecastGroup(DataStore.action->ActionManager, actionType, actionID); }
-
-        public delegate byte UseActionDelegate(IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp, IntPtr a7);
+        public delegate byte UseActionDelegate(IntPtr actionManager, ActionType actionType, uint actionID, uint targetID, uint param, uint useType, int pvp, IntPtr a7);
         public delegate void ReceiveActionEffectDetour(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail);
 
-        public static void Init(SigScanner scanner)
+        public static bool IsWeaponSkill(ActionType actionType, uint actionID)
         {
-
-            var GetRecastGroupPtr = scanner.ScanText("E8 ?? ?? ?? ?? 8B D0 48 8B CD 8B F0");
-            var GetAdjustedActionIdPtr = scanner.ScanText("E8 ?? ?? ?? ?? 8B F8 3B DF");
-
-            getRecastGroup = Marshal.GetDelegateForFunctionPointer<GetRecastGroupDelegate>(GetRecastGroupPtr);
-            getAdjustedActionId = Marshal.GetDelegateForFunctionPointer<GetAdjustedActionIdDelegate>(GetAdjustedActionIdPtr);
-        }
-
-        public static bool IsWeaponSkill(uint actionType, uint actionID)
-        {
-            var recast_group = GetRecastGroup(actionType, actionID);
+            var recast_group = DataStore.actionManager->GetRecastGroup((int)actionType, actionID);
             if (recast_group == 57) return true;
             if (DataStore.WS_CooldownGroups.TryGetValue(DataStore.clientState.LocalPlayer.ClassJob.Id, out var ws_groups))
                 return ws_groups.Contains(recast_group);
@@ -48,11 +30,18 @@ namespace GCDTracker.Data
             return DataStore.clientState.LocalPlayer.CurrentCastTime > 0;
         }
 
+        public static string GetSignature<T>(string methodName)
+        {
+            MethodBase method = typeof(T).GetMethod(methodName);
+            MemberFunctionAttribute attribute = (MemberFunctionAttribute)method.GetCustomAttributes(typeof(MemberFunctionAttribute), true)[0];
+            return attribute.Signature;
+        }
+
         /// <summary>
         /// Describes if a skill is being added to the Queue, 0.5 and 0.6 are the default Animation locks with and without noclippy respectively
         /// </summary>
         /// <returns></returns>
-        public static bool IsAddingToQueue(uint actionType, uint actionID)
+        public static bool IsAddingToQueue(ActionType actionType, uint actionID)
         {
             var weaponSkill = IsWeaponSkill(actionType, actionID);
             var act = DataStore.action;

@@ -4,6 +4,7 @@ using Dalamud.Game.ClientState.Conditions;
 using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
+using FFXIVClientStructs.FFXIV.Client.Game;
 
 namespace GCDTracker.Data
 {
@@ -11,16 +12,17 @@ namespace GCDTracker.Data
     {
         public static Combo* combo;
         public static Action* action;
+        public static ActionManager* actionManager;
         public static ClientState clientState;
         public static Condition condition;
 
         public static void Init(SigScanner scanner,ClientState cs,Condition cond)
         {
             var comboPtr = scanner.GetStaticAddressFromSig("48 89 2D ?? ?? ?? ?? 85 C0");
-            var ActionManagerPtr = scanner.GetStaticAddressFromSig("E8 ?? ?? ?? ?? 33 C0 E9 ?? ?? ?? ?? 8B 7D 0C");
+            actionManager = ActionManager.Instance();
 
             combo = (Combo*)comboPtr;
-            action = (Action*)ActionManagerPtr;
+            action = (Action*)actionManager;
             clientState = cs;
             condition = cond;
         }
@@ -68,7 +70,7 @@ namespace GCDTracker.Data
         /*
          * Dict of cooldown groups considered weapon skills(which have a gcd) on each class other than 57
          */
-        public static readonly Dictionary<uint, List<ulong>> WS_CooldownGroups = new()
+        public static readonly Dictionary<uint, List<int>> WS_CooldownGroups = new()
         {
             //SAM
             {34, new() {10} },

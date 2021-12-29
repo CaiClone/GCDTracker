@@ -7,6 +7,8 @@ using Dalamud.Game.Command;
 using Dalamud.Hooking;
 using Dalamud.IoC;
 using Dalamud.Plugin;
+using FFXIVClientStructs;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Attributes;
 using GCDTracker.Data;
 
@@ -33,7 +35,7 @@ namespace GCDTracker
 
         [PluginService]
         [RequiredVersion("1.0")]
-        private SigScanner Scanner { get; init; }
+        private Dalamud.Game.SigScanner Scanner { get; init; }
 
         [PluginService]
         [RequiredVersion("1.0")]
@@ -57,11 +59,11 @@ namespace GCDTracker
 
         public Plugin()
         {
+            Resolver.Initialize();
             this.config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             this.config.Initialize(PluginInterface);
 
             DataStore.Init(Scanner,ClientState,Condition);
-            HelperMethods.Init(Scanner);
             ComboStore.Init(Data,config);
 
             this.ui = new PluginUI(this.config);
@@ -78,12 +80,12 @@ namespace GCDTracker
 
             this.commandManager = new PluginCommandManager<Plugin>(this, Commands);
 
-            UseActionHook = new Hook<HelperMethods.UseActionDelegate>(Scanner.ScanText("E8 ?? ?? ?? ?? EB 64 B1 01"), UseActionDetour);
+            UseActionHook = new Hook<HelperMethods.UseActionDelegate>(Scanner.ScanText(HelperMethods.GetSignature<ActionManager>("UseAction")), UseActionDetour);
             ReceiveActionEffectHook = new Hook<HelperMethods.ReceiveActionEffectDetour>(Scanner.ScanText("E8 ?? ?? ?? ?? 48 8B 8D F0 03 00 00"), ReceiveActionEffect);
             UseActionHook.Enable();
             ReceiveActionEffectHook.Enable();
         }
-        private byte UseActionDetour(IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp, IntPtr a7)
+        private byte UseActionDetour(IntPtr actionManager, ActionType actionType, uint actionID, uint targetedActorID, uint param, uint useType, int pvp, IntPtr a7)
         {
             var ret = UseActionHook.Original(actionManager, actionType, actionID, targetedActorID, param, useType, pvp, a7);
             gcd.onActionUse(ret, actionManager, actionType, actionID, targetedActorID, param, useType, pvp);

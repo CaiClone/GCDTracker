@@ -49,6 +49,9 @@
 			<HintPath Condition="Exists('$(APPDATA)\XIVLauncher\addon\Hooks\dev\')">$(APPDATA)\XIVLauncher\addon\Hooks\dev\Newtonsoft.Json.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
-	</ItemGroup>
+    <Reference Include="FFXIVClientStructs">
+      <HintPath Condition="Exists('$(APPDATA)\XIVLauncher\addon\Hooks\dev\')">$(APPDATA)\XIVLauncher\addon\Hooks\dev\FFXIVClientStructs.dll</HintPath>
+    </Reference>
+  </ItemGroup>
 
 </Project>

@@ -1,5 +1,6 @@
 ﻿using Dalamud.Game;
 using Dalamud.Logging;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
 using System;
 using System.Collections.Generic;
@@ -21,12 +22,12 @@ namespace GCDTracker
             this.ComboUsed = new List<uint>();
             this.LastComboActionUsed = new(){0,0};
         }
-        public unsafe void onActionUse(byte ret, IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
+        public unsafe void onActionUse(byte ret, IntPtr actionManager, ActionType actionType, uint actionID, uint targetedActorID, uint param, uint useType, int pvp)
         {
             var comboDict = ComboStore.GetCombos();
 
             Data.Action* act = DataStore.action;
-            var cAct = HelperMethods.GetAdjustedActionId(actionID);
+            var cAct = DataStore.actionManager->GetAdjustedActionId(actionID);
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, cAct);
             var AddingToQueue = HelperMethods.IsAddingToQueue(actionType, cAct);
             var ExecutingQueued = (act->InQueue1 && !AddingToQueue);

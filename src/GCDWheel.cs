@@ -1,5 +1,6 @@
 ﻿
 using Dalamud.Game;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
 using ImGuiNET;
 using System;
@@ -22,11 +23,10 @@ namespace GCDTracker
             nextAllowedGCDEnd = DateTime.Now;
         }
 
-        public unsafe void onActionUse(byte ret,IntPtr actionManager, uint actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
+        public unsafe void onActionUse(byte ret,IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
             Data.Action* act = DataStore.action;
             if (ret != 1) return;
-            
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var AddingToQueue = HelperMethods.IsAddingToQueue(actionType, actionID);
             var ExecutingQueued = (act->InQueue1 && !AddingToQueue);
