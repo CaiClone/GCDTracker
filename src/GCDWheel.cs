@@ -35,11 +35,12 @@ namespace GCDTracker
             var AddingToQueue = HelperMethods.IsAddingToQueue(actionType, actionID);
             var ExecutingQueued = (act->InQueue && !AddingToQueue);
 
-            if (AddingToQueue)
+            if (AddingToQueue) { 
                 if (!act->IsCast)
                     ogcds[Math.Max(isWeaponSkill ? act->TotalGCD : 0, act->ElapsedGCD + act->AnimationLock)] = 0.6f;
                 else
-                    ogcds[act->TotalCastTime] = 0.6f;
+                    ogcds[act->TotalCastTime+ 0.1f] = 0.6f;
+            }
             else
             {
                 if (isWeaponSkill)
@@ -47,11 +48,17 @@ namespace GCDTracker
                     totalGCD = act->TotalGCD; //Store it in a variable in order to cache it when it goes back to 0
                     lastGCDtime = (float)ImGui.GetTime();
                     ogcds.Clear();
-                    ogcds[0f]= act->AnimationLock;
-                    if (act->TotalCastTime > 0) lastActionCast = true;
+                    if (act->IsCast)
+                    {
+                        lastActionCast = true;
+                        ogcds[0f] = act->AnimationLock;
+                        ogcds[act->TotalCastTime] = 0.1f;   //0.1f alock exists added after ending cast                 
+                    }
+                    else
+                        ogcds[0f] = act->AnimationLock;
                 }
                 else if (!ExecutingQueued)
-                    ogcds[0f] = act->AnimationLock;
+                    ogcds[act->ElapsedGCD] = act->AnimationLock;
             }
         }
 
@@ -60,7 +67,9 @@ namespace GCDTracker
             if (DataStore.clientState.LocalPlayer == null)
                 return;
             if (DataStore.action->ElapsedGCD < 0.0001f) //no gcd
+            {
                 SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
+            }
             else if (Math.Abs(DataStore.action->ElapsedGCD - DataStore.action->TotalGCD) < 0.01f && framework.LastUpdate >= nextAllowedGCDEnd)
             {
                 SlideGCDs(DataStore.action->TotalGCD, true);
@@ -83,11 +92,13 @@ namespace GCDTracker
             var ogcdsNew = new Dictionary<float, float>();
             foreach (var (k, v) in ogcds)
             {
-                if (k <= delta && v > delta)
+                if (k < 0)
+                    ; //remove from dictionary
+                else if (k <= delta && v > delta)
                     ogcdsNew[k] = v - delta;
                 else if (isOver && k + v > totalGCD)
-                    ogcdsNew[0f] = k + v - totalGCD;
-                else if (k > delta) 
+                    ogcdsNew[k - totalGCD] = k + v - totalGCD;
+                else if (k > delta)
                     ogcdsNew[k - delta] = v;
             }
             ogcds = ogcdsNew;
