@@ -17,16 +17,19 @@ namespace GCDTracker
         public Dictionary<float, float> ogcds;
 
         private DateTime nextAllowedGCDEnd;
+        private bool lastActionCast;
         public GCDWheel() {
             lastGCDtime = 0f;
             totalGCD = 3.5f;
             ogcds = new Dictionary<float, float>();
             nextAllowedGCDEnd = DateTime.Now;
+            lastActionCast = false;
         }
 
         public unsafe void onActionUse(byte ret,IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
             Data.Action* act = DataStore.action;
+
             if (ret != 1) return;
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var AddingToQueue = HelperMethods.IsAddingToQueue(actionType, actionID);
@@ -45,6 +48,7 @@ namespace GCDTracker
                     lastGCDtime = (float)ImGui.GetTime();
                     ogcds.Clear();
                     ogcds[0f]= act->AnimationLock;
+                    if (act->TotalCastTime > 0) lastActionCast = true;
                 }
                 else if (!ExecutingQueued)
                     ogcds[0f] = act->AnimationLock;
@@ -62,6 +66,13 @@ namespace GCDTracker
                 SlideGCDs(DataStore.action->TotalGCD, true);
                 nextAllowedGCDEnd = framework.LastUpdate + new TimeSpan(0, 0, 0, 0, 100);
             }
+            if (lastActionCast && !HelperMethods.IsCasting()) handleCancelCast();
+        }
+
+        private void handleCancelCast()
+        {
+            lastActionCast = false;
+            SlideGCDs(DataStore.action->TotalCastTime, true);
         }
 
         /// <summary>
@@ -106,6 +117,11 @@ namespace GCDTracker
         {
             if (oldLock == newLock) return; //Ignore autoattacks
             if (ogcds.Count == 0) return;
+            if (oldLock == 0) //End of cast
+            {
+                lastActionCast = false;
+                return;
+            }
             var ctime = DataStore.action->ElapsedGCD;
 
             var items = ogcds.Where(x => x.Key <= ctime && ctime < x.Key + x.Value);
