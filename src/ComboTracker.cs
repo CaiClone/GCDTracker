@@ -30,9 +30,9 @@ namespace GCDTracker
             var cAct = DataStore.actionManager->GetAdjustedActionId(actionID);
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, cAct);
             var AddingToQueue = HelperMethods.IsAddingToQueue(actionType, cAct);
-            var ExecutingQueued = (act->InQueue1 && !AddingToQueue);
+            var ExecutingQueued = (act->InQueue && !AddingToQueue);
 
-            if(ret ==1 &&  isWeaponSkill && (ExecutingQueued || !act->InQueue1))
+            if(ret ==1 &&  isWeaponSkill && (ExecutingQueued || !act->InQueue))
                 actTime = new[] {DateTime.Now + TimeSpan.FromMilliseconds(500),actTime}.Max();
 
             if (comboDict.Count == 0 || ExecutingQueued || ret != 1)

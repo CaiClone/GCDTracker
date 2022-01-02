@@ -1,5 +1,6 @@
 ﻿
 using Dalamud.Game;
+using Dalamud.Logging;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
 using ImGuiNET;
@@ -29,10 +30,13 @@ namespace GCDTracker
             if (ret != 1) return;
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var AddingToQueue = HelperMethods.IsAddingToQueue(actionType, actionID);
-            var ExecutingQueued = (act->InQueue1 && !AddingToQueue);
+            var ExecutingQueued = (act->InQueue && !AddingToQueue);
 
             if (AddingToQueue)
-                ogcds[Math.Max(isWeaponSkill ? act->TotalGCD:0 , act->ElapsedGCD + act->AnimationLock)] = !act->IsCast? 0.6f:0.01f;
+                if (!act->IsCast)
+                    ogcds[Math.Max(isWeaponSkill ? act->TotalGCD : 0, act->ElapsedGCD + act->AnimationLock)] = 0.6f;
+                else
+                    ogcds[act->TotalCastTime] = 0.6f;
             else
             {
                 if (isWeaponSkill)
@@ -40,10 +44,10 @@ namespace GCDTracker
                     totalGCD = act->TotalGCD; //Store it in a variable in order to cache it when it goes back to 0
                     lastGCDtime = (float)ImGui.GetTime();
                     ogcds.Clear();
-                    ogcds[act->ElapsedGCD]=act->AnimationLock;
+                    ogcds[0f]= act->AnimationLock;
                 }
                 else if (!ExecutingQueued)
-                    ogcds[act->ElapsedGCD] = act->AnimationLock;
+                    ogcds[0f] = act->AnimationLock;
             }
         }
 
@@ -51,9 +55,9 @@ namespace GCDTracker
         {
             if (DataStore.clientState.LocalPlayer == null)
                 return;
-            if (DataStore.action->ElapsedGCD < 0.0001f && !HelperMethods.IsCasting()) //no gcd
+            if (DataStore.action->ElapsedGCD < 0.0001f) //no gcd
                 SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
-            else if (Math.Abs(DataStore.action->ElapsedGCD - DataStore.action->TotalGCD) < 0.01f && framework.LastUpdate >= nextAllowedGCDEnd && !HelperMethods.IsCasting())
+            else if (Math.Abs(DataStore.action->ElapsedGCD - DataStore.action->TotalGCD) < 0.01f && framework.LastUpdate >= nextAllowedGCDEnd)
             {
                 SlideGCDs(DataStore.action->TotalGCD, true);
                 nextAllowedGCDEnd = framework.LastUpdate + new TimeSpan(0, 0, 0, 0, 100);
@@ -68,9 +72,9 @@ namespace GCDTracker
             var ogcdsNew = new Dictionary<float, float>();
             foreach (var (k, v) in ogcds)
             {
-                if (k < delta && v > delta)
+                if (k <= delta && v > delta)
                     ogcdsNew[k] = v - delta;
-                else if (isOver && k < delta && k + v > totalGCD)
+                else if (isOver && k + v > totalGCD)
                     ogcdsNew[0f] = k + v - totalGCD;
                 else if (k > delta) 
                     ogcdsNew[k - delta] = v;
@@ -100,6 +104,7 @@ namespace GCDTracker
 
         public void UpdateAnlock(float oldLock, float newLock)
         {
+            if (oldLock == newLock) return; //Ignore autoattacks
             if (ogcds.Count == 0) return;
             var ctime = DataStore.action->ElapsedGCD;
 

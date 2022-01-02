@@ -98,7 +98,6 @@ namespace GCDTracker
             ReceiveActionEffectHook.Original(sourceActorID, sourceActor, vectorPosition, effectHeader, effectArray, effectTrail);
             var newLock = DataStore.action->AnimationLock;
 
-            if (oldLock == newLock) return; //Ignore autoattacks
             this.gcd.UpdateAnlock(oldLock, newLock);
         }
         private void OpenConfig() { this.config.configEnabled = true; }

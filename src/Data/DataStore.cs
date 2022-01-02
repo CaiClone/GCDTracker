@@ -104,11 +104,11 @@ namespace GCDTracker.Data
         [FieldOffset(0x0)] public readonly void* ActionManager;
         [FieldOffset(0x8)] public readonly float AnimationLock;
         [FieldOffset(0x28)] public readonly bool IsCast;
-        [FieldOffset(0x30)] public readonly float CastTime;
+        [FieldOffset(0x30)] public readonly float ElapsedCastTime;
+        [FieldOffset(0x34)] public readonly float TotalCastTime;
         [FieldOffset(0x60)] public readonly float ComboTimer;
         [FieldOffset(0x64)] public readonly uint ComboID;
-        [FieldOffset(0x68)] public readonly bool InQueue1;
-        [FieldOffset(0x68)] public readonly bool InQueue2;
+        [FieldOffset(0x68)] public readonly bool InQueue;
         [FieldOffset(0x70)] public readonly uint QueuedAction;
         [FieldOffset(0x78)] public readonly float dunno; //always 2.01 when queuing stuff
         [FieldOffset(0x618)] public readonly float ElapsedGCD;
