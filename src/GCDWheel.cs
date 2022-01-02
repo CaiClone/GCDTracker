@@ -30,11 +30,14 @@ namespace GCDTracker
         {
             Data.Action* act = DataStore.action;
 
-            if (ret != 1) return;
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var AddingToQueue = HelperMethods.IsAddingToQueue(actionType, actionID);
             var ExecutingQueued = (act->InQueue && !AddingToQueue);
-
+            if (ret != 1)
+            {
+                if (ExecutingQueued) ogcds.Clear();
+                return;
+            }
             if (AddingToQueue) { 
                 if (!act->IsCast)
                     ogcds[Math.Max(isWeaponSkill ? act->TotalGCD : 0, act->ElapsedGCD + act->AnimationLock)] = 0.6f;
