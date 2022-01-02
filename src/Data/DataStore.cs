@@ -5,6 +5,9 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using Lumina.Excel;
+using Dalamud.Data;
+using System.Linq;
 
 namespace GCDTracker.Data
 {
@@ -15,18 +18,26 @@ namespace GCDTracker.Data
         public static ActionManager* actionManager;
         public static ClientState clientState;
         public static Condition condition;
+        public static ExcelSheet<Lumina.Excel.GeneratedSheets.Action> ActionSheet;
+        public static ExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob> ClassSheet;
 
-        public static void Init(SigScanner scanner,ClientState cs,Condition cond)
+        public static Dictionary<int, bool> ComboPreserving;
+        public static void Init(DataManager data, SigScanner scanner,ClientState cs,Condition cond)
         {
+            ActionSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>();
+            ClassSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ClassJob>();
+
             var comboPtr = scanner.GetStaticAddressFromSig("48 89 2D ?? ?? ?? ?? 85 C0");
             actionManager = ActionManager.Instance();
+
+            ComboPreserving = ActionSheet.Where(row => row.PreservesCombo).ToDictionary(row => (int)row.RowId, row => true);
 
             combo = (Combo*)comboPtr;
             action = (Action*)actionManager;
             clientState = cs;
             condition = cond;
         }
-
+        
         /*
         * Dict of manual changes to combo dict with the structure
         * (jobClass, List<condition(level), action>)
@@ -93,6 +104,7 @@ namespace GCDTracker.Data
         [FieldOffset(0x0)] public readonly void* ActionManager;
         [FieldOffset(0x8)] public readonly float AnimationLock;
         [FieldOffset(0x28)] public readonly bool IsCast;
+        [FieldOffset(0x30)] public readonly float CastTime;
         [FieldOffset(0x60)] public readonly float ComboTimer;
         [FieldOffset(0x64)] public readonly uint ComboID;
         [FieldOffset(0x68)] public readonly bool InQueue1;

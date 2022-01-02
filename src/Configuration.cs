@@ -209,7 +209,7 @@ namespace GCDTracker
                     if (ImGui.Checkbox(infoJobs[i].Item2, ref enabled))
                     {
                         enabledDict[infoJobs[i].Item1] = enabled;
-                        enabledDict[ComboStore.GetParentJob(infoJobs[i].Item1) ?? 0] = enabled;
+                        enabledDict[HelperMethods.GetParentJob(infoJobs[i].Item1) ?? 0] = enabled;
                     }
                     if (!supported) ImGui.PopStyleColor();
                 }

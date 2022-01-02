@@ -22,7 +22,7 @@ namespace GCDTracker.Data
 
         public static bool IsComboPreserving(uint actionID)
         {
-            return ComboStore.ComboPreserving.ContainsKey((int)actionID);
+            return DataStore.ComboPreserving.ContainsKey((int)actionID);
         }
 
         public static bool IsCasting()
@@ -48,6 +48,11 @@ namespace GCDTracker.Data
             return act->InQueue1 && ((weaponSkill && (
                     (act->ElapsedGCD<act->TotalGCD && act->ElapsedGCD > 0) || (act->AnimationLock!=0f && act->AnimationLock!=0.5f && act->AnimationLock!=0.6f && act->AnimationLock != 0.35f))) || //Weaponskills
                     (!weaponSkill && act->AnimationLock!= 0.5f && act->AnimationLock!= 0.6f)); //OGCDS
+        }
+
+        public static uint? GetParentJob(uint jobId)
+        {
+            return DataStore.ClassSheet.GetRow(jobId).ClassJobParent.Value?.RowId;
         }
     }
 }

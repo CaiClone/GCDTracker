@@ -63,8 +63,8 @@ namespace GCDTracker
             this.config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             this.config.Initialize(PluginInterface);
 
-            DataStore.Init(Scanner,ClientState,Condition);
-            ComboStore.Init(Data,config);
+            DataStore.Init(Data,Scanner,ClientState,Condition);
+            ComboStore.Init(config);
 
             this.ui = new PluginUI(this.config);
             this.gcd = new GCDWheel();
