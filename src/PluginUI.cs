@@ -1,4 +1,4 @@
-﻿using Dalamud.Logging;
+﻿using Dalamud.Interface;
 using GCDTracker.Data;
 using ImGuiNET;
 using System;
@@ -18,6 +18,7 @@ namespace GCDTracker
         public float Scale;
 
         private ImDrawListPtr draw;
+
         public PluginUI(Configuration conf)
         {
             this.conf = conf;
@@ -99,5 +100,23 @@ namespace GCDTracker
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backColBorder), 5f * this.Scale);
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backCol), 3f * this.Scale);
         }
+
+        public void DrawClip(float val)
+        {
+            var clipText = $"+{val * 1000:0}";
+            var textSz = ImGui.CalcTextSize(clipText);
+            var textStartPos = w_cent - (textSz / 2);
+            var padding = new Vector2(10, 5) * this.Scale;
+
+            ImGui.PushFont(UiBuilder.MonoFont);
+            ImGui.SetWindowFontScale(2f*this.Scale);
+
+            draw.AddRectFilled(textStartPos - padding, textStartPos + textSz + padding, ImGui.GetColorU32(conf.clipCol - new Vector4(0, 0, 0, 0.2f)), 10f);
+            draw.AddText(textStartPos, ImGui.GetColorU32(conf.frontCol), clipText);
+
+            ImGui.SetWindowFontScale(1f);
+            ImGui.PopFont();
+        }
+
     }
 }
