@@ -1,4 +1,7 @@
 ﻿using Dalamud.Interface;
+using Dalamud.Interface.Animation;
+using Dalamud.Interface.Animation.EasingFunctions;
+using Dalamud.Logging;
 using GCDTracker.Data;
 using ImGuiNET;
 using System;
@@ -9,6 +12,8 @@ namespace GCDTracker
     public class PluginUI
     {
         public bool IsVisible { get; set; }
+        private Easing clipAnimAlpha;
+        private Easing clipAnimPos;
         public GCDWheel gcd;
         public ComboTracker ct;
         public Configuration conf;
@@ -16,12 +21,18 @@ namespace GCDTracker
         public Vector2 w_cent;
         public Vector2 w_size;
         public float Scale;
-
         private ImDrawListPtr draw;
 
         public PluginUI(Configuration conf)
         {
             this.conf = conf;
+            clipAnimAlpha = new OutCubic(new(0, 0, 0, 2, 500));
+            clipAnimAlpha.Point1 = new(0.65f, 0);
+            clipAnimAlpha.Point2 = new(1f, 0);
+            clipAnimPos = new OutCubic(new(0, 0, 0, 1, 500));
+            clipAnimPos.Point1 = new(0, 0);
+            clipAnimPos.Point2 = new(0, -30);
+
         }
         public unsafe void Draw()
         {
@@ -100,19 +111,31 @@ namespace GCDTracker
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backColBorder), 5f * this.Scale);
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backCol), 3f * this.Scale);
         }
-
-        public void DrawClip(float val)
+        public void StartClip()
         {
-            var clipText = $"+{val * 1000:0}";
-            var textSz = ImGui.CalcTextSize(clipText);
-            var textStartPos = w_cent - (textSz / 2);
-            var padding = new Vector2(10, 5) * this.Scale;
+            clipAnimAlpha.Restart();
+            clipAnimPos.Restart();
+        }
+
+        public void DrawClip()
+        {
+            if (!clipAnimAlpha.IsRunning || clipAnimAlpha.IsDone) return;
 
             ImGui.PushFont(UiBuilder.MonoFont);
-            ImGui.SetWindowFontScale(2f*this.Scale);
+            ImGui.SetWindowFontScale(1.3f * this.Scale);
 
-            draw.AddRectFilled(textStartPos - padding, textStartPos + textSz + padding, ImGui.GetColorU32(conf.clipCol - new Vector4(0, 0, 0, 0.2f)), 10f);
-            draw.AddText(textStartPos, ImGui.GetColorU32(conf.frontCol), clipText);
+            var clipText = "CLIP";
+            var textSz = ImGui.CalcTextSize(clipText);
+            var textStartPos = w_cent - (textSz / 2) - new Vector2(0,this.w_size.X * 0.3f + 20*this.Scale);
+            var padding = new Vector2(10, 5) * this.Scale;
+
+            if (!clipAnimAlpha.IsDone) clipAnimAlpha.Update();
+            if (!clipAnimPos.IsDone) clipAnimPos.Update();
+            var animAlpha = clipAnimAlpha.EasedPoint.X;
+            var animPos = clipAnimPos.EasedPoint;
+
+            draw.AddRectFilled(textStartPos - padding + animPos, textStartPos + textSz + padding + animPos, ImGui.GetColorU32(new Vector4(conf.clipCol.X, conf.clipCol.Y, conf.clipCol.Z, 1-animAlpha)), 10f);
+            draw.AddText(textStartPos + animPos, ImGui.GetColorU32(new Vector4(conf.frontCol.X, conf.frontCol.Y, conf.frontCol.Z,1-animAlpha)), clipText);
 
             ImGui.SetWindowFontScale(1f);
             ImGui.PopFont();
