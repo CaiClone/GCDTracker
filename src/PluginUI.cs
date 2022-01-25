@@ -23,16 +23,20 @@ namespace GCDTracker
         public float Scale;
         private ImDrawListPtr draw;
 
+
         public PluginUI(Configuration conf)
         {
             this.conf = conf;
-            clipAnimAlpha = new OutCubic(new(0, 0, 0, 2, 500));
-            clipAnimAlpha.Point1 = new(0.65f, 0);
-            clipAnimAlpha.Point2 = new(1f, 0);
-            clipAnimPos = new OutCubic(new(0, 0, 0, 1, 500));
-            clipAnimPos.Point1 = new(0, 0);
-            clipAnimPos.Point2 = new(0, -30);
-
+            clipAnimAlpha = new OutCubic(new(0, 0, 0, 2, 1000))
+            {
+                Point1 = new(0.25f, 0),
+                Point2 = new(1f, 0)
+            };
+            clipAnimPos = new OutCubic(new(0, 0, 0, 1, 500))
+            {
+                Point1 = new(0, 0),
+                Point2 = new(0, -20)
+            };
         }
         public unsafe void Draw()
         {
@@ -111,6 +115,7 @@ namespace GCDTracker
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backColBorder), 5f * this.Scale);
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backCol), 3f * this.Scale);
         }
+
         public void StartClip()
         {
             clipAnimAlpha.Restart();

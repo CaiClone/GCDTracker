@@ -3,7 +3,6 @@ using Dalamud.Game;
 using Dalamud.Logging;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
-using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -18,12 +17,18 @@ namespace GCDTracker
         private DateTime lastGCDEnd;
         private float lastElapsedGCD;
         private bool lastActionCast;
+        private float lastClipDelta;
+        private bool clippedGCD;
+        private bool checkClip;
 
         public GCDWheel() {
             totalGCD = 3.5f;
             ogcds = new();
             lastGCDEnd = DateTime.Now;
             lastActionCast = false;
+            lastClipDelta = 0f;
+            clippedGCD = false;
+            checkClip = false;
         }
 
         public unsafe void onActionUse(byte ret,IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
@@ -100,21 +105,43 @@ namespace GCDTracker
                 else if (k > delta)
                     ogcdsNew[k - delta] = (v, vt);
                 else if ((isOver && k + v > totalGCD))
+                {
                     ogcdsNew[0] = (k + v - delta, vt);
+                    if (k < delta - 0.01f) // Ignore things that are queued 
+                        this.lastClipDelta = (k + v - delta);
+                }
             }
             ogcds = ogcdsNew;
         }
+        private bool shouldStartClip() {
+            checkClip = false;
+            if (this.lastClipDelta > 0.01f)
+            { 
+                this.clippedGCD = true;
+                this.lastClipDelta = 0;
+                return true;
+            }
+            else { 
+                this.clippedGCD = false;
+                return false;
+            }
+        }
+
         public bool DrawGCDWheel(PluginUI ui, Configuration conf)
         {
             float gcdTotal = totalGCD;
             float gcdTime = lastElapsedGCD;
             if (HelperMethods.IsCasting() && DataStore.action->ElapsedCastTime > gcdTotal) gcdTime = gcdTotal;
 
+            if (checkClip && shouldStartClip()) ui.StartClip();
+
+            var backgroundCol = this.clippedGCD ? conf.clipCol : conf.backCol;
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); //Background
-            ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, conf.backCol);
+            ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, backgroundCol);
 
             ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); //Queue lock
-            ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, conf.backCol);
+            ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, backgroundCol);
+            ui.DrawClip();
 
             ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
 
@@ -134,6 +161,7 @@ namespace GCDTracker
         private void endCurrentGCD(float GCDtime)
         {
             SlideGCDs(GCDtime, true);
+            if (lastElapsedGCD > 0) checkClip = true;
             lastElapsedGCD = DataStore.action->ElapsedGCD;
             lastGCDEnd = DateTime.Now;
         }
