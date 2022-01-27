@@ -115,16 +115,8 @@ namespace GCDTracker
         }
         private bool shouldStartClip() {
             checkClip = false;
-            if (this.lastClipDelta > 0.01f)
-            { 
-                this.clippedGCD = true;
-                this.lastClipDelta = 0;
-                return true;
-            }
-            else { 
-                this.clippedGCD = false;
-                return false;
-            }
+            this.clippedGCD = this.lastClipDelta > 0.01f;
+            return this.clippedGCD;
         }
 
         public bool DrawGCDWheel(PluginUI ui, Configuration conf)
@@ -133,7 +125,11 @@ namespace GCDTracker
             float gcdTime = lastElapsedGCD;
             if (HelperMethods.IsCasting() && DataStore.action->ElapsedCastTime > gcdTotal) gcdTime = gcdTotal;
 
-            if (checkClip && shouldStartClip()) ui.StartClip();
+            if (checkClip && shouldStartClip())
+            {
+                ui.StartClip(this.lastClipDelta);
+                this.lastClipDelta = 0;
+            }
 
             var backgroundCol = this.clippedGCD ? conf.clipCol : conf.backCol;
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); //Background

@@ -23,6 +23,9 @@ namespace GCDTracker
         [JsonIgnore]
         public bool WindowMoveableGW = false;
         public bool ShowOutOfCombatGW = false;
+        public bool ColorClipEnabled = true;
+        public bool ClipAlertEnabled = true;
+        public int ClipAlertPrecision = 0;
         public Vector4 backCol = new(0.376f, 0.376f, 0.376f, 1);
         public Vector4 backColBorder = new(0f, 0f, 0f, 1f);
         public Vector4 frontCol = new(0.9f, 0.9f, 0.9f, 1f);
@@ -157,12 +160,28 @@ namespace GCDTracker
                         ImGui.Checkbox("Show out of combat", ref ShowOutOfCombatGW);
                         ImGui.Separator();
 
+                        ImGui.Checkbox("Color wheel on clipped GCD", ref ColorClipEnabled);
+                        ImGui.Checkbox("Show clip alert", ref ClipAlertEnabled);
+                        if (ClipAlertEnabled)
+                        {
+                            ImGui.SameLine();
+                            ImGui.RadioButton("CLIP", ref ClipAlertPrecision, 0);
+                            ImGui.SameLine();
+                            ImGui.RadioButton("0.X", ref ClipAlertPrecision, 1);
+                            ImGui.SameLine();
+                            ImGui.RadioButton("0.XX", ref ClipAlertPrecision, 2);
+                        }
+
+                        ImGui.Separator();
+                        ImGui.Columns(2);
                         ImGui.ColorEdit4("Background bar color", ref backCol, ImGuiColorEditFlags.NoInputs);
                         ImGui.ColorEdit4("Background border color", ref backColBorder, ImGuiColorEditFlags.NoInputs);
                         ImGui.ColorEdit4("GCD bar color", ref frontCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.NextColumn();
                         ImGui.ColorEdit4("GCD start indicator color", ref ogcdCol, ImGuiColorEditFlags.NoInputs);
                         ImGui.ColorEdit4("Animation lock bar color", ref anLockCol, ImGuiColorEditFlags.NoInputs);
                         ImGui.ColorEdit4("Clipping color", ref clipCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.Columns(1);
                         ImGui.Separator();
 
                         DrawJobGrid(ref EnabledGWJobs, true);

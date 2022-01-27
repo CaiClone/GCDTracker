@@ -22,7 +22,7 @@ namespace GCDTracker
         public Vector2 w_size;
         public float Scale;
         private ImDrawListPtr draw;
-
+        private string clipText;
 
         public PluginUI(Configuration conf)
         {
@@ -37,6 +37,7 @@ namespace GCDTracker
                 Point1 = new(0, 0),
                 Point2 = new(0, -20)
             };
+            clipText = "CLIP";
         }
         public unsafe void Draw()
         {
@@ -116,8 +117,11 @@ namespace GCDTracker
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backCol), 3f * this.Scale);
         }
 
-        public void StartClip()
+        public void StartClip(float ms)
         {
+            if (!conf.ClipAlertEnabled) return;
+            if (conf.ClipAlertPrecision == 0) this.clipText = "CLIP";
+            else this.clipText = String.Format(conf.ClipAlertPrecision == 1 ? "{0:0.0}": "{0:0.00}", ms); 
             clipAnimAlpha.Restart();
             clipAnimPos.Restart();
         }
@@ -129,7 +133,6 @@ namespace GCDTracker
             ImGui.PushFont(UiBuilder.MonoFont);
             ImGui.SetWindowFontScale(1.3f * this.Scale);
 
-            var clipText = "CLIP";
             var textSz = ImGui.CalcTextSize(clipText);
             var textStartPos = w_cent - (textSz / 2) - new Vector2(0,this.w_size.X * 0.3f + 20*this.Scale);
             var padding = new Vector2(10, 5) * this.Scale;
