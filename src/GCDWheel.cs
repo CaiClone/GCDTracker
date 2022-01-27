@@ -130,6 +130,7 @@ namespace GCDTracker
                 ui.StartClip(this.lastClipDelta);
                 this.lastClipDelta = 0;
             }
+            if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now) this.clippedGCD = false;
 
             var backgroundCol = this.clippedGCD ? conf.clipCol : conf.backCol;
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); //Background
