@@ -107,7 +107,7 @@ namespace GCDTracker
                 else if ((isOver && k + v > totalGCD))
                 {
                     ogcdsNew[0] = (k + v - delta, vt);
-                    if (k < delta - 0.01f) // Ignore things that are queued 
+                    if (k < delta - 0.02f) // Ignore things that are queued or queued + cast end animation lock
                         this.lastClipDelta = (k + v - delta);
                 }
             }
@@ -144,10 +144,10 @@ namespace GCDTracker
 
             foreach (var (ogcd, (anlock,castLock)) in ogcds)
             {
-                var isClipping = !castLock && DateTime.Now > lastGCDEnd +TimeSpan.FromMilliseconds(50)  &&
+                var isClipping = !castLock && DateTime.Now > lastGCDEnd + TimeSpan.FromMilliseconds(50)  &&
                     (
-                        (ogcd < (gcdTotal - 0.05f) && ogcd + anlock > gcdTotal) 
-                        || (gcdTime < 0.001f && ogcd < 0.001f && !(anlock % 0.1f < 10e-4))
+                        (ogcd < (gcdTotal - 0.05f) && ogcd + anlock > gcdTotal) // You will clip next GCD
+                        || (gcdTime < 0.001f && ogcd < 0.001f && (anlock > (lastActionCast? 0.125:0.025))) // anlock when no gcdRolling nor CastEndAnimation
                     );
                 ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * ui.Scale, (isClipping)? conf.clipCol : conf.anLockCol);
                 if (!castLock) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * ui.Scale, conf.ogcdCol);

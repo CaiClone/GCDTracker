@@ -41,7 +41,6 @@ namespace GCDTracker
         }
         public unsafe void Draw()
         {
-
             conf.DrawConfig();
 
             if (DataStore.clientState.LocalPlayer == null)
