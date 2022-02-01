@@ -1,21 +1,21 @@
 ![Header](images/header.png)
 # GCDTracker
-A plugin for goat's [XIVLauncher](https://github.com/goaaats/FFXIVQuickLauncher) designed to help familiarize yourself with basic combats such as GCD and animation lock in the game.
-Once you install the plugin and start attacking the nearest thing a circle showing the current status of your weaponskill GCD will be displayed as well as a graph showing your combo position. OGCDs will be added to the wheel with their correspondent animation locks as they get pressed.
+A plugin for goat's [XIVLauncher](https://github.com/goaaats/FFXIVQuickLauncher) that helps you learn the basics of combat, such as GCD and animation lock.
+Once you enter combat, the plugin will show you a circle with the current status of your GCD, as well as a graph showing the current step in your combo. OGCDs will be added with their correspondent animation locks as they get pressed.
 
 ![GCDTracker at work](images/example.gif)
 
 ## FAQ
 
 ### X action does not trigger the combo tracker?
-Combos are automatically extracted from the game files so that means that whatever the game doesn't consider strictly as a combo won't be detected as one. Trying yet to find a balance between major classes working and not having to add exceptions for every possible combo.
+The game files are used to detect combos, and anything that isn't considered a combo by the game won't be detected.  Trying yet to find a balance between major classes working and not having to add too many exceptions. 
 
 
 ### Why does the animation lock get longer immediately after appearing?
-All animation locks start equal, then they get an update from the server indicating their remaining length accounting for the ability animation lock+lag.
+All skills have a default animation lock and later get an update from the server with the remaining animation lock length. this update accounts for the original lock + ping.
 
 ### Can I help by testing?
 Please do! I don't have all the jobs leveled yet so I really appreciate testing, to do so:
 
-- Add the following custom plugin repository to dalamaud: `https://gist.githubusercontent.com/CaiClone/0aad66569dbf63a9bbeec6a8e95a123f/raw/pluginmaster.json`
+- Add the following custom plugin repository to dalamud: `https://gist.githubusercontent.com/CaiClone/0aad66569dbf63a9bbeec6a8e95a123f/raw/pluginmaster.json`
 - Report any issue you find to this repo.
