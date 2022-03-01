@@ -47,7 +47,7 @@ namespace GCDTracker
                 if (!act->IsCast)
                     ogcds[Math.Max(isWeaponSkill ? act->TotalGCD : 0, act->ElapsedGCD + act->AnimationLock)] = (0.6f,false);
                 else
-                    ogcds[Math.Max(act->TotalCastTime+ 0.1f,act->TotalGCD)] = (0.6f,false);
+                    ogcds[Math.Max(isWeaponSkill ? act->TotalGCD: 0, act->TotalCastTime + 0.1f)] = (0.6f,false);
             }
             else
             {
