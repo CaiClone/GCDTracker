@@ -123,7 +123,7 @@ namespace GCDTracker
         {
             float gcdTotal = totalGCD;
             float gcdTime = lastElapsedGCD;
-            if (HelperMethods.IsCasting() && DataStore.action->ElapsedCastTime > gcdTotal) gcdTime = gcdTotal;
+            if (HelperMethods.IsCasting() && DataStore.action->ElapsedCastTime > gcdTotal && DataStore.action->ComboID!=0) gcdTime = gcdTotal;
 
             if (checkClip && shouldStartClip())
             {
