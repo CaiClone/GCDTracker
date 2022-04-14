@@ -13,6 +13,6 @@
     "IconUrl": "https://github.com/CaiClone/GCDTracker/raw/main/images/icon.png",
     "ApplicableVersion": "any",
     "PunchLine": "Is my DRG still jumping?",
-    "DalamudApiLevel": 5,
+    "DalamudApiLevel": 6,
     "LoadPriority": 0
 }

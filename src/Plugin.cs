@@ -14,7 +14,7 @@ using GCDTracker.Data;
 
 namespace GCDTracker
 {
-    public class Plugin : IDalamudPlugin
+    public unsafe class Plugin : IDalamudPlugin
     {
         [PluginService]
         [RequiredVersion("1.0")]
@@ -80,7 +80,7 @@ namespace GCDTracker
 
             this.commandManager = new PluginCommandManager<Plugin>(this, Commands);
 
-            UseActionHook = new (Scanner.ScanText(HelperMethods.GetSignature<ActionManager>("UseAction")), UseActionDetour);
+            UseActionHook = new ((IntPtr)ActionManager.fpUseAction, UseActionDetour);
             ReceiveActionEffectHook = new (Scanner.ScanText("E8 ?? ?? ?? ?? 48 8B 8D F0 03 00 00"), ReceiveActionEffect);
             UseActionHook.Enable();
             ReceiveActionEffectHook.Enable();
