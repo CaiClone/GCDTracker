@@ -6,7 +6,7 @@ using System.Reflection;
 
 namespace GCDTracker.Data
 {
-    static unsafe class HelperMethods
+    public static unsafe class HelperMethods
     {
         public delegate byte UseActionDelegate(IntPtr actionManager, ActionType actionType, uint actionID, long targetID, uint param, uint useType, int pvp, IntPtr a7);
         public delegate void ReceiveActionEffectDetour(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail);

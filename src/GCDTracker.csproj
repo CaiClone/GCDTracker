@@ -18,11 +18,11 @@
 	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
-
-	<ItemGroup>
-		<PackageReference Include="DalamudPackager" Version="2.1.5" />
-	</ItemGroup>
-
+  
+  <ItemGroup>
+    <PackageReference Include="DalamudPackager" Version="2.1.7" />
+  </ItemGroup>
+  
 	<ItemGroup>
 		<!--You may need to adjust these paths yourself. These assume that you have Dalamud pulled and built near your plugin project folder.-->
 		<Reference Include="Dalamud">
