@@ -31,19 +31,19 @@ namespace GCDTracker
             checkClip = false;
         }
 
-        public unsafe void onActionUse(byte ret,IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
+        public unsafe void onActionUse(byte ret, IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
             Data.Action* act = DataStore.action;
 
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
-            var AddingToQueue = HelperMethods.IsAddingToQueue(actionType, actionID);
+            var AddingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act);
             var ExecutingQueued = (act->InQueue && !AddingToQueue);
             if (ret != 1)
             {
                 if (ExecutingQueued && Math.Abs(act->ElapsedCastTime-act->TotalCastTime)<0.0001f) ogcds.Clear();
                 return;
             }
-            if (AddingToQueue) { 
+            if (AddingToQueue) {
                 if (!act->IsCast)
                     ogcds[Math.Max(isWeaponSkill ? act->TotalGCD : 0, act->ElapsedGCD + act->AnimationLock)] = (0.6f,false);
                 else

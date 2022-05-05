@@ -3,7 +3,9 @@ using FFXIVClientStructs.Attributes;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using System;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker.Data
 {
     public static unsafe class HelperMethods
@@ -13,9 +15,15 @@ namespace GCDTracker.Data
 
         public static bool IsWeaponSkill(ActionType actionType, uint actionID)
         {
-            var recast_group = DataStore.actionManager->GetRecastGroup((int)actionType, actionID);
+            return _isWeaponSkill(
+                DataStore.actionManager->GetRecastGroup((int)actionType, actionID),
+                DataStore.clientState.LocalPlayer.ClassJob.Id);
+        }
+
+        internal static bool _isWeaponSkill(int recast_group, uint job)
+        {
             if (recast_group == 57) return true;
-            if (DataStore.WS_CooldownGroups.TryGetValue(DataStore.clientState.LocalPlayer.ClassJob.Id, out var ws_groups))
+            if (DataStore.WS_CooldownGroups.TryGetValue(job, out var ws_groups))
                 return ws_groups.Contains(recast_group);
             return false;
         }
@@ -41,13 +49,24 @@ namespace GCDTracker.Data
         /// Describes if a skill is being added to the Queue, 0.5 and 0.6 are the default Animation locks with and without noclippy respectively
         /// </summary>
         /// <returns></returns>
-        public static bool IsAddingToQueue(ActionType actionType, uint actionID)
+        public static bool IsAddingToQueue(bool isWeaponSkill, Action* act)
         {
-            var weaponSkill = IsWeaponSkill(actionType, actionID);
-            var act = DataStore.action;
-            return act->InQueue && ((weaponSkill && (
-                    (act->ElapsedGCD<act->TotalGCD && act->ElapsedGCD > 0) || (act->AnimationLock!=0f && act->AnimationLock!=0.5f && act->AnimationLock!=0.6f && act->AnimationLock != 0.35f))) || //Weaponskills
-                    (!weaponSkill && act->AnimationLock!= 0.5f && act->AnimationLock!= 0.6f)); //OGCDS
+            return _isAddingToQueue(
+                isWeaponSkill,
+                act->InQueue,
+                act->ElapsedGCD,
+                act->TotalGCD,
+                act->AnimationLock);
+        }
+
+        internal static bool _isAddingToQueue(bool isWeaponSkill, bool InQueue, float ElapsedGCD, float TotalGCD, float AnimationLock)
+        {
+            return InQueue && (
+                    (isWeaponSkill && (
+                        (ElapsedGCD < TotalGCD && ElapsedGCD > 0.001f) ||
+                        (AnimationLock != 0f && AnimationLock != 0.5f && AnimationLock != 0.6f && AnimationLock != 0.35f))) || //Weaponskills
+                    (!isWeaponSkill && AnimationLock != 0.5f && AnimationLock != 0.6f)); //OGCDS
+
         }
 
         public static uint? GetParentJob(uint jobId)

@@ -29,7 +29,7 @@ namespace GCDTracker
             Data.Action* act = DataStore.action;
             var cAct = DataStore.actionManager->GetAdjustedActionId(actionID);
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, cAct);
-            var AddingToQueue = HelperMethods.IsAddingToQueue(actionType, cAct);
+            var AddingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act);
             var ExecutingQueued = (act->InQueue && !AddingToQueue);
 
             if(ret ==1 &&  isWeaponSkill && (ExecutingQueued || !act->InQueue))
