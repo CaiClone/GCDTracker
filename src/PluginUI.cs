@@ -48,7 +48,8 @@ namespace GCDTracker
 
             bool inCombat = DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
             bool noUI = DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.OccupiedInQuestEvent]
-                        || DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas];
+                        || DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas]
+                        || DataStore.clientState.IsPvP;
 
             conf.EnabledGWJobs.TryGetValue(DataStore.clientState.LocalPlayer.ClassJob.Id, out var enabledJobGW);
             conf.EnabledCTJobs.TryGetValue(DataStore.clientState.LocalPlayer.ClassJob.Id, out var enabledJobCT);
