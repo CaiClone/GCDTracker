@@ -73,6 +73,11 @@ namespace GCDTracker.Data
         {
             return DataStore.ClassSheet.GetRow(jobId).ClassJobParent.Value?.RowId;
         }
+
+        internal static bool IsTeleport(uint castId)
+        {
+            return DataStore.TeleportIds.Contains(castId);
+        }
     }
 }
  

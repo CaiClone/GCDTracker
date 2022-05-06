@@ -98,6 +98,8 @@ namespace GCDTracker.Data
             //SGE
             {40, new() {18} },
         };
+
+        public static readonly List<uint> TeleportIds = new() {5,6};
     }
 
     [StructLayout(LayoutKind.Explicit)]
@@ -105,6 +107,7 @@ namespace GCDTracker.Data
     {
         [FieldOffset(0x0)] public readonly void* ActionManager;
         [FieldOffset(0x8)] public readonly float AnimationLock;
+        [FieldOffset(0x24)] public readonly uint CastId;
         [FieldOffset(0x28)] public readonly bool IsCast;
         [FieldOffset(0x30)] public readonly float ElapsedCastTime;
         [FieldOffset(0x34)] public readonly float TotalCastTime;

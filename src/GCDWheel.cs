@@ -125,8 +125,7 @@ namespace GCDTracker
         {
             float gcdTotal = totalGCD;
             float gcdTime = lastElapsedGCD;
-            if (HelperMethods.IsCasting() && DataStore.action->ElapsedCastTime > gcdTotal && DataStore.action->ComboID!=0) gcdTime = gcdTotal;
-
+            if (HelperMethods.IsCasting() && DataStore.action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.action->CastId)) gcdTime = gcdTotal;
             if (checkClip && shouldStartClip())
             {
                 ui.StartClip(this.lastClipDelta);
