@@ -1,5 +1,7 @@
+using GCDTracker;
 using GCDTracker.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Linq;
 
 namespace Tests
 {
@@ -98,6 +100,23 @@ namespace Tests
                 InQueue = true,
                 TotalGCD = 1.5f
             }));
+        }
+        [TestMethod]
+        public void test_exact_slidegcd_end() {
+            GCDWheel wheel = new()
+            {
+                ogcds = new()
+                {
+                    { 0, (0.35f, false) },
+                    { 0.5f, (0.64f, false) }
+                },
+                totalGCD = 0.5f
+            };
+            wheel.SlideGCDs(0.5f, true);
+
+            Assert.AreEqual(1, wheel.ogcds.Count);
+            Assert.AreEqual(0, wheel.ogcds.Keys.First());
+            Assert.AreEqual((0.64f, false), wheel.ogcds.Values.First());
         }
 
         public (bool, bool, bool) GetActionPressStatus(uint job, MockAction act)

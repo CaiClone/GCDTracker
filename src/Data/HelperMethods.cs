@@ -64,8 +64,8 @@ namespace GCDTracker.Data
             return InQueue && (
                     (isWeaponSkill && (
                         (ElapsedGCD < TotalGCD && ElapsedGCD > 0.001f) ||
-                        (AnimationLock != 0f && AnimationLock != 0.5f && AnimationLock != 0.6f && AnimationLock != 0.35f))) || //Weaponskills
-                    (!isWeaponSkill && AnimationLock != 0.5f && AnimationLock != 0.6f)); //OGCDS
+                        (AnimationLock != 0f && AnimationLock != 0.5f && AnimationLock != 0.64f && AnimationLock != 0.35f))) || //Weaponskills
+                    (!isWeaponSkill && AnimationLock != 0.5f && AnimationLock != 0.64f)); //OGCDS
 
         }
 

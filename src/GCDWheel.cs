@@ -6,7 +6,9 @@ using GCDTracker.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker
 {
     public unsafe class GCDWheel
@@ -45,9 +47,9 @@ namespace GCDTracker
             }
             if (AddingToQueue) {
                 if (!act->IsCast)
-                    ogcds[Math.Max(isWeaponSkill ? act->TotalGCD : 0, act->ElapsedGCD + act->AnimationLock)] = (0.6f,false);
+                    ogcds[Math.Max(isWeaponSkill ? act->TotalGCD : 0, act->ElapsedGCD + act->AnimationLock)] = (0.64f,false);
                 else
-                    ogcds[Math.Max(isWeaponSkill ? act->TotalGCD: 0, act->TotalCastTime + 0.1f)] = (0.6f,false);
+                    ogcds[Math.Max(isWeaponSkill ? act->TotalGCD : 0, act->TotalCastTime + 0.1f)] = (0.64f,false);
             }
             else
             {
@@ -92,7 +94,7 @@ namespace GCDTracker
         /// <summary>
         /// This function slides all the GCDs forward by a delta and deletes the ones that reach 0
         /// </summary>
-        private void SlideGCDs(float delta, bool isOver)
+        internal void SlideGCDs(float delta, bool isOver)
         {
             if (delta <= 0) return; //avoid problem with float precision
             var ogcdsNew = new Dictionary<float, (float,bool)>();
@@ -100,7 +102,7 @@ namespace GCDTracker
             {
                 if (k < -0.1)
                     ; //remove from dictionary
-                else if (k <= delta && v > delta)
+                else if (k < delta && v > delta)
                     ogcdsNew[k] = (v - delta, vt);
                 else if (k > delta)
                     ogcdsNew[k - delta] = (v, vt);
