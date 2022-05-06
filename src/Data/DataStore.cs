@@ -83,6 +83,8 @@ namespace GCDTracker.Data
          */
         public static readonly Dictionary<uint, List<int>> WS_CooldownGroups = new()
         {
+            //SCH
+            {27, new() {6} },
             //SAM
             {34, new() {10} },
             //NIN
