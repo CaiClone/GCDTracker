@@ -26,12 +26,11 @@ namespace GCDTracker
 
         [PluginService]
         [RequiredVersion("1.0")]
-        public static Framework Framework { get; private set; }
+        public static Framework Framework { get; }
 
         [PluginService]
         [RequiredVersion("1.0")]
         private ClientState ClientState { get; init; }
-
 
         [PluginService]
         [RequiredVersion("1.0")]

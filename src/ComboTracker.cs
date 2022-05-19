@@ -70,7 +70,6 @@ namespace GCDTracker
         ///   1 -> 2 -> 3
         ///     \> 4 -> 5
         ///   6 -> 7
-        /// 
         /// Algorithm: Given the combo as (skill, follow ups[]), for example (1,[2,4]),(2,[3]),(4,[5]),(6,[7]), pictured Above.
         ///  - We first draw the lines, drawing one line for each follow up in each node, while storing the positions.
         ///  - Reuse the stored position if it exists

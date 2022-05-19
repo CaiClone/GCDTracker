@@ -10,7 +10,6 @@ namespace GCDTracker.Data
 {
     public static class ComboStore
     {
-
         private static Dictionary<(uint, uint, bool, Dictionary<uint, bool>), Dictionary<uint, List<uint>>> comboCache;
         private static Configuration conf;
         public static void Init(Configuration config)
@@ -43,18 +42,18 @@ namespace GCDTracker.Data
             comboDict = getCombos(par.Id, par.Level, par.Item3);
             applyManual(ref comboDict, par.Id, par.Level);
             comboCache.Add(par, comboDict);
-            return comboDict; 
+            return comboDict;
         }
 
         private static void applyManual(ref Dictionary<uint, List<uint>> comboDict, uint jobclass, uint level)
         {
             if (DataStore.ManualCombo.TryGetValue(jobclass,out var modifications))
             {
-                foreach (var (condition, effect) in modifications) { 
+                foreach (var (condition, effect) in modifications) {
                     try {
                         if (condition(level)) effect(comboDict);
                     }
-                    catch(Exception e) { 
+                    catch(Exception e) {
                         PluginLog.Error("Couldn't apply modification: " + e);
                     }
                 }

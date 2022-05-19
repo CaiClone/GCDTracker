@@ -153,7 +153,7 @@ namespace GCDTracker
                 if (ImGui.BeginTabItem("GCDWheel"))
                 {
                     ImGui.Checkbox("Enable GCDWheel", ref WheelEnabled);
-                    if (WheelEnabled) { 
+                    if (WheelEnabled) {
                         ImGui.Checkbox("Move/resize window", ref WindowMoveableGW);
                         if (WindowMoveableGW)
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");

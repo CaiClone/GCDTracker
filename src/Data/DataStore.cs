@@ -30,14 +30,13 @@ namespace GCDTracker.Data
             var comboPtr = scanner.GetStaticAddressFromSig("F3 0F 11 05 ?? ?? ?? ?? F3 0F 10 45");
             actionManager = ActionManager.Instance();
 
-            ComboPreserving = ActionSheet.Where(row => row.PreservesCombo).ToDictionary(row => (int)row.RowId, row => true); 
+            ComboPreserving = ActionSheet.Where(row => row.PreservesCombo).ToDictionary(row => (int)row.RowId, row => true);
 
             combo = (Combo*)comboPtr;
             action = (Action*)actionManager;
             clientState = cs;
             condition = cond;
         }
-        
         /*
         * Dict of manual changes to combo dict with the structure
         * (jobClass, List<condition(level), action>)

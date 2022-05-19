@@ -121,7 +121,7 @@ namespace GCDTracker
         {
             if (!conf.ClipAlertEnabled) return;
             if (conf.ClipAlertPrecision == 0) this.clipText = "CLIP";
-            else this.clipText = String.Format(conf.ClipAlertPrecision == 1 ? "{0:0.0}": "{0:0.00}", ms); 
+            else this.clipText = String.Format(conf.ClipAlertPrecision == 1 ? "{0:0.0}": "{0:0.00}", ms);
             clipAnimAlpha.Restart();
             clipAnimPos.Restart();
         }
@@ -148,6 +148,5 @@ namespace GCDTracker
             ImGui.SetWindowFontScale(1f);
             ImGui.PopFont();
         }
-
     }
 }
