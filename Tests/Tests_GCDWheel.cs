@@ -6,7 +6,7 @@ using System.Linq;
 namespace Tests
 {
     [TestClass]
-    public unsafe class Tests_GCDWheel
+    public class Tests_GCDWheel
     {
         [TestMethod]
         public void test_ogcd_queue()
@@ -110,7 +110,7 @@ namespace Tests
                     { 0, (0.35f, false) },
                     { 0.5f, (0.64f, false) }
                 },
-                totalGCD = 0.5f
+                TotalGCD = 0.5f
             };
             wheel.SlideGCDs(0.5f, true);
 

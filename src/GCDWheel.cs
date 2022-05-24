@@ -13,7 +13,7 @@ namespace GCDTracker
 {
     public unsafe class GCDWheel
     {
-        public float totalGCD;
+        public float TotalGCD;
         public Dictionary<float, (float, bool)> ogcds;
 
         private DateTime lastGCDEnd;
@@ -24,7 +24,7 @@ namespace GCDTracker
         private bool checkClip;
 
         public GCDWheel() {
-            totalGCD = 3.5f;
+            TotalGCD = 3.5f;
             ogcds = new();
             lastGCDEnd = DateTime.Now;
             lastActionCast = false;
@@ -33,9 +33,9 @@ namespace GCDTracker
             checkClip = false;
         }
 
-        public unsafe void onActionUse(byte ret, IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
+        public void OnActionUse(byte ret, IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
-            Data.Action* act = DataStore.action;
+            Data.Action* act = DataStore.Action;
 
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var AddingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act);
@@ -55,8 +55,8 @@ namespace GCDTracker
             {
                 if (isWeaponSkill)
                 {
-                    endCurrentGCD(totalGCD);
-                    totalGCD = act->TotalGCD; //Store it in a variable in order to cache it when it goes back to 0
+                    EndCurrentGCD(TotalGCD);
+                    TotalGCD = act->TotalGCD; //Store it in a variable in order to cache it when it goes back to 0
                     if (act->IsCast)
                     {
                         lastActionCast = true;
@@ -73,22 +73,22 @@ namespace GCDTracker
 
         public void Update(Framework framework)
         {
-            if (DataStore.clientState.LocalPlayer == null)
+            if (DataStore.ClientState.LocalPlayer == null)
                 return;
 
             if (lastActionCast && !HelperMethods.IsCasting())
-                handleCancelCast();
-            else if (DataStore.action->ElapsedGCD < lastElapsedGCD)
-                endCurrentGCD(lastElapsedGCD);
-            else if (DataStore.action->ElapsedGCD < 0.0001f)
+                HandleCancelCast();
+            else if (DataStore.Action->ElapsedGCD < lastElapsedGCD)
+                EndCurrentGCD(lastElapsedGCD);
+            else if (DataStore.Action->ElapsedGCD < 0.0001f)
                 SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
-            lastElapsedGCD = DataStore.action->ElapsedGCD;
+            lastElapsedGCD = DataStore.Action->ElapsedGCD;
         }
 
-        private void handleCancelCast()
+        private void HandleCancelCast()
         {
             lastActionCast = false;
-            endCurrentGCD(DataStore.action->TotalCastTime);
+            EndCurrentGCD(DataStore.Action->TotalCastTime);
         }
 
         /// <summary>
@@ -100,13 +100,12 @@ namespace GCDTracker
             var ogcdsNew = new Dictionary<float, (float,bool)>();
             foreach (var (k, (v,vt)) in ogcds)
             {
-                if (k < -0.1)
-                    ; //remove from dictionary
+                if (k < -0.1) { } //remove from dictionary
                 else if (k < delta && v > delta)
                     ogcdsNew[k] = (v - delta, vt);
                 else if (k > delta)
                     ogcdsNew[k - delta] = (v, vt);
-                else if ((isOver && k + v > totalGCD))
+                else if ((isOver && k + v > TotalGCD))
                 {
                     ogcdsNew[0] = (k + v - delta, vt);
                     if (k < delta - 0.02f) // Ignore things that are queued or queued + cast end animation lock
@@ -115,18 +114,18 @@ namespace GCDTracker
             }
             ogcds = ogcdsNew;
         }
-        private bool shouldStartClip() {
+        private bool ShouldStartClip() {
             checkClip = false;
             this.clippedGCD = this.lastClipDelta > 0.01f;
             return this.clippedGCD;
         }
 
-        public bool DrawGCDWheel(PluginUI ui, Configuration conf)
+        public void DrawGCDWheel(PluginUI ui, Configuration conf)
         {
-            float gcdTotal = totalGCD;
+            float gcdTotal = TotalGCD;
             float gcdTime = lastElapsedGCD;
-            if (HelperMethods.IsCasting() && DataStore.action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.action->CastId)) gcdTime = gcdTotal;
-            if (checkClip && shouldStartClip())
+            if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId)) gcdTime = gcdTotal;
+            if (checkClip && ShouldStartClip())
             {
                 ui.StartClip(this.lastClipDelta);
                 this.lastClipDelta = 0;
@@ -153,14 +152,13 @@ namespace GCDTracker
                 ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * ui.Scale, (isClipping)? conf.clipCol : conf.anLockCol);
                 if (!castLock) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * ui.Scale, conf.ogcdCol);
             }
-            return true;
         }
 
-        private void endCurrentGCD(float GCDtime)
+        private void EndCurrentGCD(float GCDtime)
         {
             SlideGCDs(GCDtime, true);
             if (lastElapsedGCD > 0) checkClip = true;
-            lastElapsedGCD = DataStore.action->ElapsedGCD;
+            lastElapsedGCD = DataStore.Action->ElapsedGCD;
             lastGCDEnd = DateTime.Now;
         }
 
@@ -173,7 +171,7 @@ namespace GCDTracker
                 lastActionCast = false;
                 return;
             }
-            var ctime = DataStore.action->ElapsedGCD;
+            var ctime = DataStore.Action->ElapsedGCD;
 
             var items = ogcds.Where(x => x.Key <= ctime && ctime < x.Key + x.Value.Item1);
             if (items.Count() == 0) return;

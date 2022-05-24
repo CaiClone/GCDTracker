@@ -12,8 +12,8 @@ namespace GCDTracker
     public class PluginUI
     {
         public bool IsVisible { get; set; }
-        private Easing clipAnimAlpha;
-        private Easing clipAnimPos;
+        private readonly Easing clipAnimAlpha;
+        private readonly Easing clipAnimPos;
         public GCDWheel gcd;
         public ComboTracker ct;
         public Configuration conf;
@@ -39,20 +39,20 @@ namespace GCDTracker
             };
             clipText = "CLIP";
         }
-        public unsafe void Draw()
+        public void Draw()
         {
             conf.DrawConfig();
 
-            if (DataStore.clientState.LocalPlayer == null)
+            if (DataStore.ClientState.LocalPlayer == null)
                 return;
 
-            bool inCombat = DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
-            bool noUI = DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.OccupiedInQuestEvent]
-                        || DataStore.condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas]
-                        || DataStore.clientState.IsPvP;
+            bool inCombat = DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
+            bool noUI = DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.OccupiedInQuestEvent]
+                        || DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas]
+                        || DataStore.ClientState.IsPvP;
 
-            conf.EnabledGWJobs.TryGetValue(DataStore.clientState.LocalPlayer.ClassJob.Id, out var enabledJobGW);
-            conf.EnabledCTJobs.TryGetValue(DataStore.clientState.LocalPlayer.ClassJob.Id, out var enabledJobCT);
+            conf.EnabledGWJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGW);
+            conf.EnabledCTJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobCT);
             if (conf.WheelEnabled && !noUI && (conf.WindowMoveableGW || (enabledJobGW && (conf.ShowOutOfCombatGW || inCombat))))
             {
                 SetupWindow("GCDTracker_GCDWheel", conf.WindowMoveableGW);
@@ -71,17 +71,17 @@ namespace GCDTracker
         {
             ImGui.SetNextWindowSize(new Vector2(100, 100), ImGuiCond.FirstUseEver);
             ImGui.SetNextWindowBgAlpha(0.45f);
-            ImGui.Begin(name, getFlags(windowMovable));
-            getWindowsInfo();
+            ImGui.Begin(name, GetFlags(windowMovable));
+            GetWindowsInfo();
             draw = ImGui.GetBackgroundDrawList();
         }
-        private ImGuiWindowFlags getFlags(bool windowMovable)
+        private static ImGuiWindowFlags GetFlags(bool windowMovable)
         {
             var flags = ImGuiWindowFlags.NoNav | ImGuiWindowFlags.NoScrollbar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoTitleBar;
             if (!windowMovable) flags |= ImGuiWindowFlags.NoBackground | ImGuiWindowFlags.NoInputs;
             return flags;
         }
-        private void getWindowsInfo()
+        private void GetWindowsInfo()
         {
             var w_pos = ImGui.GetWindowPos();
             this.w_size = ImGui.GetWindowSize();
@@ -97,7 +97,7 @@ namespace GCDTracker
 
         public unsafe void DrawActionCircle(Vector2 cpos,float circRad,uint action)
         {
-            if (DataStore.combo->Action == action || ct.LastComboActionUsed.Contains(action))
+            if (DataStore.Combo->Action == action || ct.LastComboActionUsed.Contains(action))
                 draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.ctComboActive));
             else if (ct.ComboUsed.Contains(action))
                 draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.ctComboUsed));

@@ -8,23 +8,23 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker.Data
 {
-    public static unsafe class HelperMethods
+    public static class HelperMethods
     {
         public delegate byte UseActionDelegate(IntPtr actionManager, ActionType actionType, uint actionID, long targetID, uint param, uint useType, int pvp, IntPtr a7);
         public delegate void ReceiveActionEffectDetour(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail);
 
-        public static bool IsWeaponSkill(ActionType actionType, uint actionID)
+        public static unsafe bool IsWeaponSkill(ActionType actionType, uint actionID)
         {
             return _isWeaponSkill(
-                DataStore.actionManager->GetRecastGroup((int)actionType, actionID),
-                DataStore.clientState.LocalPlayer.ClassJob.Id);
+                DataStore.ActionManager->GetRecastGroup((int)actionType, actionID),
+                DataStore.ClientState.LocalPlayer.ClassJob.Id);
         }
 
-        internal static bool _isWeaponSkill(int recast_group, uint job)
+        internal static bool _isWeaponSkill(int recastGroup, uint job)
         {
-            if (recast_group == 57) return true;
+            if (recastGroup == 57) return true;
             if (DataStore.WS_CooldownGroups.TryGetValue(job, out var ws_groups))
-                return ws_groups.Contains(recast_group);
+                return ws_groups.Contains(recastGroup);
             return false;
         }
 
@@ -35,7 +35,7 @@ namespace GCDTracker.Data
 
         public static bool IsCasting()
         {
-            return DataStore.clientState.LocalPlayer.CurrentCastTime > 0;
+            return DataStore.ClientState.LocalPlayer.CurrentCastTime > 0;
         }
 
         public static string GetSignature<T>(string methodName)
@@ -49,7 +49,7 @@ namespace GCDTracker.Data
         /// Describes if a skill is being added to the Queue, 0.5 and 0.6 are the default Animation locks with and without noclippy respectively
         /// </summary>
         /// <returns></returns>
-        public static bool IsAddingToQueue(bool isWeaponSkill, Action* act)
+        public static unsafe bool IsAddingToQueue(bool isWeaponSkill, Action* act)
         {
             return _isAddingToQueue(
                 isWeaponSkill,

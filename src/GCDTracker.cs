@@ -14,7 +14,7 @@ using GCDTracker.Data;
 
 namespace GCDTracker
 {
-    public unsafe class Plugin : IDalamudPlugin
+    public unsafe class GCDTracker : IDalamudPlugin
     {
         [PluginService]
         [RequiredVersion("1.0")]
@@ -26,7 +26,7 @@ namespace GCDTracker
 
         [PluginService]
         [RequiredVersion("1.0")]
-        public static Framework Framework { get; }
+        public static Framework Framework { get; private set; }
 
         [PluginService]
         [RequiredVersion("1.0")]
@@ -44,19 +44,19 @@ namespace GCDTracker
         [RequiredVersion("1.0")]
         private Condition Condition { get; init; }
 
-        private readonly PluginCommandManager<Plugin> commandManager;
+        private readonly PluginCommandManager<GCDTracker> commandManager;
         private readonly Configuration config;
         private readonly PluginUI ui;
 
         public string Name => "GCDTracker";
 
-        private Hook<HelperMethods.UseActionDelegate> UseActionHook;
-        private Hook<HelperMethods.ReceiveActionEffectDetour> ReceiveActionEffectHook;
+        private readonly Hook<HelperMethods.UseActionDelegate> UseActionHook;
+        private readonly Hook<HelperMethods.ReceiveActionEffectDetour> ReceiveActionEffectHook;
 
-        private GCDWheel gcd;
-        private ComboTracker ct;
+        private readonly GCDWheel gcd;
+        private readonly ComboTracker ct;
 
-        public Plugin()
+        public GCDTracker()
         {
             Resolver.Initialize();
             this.config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
@@ -77,7 +77,7 @@ namespace GCDTracker
             Framework.Update += this.ct.Update;
             Framework.Update += this.gcd.Update;
 
-            this.commandManager = new PluginCommandManager<Plugin>(this, Commands);
+            this.commandManager = new PluginCommandManager<GCDTracker>(this, Commands);
 
             UseActionHook = new ((IntPtr)ActionManager.fpUseAction, UseActionDetour);
             ReceiveActionEffectHook = new (Scanner.ScanText("E8 ?? ?? ?? ?? 48 8B 8D F0 03 00 00"), ReceiveActionEffect);
@@ -87,15 +87,15 @@ namespace GCDTracker
         private byte UseActionDetour(IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp, IntPtr a7)
         {
             var ret = UseActionHook.Original(actionManager, actionType, actionID, targetedActorID, param, useType, pvp, a7);
-            gcd.onActionUse(ret, actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
-            ct.onActionUse(ret,actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
+            gcd.OnActionUse(ret, actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
+            ct.OnActionUse(ret,actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
             return ret;
         }
-        private unsafe void ReceiveActionEffect(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail)
+        private void ReceiveActionEffect(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail)
         {
-            var oldLock = DataStore.action->AnimationLock;
+            var oldLock = DataStore.Action->AnimationLock;
             ReceiveActionEffectHook.Original(sourceActorID, sourceActor, vectorPosition, effectHeader, effectArray, effectTrail);
-            var newLock = DataStore.action->AnimationLock;
+            var newLock = DataStore.Action->AnimationLock;
 
             this.gcd.UpdateAnlock(oldLock, newLock);
         }

@@ -9,7 +9,7 @@ using System.Numerics;
 
 namespace GCDTracker
 {
-    public unsafe class ComboTracker
+    public class ComboTracker
     {
         public List<uint> ComboUsed;
 
@@ -22,28 +22,29 @@ namespace GCDTracker
             this.ComboUsed = new List<uint>();
             this.LastComboActionUsed = new(){0,0};
         }
-        public unsafe void onActionUse(byte ret, IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
+
+        public unsafe void OnActionUse(byte ret, IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
         {
             var comboDict = ComboStore.GetCombos();
 
-            Data.Action* act = DataStore.action;
-            var cAct = DataStore.actionManager->GetAdjustedActionId(actionID);
+            Data.Action* act = DataStore.Action;
+            var cAct = DataStore.ActionManager->GetAdjustedActionId(actionID);
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, cAct);
-            var AddingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act);
-            var ExecutingQueued = (act->InQueue && !AddingToQueue);
+            var addingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act);
+            var executingQueued = (act->InQueue && !addingToQueue);
 
-            if(ret ==1 &&  isWeaponSkill && (ExecutingQueued || !act->InQueue))
+            if(ret == 1 &&  isWeaponSkill && (executingQueued || !act->InQueue))
                 actTime = new[] {DateTime.Now + TimeSpan.FromMilliseconds(500),actTime}.Max();
 
-            if (comboDict.Count == 0 || ExecutingQueued || ret != 1)
+            if (comboDict.Count == 0 || executingQueued || ret != 1)
                 return;
 
             if (!HelperMethods.IsComboPreserving(cAct))
             {
                 actTime = DateTime.Now + TimeSpan.FromMilliseconds(5000);
                 //If it's not the current continuation let's first clear the combo
-                var CCombo = LastComboActionUsed.Where(comboDict.ContainsKey).Select(x => comboDict[x]).FirstOrDefault();
-                if (CCombo is null || !(CCombo.Contains(cAct) || CCombo.Contains(actionID)))
+                var cCombo = LastComboActionUsed.Where(comboDict.ContainsKey).Select(x => comboDict[x]).FirstOrDefault();
+                if (cCombo is null || !(cCombo.Contains(cAct) || cCombo.Contains(actionID)))
                 {
                     ComboUsed.Clear();
                     actTime = DateTime.Now + TimeSpan.FromMilliseconds(500);
@@ -54,11 +55,11 @@ namespace GCDTracker
             }
         }
 
-        public void Update(Framework framework)
+        public unsafe void Update(Framework framework)
         {
-            if (DataStore.clientState.LocalPlayer == null)
+            if (DataStore.ClientState.LocalPlayer == null)
                 return;
-            if (ComboUsed.Count>0 && framework.LastUpdate > actTime && DataStore.combo->Timer <= 0)
+            if (ComboUsed.Count>0 && framework.LastUpdate > actTime && DataStore.Combo->Timer <= 0)
             {
                 ComboUsed.Clear();
                 this.LastComboActionUsed = new() {0,0};
@@ -94,7 +95,7 @@ namespace GCDTracker
                     nodepos.Add(node, cpos);
                 }
 
-                var followPositions = getFollowupPos(cpos, follows.Count, xsep, ysep, circRad);
+                var followPositions = GetFollowupPos(cpos, follows.Count, xsep, ysep, circRad);
                 if (followPositions.Length > 1) startpos += new Vector2(0, ysep);
                 for (int i = 0; i < followPositions.Length; i++)
                 {
@@ -102,13 +103,13 @@ namespace GCDTracker
                     nodepos.Add(follows[i], followPositions[i]);
                 }
             }
-            foreach ((var actionId,var pos) in nodepos)
+            foreach (var (actionId, pos) in nodepos)
             {
                 ui.DrawActionCircle(pos,circRad,actionId);
             }
         }
 
-        private Vector2[] getFollowupPos(Vector2 cpos, int nChild,float xsep, float ysep, float circRad)
+        private static Vector2[] GetFollowupPos(Vector2 cpos, int nChild,float xsep, float ysep, float circRad)
         {
             Vector2[] positions = new Vector2[nChild];
             for(int i = 0; i < nChild; i++)

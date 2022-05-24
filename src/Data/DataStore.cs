@@ -13,11 +13,11 @@ namespace GCDTracker.Data
 {
     static unsafe class DataStore
     {
-        public static Combo* combo;
-        public static Action* action;
-        public static ActionManager* actionManager;
-        public static ClientState clientState;
-        public static Condition condition;
+        public static Combo* Combo;
+        public static Action* Action;
+        public static ActionManager* ActionManager;
+        public static ClientState ClientState;
+        public static Condition Condition;
         public static ExcelSheet<Lumina.Excel.GeneratedSheets.Action> ActionSheet;
         public static ExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob> ClassSheet;
 
@@ -28,14 +28,14 @@ namespace GCDTracker.Data
             ClassSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ClassJob>();
 
             var comboPtr = scanner.GetStaticAddressFromSig("F3 0F 11 05 ?? ?? ?? ?? F3 0F 10 45");
-            actionManager = ActionManager.Instance();
+            ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
 
             ComboPreserving = ActionSheet.Where(row => row.PreservesCombo).ToDictionary(row => (int)row.RowId, row => true);
 
-            combo = (Combo*)comboPtr;
-            action = (Action*)actionManager;
-            clientState = cs;
-            condition = cond;
+            Combo = (Combo*)comboPtr;
+            Action = (Action*)ActionManager;
+            ClientState = cs;
+            Condition = cond;
         }
         /*
         * Dict of manual changes to combo dict with the structure
