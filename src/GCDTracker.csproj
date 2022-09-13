@@ -1,8 +1,8 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFramework>net5.0-windows</TargetFramework>
-		<LangVersion>9.0</LangVersion>
+		<TargetFramework>net6.0-windows</TargetFramework>
+		<LangVersion>10.0</LangVersion>
 		<Version>1.0.2.2</Version>
 	</PropertyGroup>
 
@@ -19,39 +19,45 @@
 	  <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
 	</PropertyGroup>
   
+   <PropertyGroup>
+    <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
+  </PropertyGroup>
+  
+   <PropertyGroup Condition="'$([System.Runtime.InteropServices.RuntimeInformation]::IsOSPlatform($([System.Runtime.InteropServices.OSPlatform]::Linux)))'">
+    <DalamudLibPath>$(DALAMUD_HOME)/</DalamudLibPath>
+  </PropertyGroup>
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="2.1.7" />
+    <PackageReference Include="DalamudPackager" Version="2.1.8" />
   </ItemGroup>
   
 	<ItemGroup>
 		<!--You may need to adjust these paths yourself. These assume that you have Dalamud pulled and built near your plugin project folder.-->
 		<Reference Include="Dalamud">
-			<HintPath Condition="Exists('$(APPDATA)\XIVLauncher\addon\Hooks\dev\')">$(APPDATA)\XIVLauncher\addon\Hooks\dev\Dalamud.dll</HintPath>
+      <HintPath>$(DalamudLibPath)Dalamud.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="ImGui.NET">
-			<HintPath Condition="Exists('$(APPDATA)\XIVLauncher\addon\Hooks\dev\')">$(APPDATA)\XIVLauncher\addon\Hooks\dev\ImGui.NET.dll</HintPath>
+      <HintPath>$(DalamudLibPath)ImGui.NET.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="ImGuiScene">
-			<HintPath Condition="Exists('$(APPDATA)\XIVLauncher\addon\Hooks\dev\')">$(APPDATA)\XIVLauncher\addon\Hooks\dev\ImGuiScene.dll</HintPath>
+			<HintPath>$(DalamudLibPath)ImGuiScene.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Lumina">
-			<HintPath Condition="Exists('$(APPDATA)\XIVLauncher\addon\Hooks\dev\')">$(APPDATA)\XIVLauncher\addon\Hooks\dev\Lumina.dll</HintPath>
+			<HintPath>$(DalamudLibPath)Lumina.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Lumina.Excel">
-			<HintPath Condition="Exists('$(APPDATA)\XIVLauncher\addon\Hooks\dev\')">$(APPDATA)\XIVLauncher\addon\Hooks\dev\Lumina.Excel.dll</HintPath>
+			<HintPath>$(DalamudLibPath)Lumina.Excel.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
 		<Reference Include="Newtonsoft.Json">
-			<HintPath Condition="Exists('$(APPDATA)\XIVLauncher\addon\Hooks\dev\')">$(APPDATA)\XIVLauncher\addon\Hooks\dev\Newtonsoft.Json.dll</HintPath>
+			<HintPath>$(DalamudLibPath)Newtonsoft.Json.dll</HintPath>
 			<Private>false</Private>
 		</Reference>
     <Reference Include="FFXIVClientStructs">
-      <HintPath Condition="Exists('$(APPDATA)\XIVLauncher\addon\Hooks\dev\')">$(APPDATA)\XIVLauncher\addon\Hooks\dev\FFXIVClientStructs.dll</HintPath>
+      <HintPath>$(DalamudLibPath)FFXIVClientStructs.dll</HintPath>
     </Reference>
   </ItemGroup>
-
 </Project>
