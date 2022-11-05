@@ -132,7 +132,7 @@ namespace Tests
         public bool InQueue = false;
         public float ElapsedGCD = 0;
         public float TotalGCD = 2.31f;
-        public float AnimationLock = 0.64f;
+        public float AnimationLock = 0.5f;
         public int recast_group = 57;
     }
 }
