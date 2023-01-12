@@ -1,6 +1,7 @@
 ﻿using Dalamud.Logging;
 using FFXIVClientStructs.Attributes;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.Interop.Attributes;
 using System;
 using System.Reflection;
 using System.Runtime.CompilerServices;

@@ -9,6 +9,7 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using FFXIVClientStructs;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.Interop;
 using GCDTracker.Attributes;
 using GCDTracker.Data;
 
@@ -58,7 +59,8 @@ namespace GCDTracker
 
         public GCDTracker()
         {
-            Resolver.Initialize();
+            Resolver.GetInstance.SetupSearchSpace();
+            Resolver.GetInstance.Resolve();
             this.config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             this.config.Initialize(PluginInterface);
 
@@ -79,7 +81,7 @@ namespace GCDTracker
 
             this.commandManager = new PluginCommandManager<GCDTracker>(this, Commands);
 
-            UseActionHook = new ((IntPtr)ActionManager.fpUseAction, UseActionDetour);
+            UseActionHook = new ((IntPtr)ActionManager.MemberFunctionPointers.UseAction, UseActionDetour);
             ReceiveActionEffectHook = new (Scanner.ScanText("E8 ?? ?? ?? ?? 48 8B 8D F0 03 00 00"), ReceiveActionEffect);
             UseActionHook.Enable();
             ReceiveActionEffectHook.Enable();
