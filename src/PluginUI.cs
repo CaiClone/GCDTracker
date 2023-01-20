@@ -5,6 +5,7 @@ using Dalamud.Logging;
 using GCDTracker.Data;
 using ImGuiNET;
 using System;
+using System.Diagnostics;
 using System.Numerics;
 
 namespace GCDTracker
@@ -90,7 +91,9 @@ namespace GCDTracker
         }
         public void DrawCircSegment(float start_rad, float end_rad, float thickness,Vector4 col)
         {
-            int n_segments = (int)Math.Round((end_rad-start_rad)*30);
+            start_rad = Math.Clamp(Math.Min(start_rad, end_rad),0,2);
+            end_rad = Math.Clamp(Math.Max(start_rad, end_rad),0,2);
+            int n_segments = Math.Clamp((int)Math.Ceiling((end_rad - start_rad) * 30), 1, 40);
             draw.PathArcTo(this.w_cent, this.w_size.X*0.3f , start_rad*2*(float)Math.PI - 1.57f, end_rad * 2 * (float)Math.PI - 1.57f, n_segments);
             draw.PathStroke(ImGui.GetColorU32(col), ImDrawFlags.None, thickness);
         }
