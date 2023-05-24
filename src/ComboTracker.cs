@@ -60,7 +60,7 @@ namespace GCDTracker
         {
             if (DataStore.ClientState.LocalPlayer == null)
                 return;
-            if (ComboUsed.Count>0 && framework.LastUpdate > actTime && DataStore.Combo->Timer <= 0)
+            if (ComboUsed.Count>0 && framework.LastUpdate > actTime && DataStore.Combo.Timer <= 0)
             {
                 ComboUsed.Clear();
                 this.LastComboActionUsed = new() {0,0};

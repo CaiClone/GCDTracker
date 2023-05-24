@@ -13,7 +13,7 @@ namespace GCDTracker.Data
 {
     static unsafe class DataStore
     {
-        public static Combo* Combo;
+        public static ComboDetail Combo;
         public static Action* Action;
         public static ActionManager* ActionManager;
         public static ClientState ClientState;
@@ -22,17 +22,16 @@ namespace GCDTracker.Data
         public static ExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob> ClassSheet;
 
         public static Dictionary<int, bool> ComboPreserving;
-        public static void Init(DataManager data, SigScanner scanner,ClientState cs,Condition cond)
+        public static void Init(DataManager data, ClientState cs,Condition cond)
         {
             ActionSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>();
             ClassSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ClassJob>();
 
-            var comboPtr = scanner.GetStaticAddressFromSig("F3 0F 11 05 ?? ?? ?? ?? F3 0F 10 45");
             ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
 
             ComboPreserving = ActionSheet.Where(row => row.PreservesCombo).ToDictionary(row => (int)row.RowId, row => true);
 
-            Combo = (Combo*)comboPtr;
+            Combo = ActionManager->Combo;
             Action = (Action*)ActionManager;
             ClientState = cs;
             Condition = cond;
@@ -118,12 +117,5 @@ namespace GCDTracker.Data
         [FieldOffset(0x5F0)] public readonly float ElapsedGCD;
         [FieldOffset(0x5F4)] public readonly float TotalGCD;
         [FieldOffset(0x7E8)] public readonly float AnimationTimer;
-    }
-
-    [StructLayout(LayoutKind.Explicit, Size = 0x8)]
-    public readonly struct Combo
-    {
-        [FieldOffset(0x00)] public readonly float Timer;
-        [FieldOffset(0x04)] public readonly uint Action;
     }
 }
