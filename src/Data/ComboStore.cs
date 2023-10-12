@@ -1,8 +1,4 @@
-﻿
-using Dalamud.Data;
-using Dalamud.Logging;
-using Lumina.Excel;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -10,6 +6,7 @@ namespace GCDTracker.Data
 {
     public static class ComboStore
     {
+
         private static Dictionary<(uint, uint, bool, Dictionary<uint, bool>), Dictionary<uint, List<uint>>> comboCache;
         private static Configuration conf;
         public static void Init(Configuration config)
@@ -20,7 +17,7 @@ namespace GCDTracker.Data
 
         private static Dictionary<uint,List<uint>> getCombos(uint jobclass, uint level, bool isPvp)
         {
-            PluginLog.Verbose($"Get combos for class: {jobclass} at level {level}");
+            GCDTracker.Log.Verbose($"Get combos for class: {jobclass} at level {level}");
             return DataStore.ActionSheet
                 .Where(row => row.ActionCombo.Value.RowId != 0
                               && (row.ClassJobCategory.Value?.Name.RawString.Contains(DataStore.ClassSheet.GetRow(jobclass).Abbreviation) ?? false)
@@ -34,7 +31,6 @@ namespace GCDTracker.Data
         public static Dictionary<uint, List<uint>> GetCombos()
         {
             var par = (DataStore.ClientState.LocalPlayer.ClassJob.Id, DataStore.ClientState.LocalPlayer.Level, false,conf.EnabledCTJobs);
-
             par.EnabledCTJobs.TryGetValue(par.Id, out bool enabled);
             if (!enabled) return new Dictionary<uint, List<uint>>();
             if(comboCache.TryGetValue(par, out var comboDict))
@@ -54,7 +50,7 @@ namespace GCDTracker.Data
                         if (condition(level)) effect(comboDict);
                     }
                     catch(Exception e) {
-                        PluginLog.Error("Couldn't apply modification: " + e);
+                        GCDTracker.Log.Error("Couldn't apply modification: " + e);
                     }
                 }
             }

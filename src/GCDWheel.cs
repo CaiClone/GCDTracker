@@ -1,6 +1,7 @@
 ﻿
 using Dalamud.Game;
 using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
 using System;
@@ -33,7 +34,7 @@ namespace GCDTracker
             checkClip = false;
         }
 
-        public void OnActionUse(byte ret, IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
+        public void OnActionUse(byte ret, ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp)
         {
             Data.Action* act = DataStore.Action;
 
@@ -71,7 +72,7 @@ namespace GCDTracker
             }
         }
 
-        public void Update(Framework framework)
+        public void Update(IFramework framework)
         {
             if (DataStore.ClientState.LocalPlayer == null)
                 return;

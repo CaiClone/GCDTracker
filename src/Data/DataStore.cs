@@ -8,6 +8,7 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel;
 using Dalamud.Data;
 using System.Linq;
+using Dalamud.Plugin.Services;
 
 namespace GCDTracker.Data
 {
@@ -16,13 +17,13 @@ namespace GCDTracker.Data
         public static ComboDetail Combo;
         public static Action* Action;
         public static ActionManager* ActionManager;
-        public static ClientState ClientState;
-        public static Condition Condition;
+        public static IClientState ClientState;
+        public static ICondition Condition;
         public static ExcelSheet<Lumina.Excel.GeneratedSheets.Action> ActionSheet;
         public static ExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob> ClassSheet;
 
         public static Dictionary<int, bool> ComboPreserving;
-        public static void Init(DataManager data, ClientState cs,Condition cond)
+        public static void Init(IDataManager data, IClientState cs, ICondition cond)
         {
             ActionSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>();
             ClassSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ClassJob>();

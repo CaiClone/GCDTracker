@@ -1,13 +1,9 @@
 ﻿using System;
-using Dalamud.Data;
 using Dalamud.Game;
-using Dalamud.Game.ClientState;
-using Dalamud.Game.ClientState.Conditions;
-using Dalamud.Game.Command;
 using Dalamud.Hooking;
 using Dalamud.IoC;
 using Dalamud.Plugin;
-using FFXIVClientStructs;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.Interop;
 using GCDTracker.Attributes;
@@ -23,27 +19,34 @@ namespace GCDTracker
 
         [PluginService]
         [RequiredVersion("1.0")]
-        private CommandManager Commands { get; init; }
+        private ICommandManager Commands { get; init; }
 
         [PluginService]
         [RequiredVersion("1.0")]
-        public static Framework Framework { get; private set; }
+        public static IFramework Framework { get; private set; }
 
         [PluginService]
         [RequiredVersion("1.0")]
-        private ClientState ClientState { get; init; }
+        private IClientState ClientState { get; init; }
 
         [PluginService]
         [RequiredVersion("1.0")]
-        private Dalamud.Game.SigScanner Scanner { get; init; }
+        private IDataManager Data { get; init; }
 
         [PluginService]
         [RequiredVersion("1.0")]
-        private DataManager Data { get; init; }
+        private ICondition Condition { get; init; }
 
         [PluginService]
         [RequiredVersion("1.0")]
-        private Condition Condition { get; init; }
+        private IGameInteropProvider GameInteropProvider { get; init; }
+
+        [PluginService]
+        private ISigScanner SigScanner { get; init; }
+
+        [PluginService]
+        public static IPluginLog Log { get; private set; }
+
 
         private readonly PluginCommandManager<GCDTracker> commandManager;
         private readonly Configuration config;
@@ -81,12 +84,12 @@ namespace GCDTracker
 
             this.commandManager = new PluginCommandManager<GCDTracker>(this, Commands);
 
-            UseActionHook = new ((IntPtr)ActionManager.MemberFunctionPointers.UseAction, UseActionDetour);
-            ReceiveActionEffectHook = new (Scanner.ScanText("E8 ?? ?? ?? ?? 48 8B 8D F0 03 00 00"), ReceiveActionEffect);
+            UseActionHook = GameInteropProvider.HookFromAddress<HelperMethods.UseActionDelegate>((nint)ActionManager.MemberFunctionPointers.UseAction, UseActionDetour);
+            ReceiveActionEffectHook = GameInteropProvider.HookFromAddress<HelperMethods.ReceiveActionEffectDetour>(SigScanner.ScanText("E8 ?? ?? ?? ?? 48 8B 8D F0 03 00 00"), ReceiveActionEffect);
             UseActionHook.Enable();
             ReceiveActionEffectHook.Enable();
         }
-        private byte UseActionDetour(IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp, IntPtr a7)
+        private byte UseActionDetour(ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp, nint a7)
         {
             var ret = UseActionHook.Original(actionManager, actionType, actionID, targetedActorID, param, useType, pvp, a7);
             gcd.OnActionUse(ret, actionManager, actionType, actionID, targetedActorID, param, useType, pvp);

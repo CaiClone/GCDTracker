@@ -9,9 +9,9 @@ using System.Runtime.CompilerServices;
 [assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker.Data
 {
-    public static class HelperMethods
+    public unsafe static class HelperMethods
     {
-        public delegate byte UseActionDelegate(IntPtr actionManager, ActionType actionType, uint actionID, long targetID, uint param, uint useType, int pvp, IntPtr a7);
+        public delegate byte UseActionDelegate(ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetID, uint param, uint useType, int pvp, nint a7);
         public delegate void ReceiveActionEffectDetour(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail);
 
         public static unsafe bool IsWeaponSkill(ActionType actionType, uint actionID)

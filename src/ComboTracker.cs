@@ -1,5 +1,6 @@
 ﻿using Dalamud.Game;
 using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
 using System;
@@ -24,9 +25,10 @@ namespace GCDTracker
             this.LastComboActionUsed = new(){0,0};
         }
 
-        public unsafe void OnActionUse(byte ret, IntPtr actionManager, ActionType actionType, uint actionID, long targetedActorID, uint param, uint useType, int pvp)
+        public unsafe void OnActionUse(byte ret, ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp)
         {
             var comboDict = ComboStore.GetCombos();
+
 
             Data.Action* act = DataStore.Action;
             var cAct = DataStore.ActionManager->GetAdjustedActionId(actionID);
@@ -56,7 +58,7 @@ namespace GCDTracker
             }
         }
 
-        public unsafe void Update(Framework framework)
+        public unsafe void Update(IFramework framework)
         {
             if (DataStore.ClientState.LocalPlayer == null)
                 return;
