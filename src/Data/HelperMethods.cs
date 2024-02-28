@@ -48,12 +48,18 @@ namespace GCDTracker.Data
                 act->TotalGCD,
                 act->AnimationLock);
 
-        internal static bool _isAddingToQueue(bool isWeaponSkill, bool InQueue, float ElapsedGCD, float TotalGCD, float AnimationLock) =>
-            InQueue && (
+        internal static bool _isAddingToQueue(bool isWeaponSkill, bool InQueue, float ElapsedGCD, float TotalGCD, float AnimationLock) {
+            return InQueue && (
                     (isWeaponSkill && (
                         (ElapsedGCD < TotalGCD && ElapsedGCD > 0.001f) ||
-                        (AnimationLock != 0f && AnimationLock != 0.5f && AnimationLock != 0.64000005f && AnimationLock != 0.35f))) || //Weaponskills
+                        (AnimationLock != 0f && AnimationLock != 0.5f && AnimationLock != 0.64000005f
+                            && AnimationLock != 0.35f //Mudra
+                            && AnimationLock != 0.74000007f //Gnashing Fang
+                            && AnimationLock != 0.54f //Savage Claw
+                            && AnimationLock != 0.81000006f // Wicked Talon
+                            ))) || //Weaponskills
                     (!isWeaponSkill && AnimationLock != 0.5f && AnimationLock != 0.64000005f)); //OGCDS
+        }
 
         public static uint? GetParentJob(uint jobId) => DataStore.ClassSheet.GetRow(jobId).ClassJobParent.Value?.RowId;
         internal static bool IsTeleport(uint castId) => DataStore.TeleportIds.Contains(castId);

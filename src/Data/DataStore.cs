@@ -87,6 +87,8 @@ namespace GCDTracker.Data
             {30, new() {8} },
             //MCH
             {31, new() {6,7,8,11,12} },
+            //GNB
+            {37, new() {5} },
             //DNC
             {38, new() {8, 19} },
             //RPR
