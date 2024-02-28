@@ -47,7 +47,6 @@ namespace GCDTracker
         [PluginService]
         public static IPluginLog Log { get; private set; }
 
-
         private readonly PluginCommandManager<GCDTracker> commandManager;
         private readonly Configuration config;
         private readonly PluginUI ui;
@@ -60,62 +59,57 @@ namespace GCDTracker
         private readonly GCDWheel gcd;
         private readonly ComboTracker ct;
 
-        public GCDTracker()
-        {
+        public GCDTracker() {
             Resolver.GetInstance.SetupSearchSpace();
             Resolver.GetInstance.Resolve();
-            this.config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
-            this.config.Initialize(PluginInterface);
+            config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
+            config.Initialize(PluginInterface);
 
             DataStore.Init(Data,ClientState,Condition);
             ComboStore.Init(config);
 
-            this.ui = new PluginUI(this.config);
-            this.gcd = new GCDWheel();
-            this.ct = new ComboTracker();
+            ui = new PluginUI(config);
+            gcd = new GCDWheel();
+            ct = new ComboTracker();
 
-            ui.gcd = this.gcd;
-            ui.ct = this.ct;
+            ui.gcd = gcd;
+            ui.ct = ct;
 
-            PluginInterface.UiBuilder.Draw += this.ui.Draw;
+            PluginInterface.UiBuilder.Draw += ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
-            Framework.Update += this.ct.Update;
-            Framework.Update += this.gcd.Update;
+            Framework.Update += ct.Update;
+            Framework.Update += gcd.Update;
 
-            this.commandManager = new PluginCommandManager<GCDTracker>(this, Commands);
+            commandManager = new PluginCommandManager<GCDTracker>(this, Commands);
 
             UseActionHook = GameInteropProvider.HookFromAddress<HelperMethods.UseActionDelegate>((nint)ActionManager.MemberFunctionPointers.UseAction, UseActionDetour);
             ReceiveActionEffectHook = GameInteropProvider.HookFromAddress<HelperMethods.ReceiveActionEffectDetour>(SigScanner.ScanText("E8 ?? ?? ?? ?? 48 8B 8D F0 03 00 00"), ReceiveActionEffect);
             UseActionHook.Enable();
             ReceiveActionEffectHook.Enable();
         }
-        private byte UseActionDetour(ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp, nint a7)
-        {
+
+        private byte UseActionDetour(ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp, nint a7) {
             var ret = UseActionHook.Original(actionManager, actionType, actionID, targetedActorID, param, useType, pvp, a7);
             gcd.OnActionUse(ret, actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
             ct.OnActionUse(ret,actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
             return ret;
         }
-        private void ReceiveActionEffect(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail)
-        {
+
+        private void ReceiveActionEffect(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail) {
             var oldLock = DataStore.Action->AnimationLock;
             ReceiveActionEffectHook.Original(sourceActorID, sourceActor, vectorPosition, effectHeader, effectArray, effectTrail);
             var newLock = DataStore.Action->AnimationLock;
 
-            this.gcd.UpdateAnlock(oldLock, newLock);
+            gcd.UpdateAnlock(oldLock, newLock);
         }
-        private void OpenConfig() { this.config.configEnabled = true; }
+        private void OpenConfig() { config.configEnabled = true; }
 
         [Command("/gcdtracker")]
         [HelpMessage("Open GCDTracker settings.")]
-        public void GCDTrackerCommand(string command, string args)
-        {
-            this.OpenConfig();
-        }
+        public void GCDTrackerCommand(string _, string _2) => OpenConfig();
 
         #region IDisposable Support
-        protected virtual void Dispose(bool disposing)
-        {
+        protected virtual void Dispose(bool disposing) {
             if (!disposing) return;
 
             UseActionHook?.Disable();
@@ -123,18 +117,17 @@ namespace GCDTracker
             ReceiveActionEffectHook?.Disable();
             ReceiveActionEffectHook?.Dispose();
 
-            this.commandManager.Dispose();
+            commandManager.Dispose();
 
-            PluginInterface.SavePluginConfig(this.config);
+            PluginInterface.SavePluginConfig(config);
 
-            PluginInterface.UiBuilder.Draw -= this.ui.Draw;
+            PluginInterface.UiBuilder.Draw -= ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi -= OpenConfig;
-            Framework.Update -= this.ct.Update;
-            Framework.Update -= this.gcd.Update;
+            Framework.Update -= ct.Update;
+            Framework.Update -= gcd.Update;
         }
 
-        public void Dispose()
-        {
+        public void Dispose() {
             Dispose(true);
             GC.SuppressFinalize(this);
         }

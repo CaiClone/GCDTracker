@@ -23,26 +23,24 @@ namespace GCDTracker.Data
         public static ExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob> ClassSheet;
 
         public static Dictionary<int, bool> ComboPreserving;
-        public static void Init(IDataManager data, IClientState cs, ICondition cond)
-        {
+        public static void Init(IDataManager data, IClientState cs, ICondition cond) {
             ActionSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>();
             ClassSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ClassJob>();
 
             ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
-
-            ComboPreserving = ActionSheet.Where(row => row.PreservesCombo).ToDictionary(row => (int)row.RowId, row => true);
+            ComboPreserving = ActionSheet.Where(row => row.PreservesCombo).ToDictionary(row => (int)row.RowId, _ => true);
 
             Combo = ActionManager->Combo;
             Action = (Action*)ActionManager;
             ClientState = cs;
             Condition = cond;
         }
+
         /*
         * Dict of manual changes to combo dict with the structure
         * (jobClass, List<condition(level), action>)
         */
-        public static readonly Dictionary<uint, List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>> ManualCombo = new()
-        {
+        public static readonly Dictionary<uint, List<(Predicate<uint>, Action<Dictionary<uint, List<uint>>>)>> ManualCombo = new() {
             {
                 19,
                 new(){ //PLD
@@ -80,8 +78,7 @@ namespace GCDTracker.Data
         /*
          * Dict of cooldown groups considered weapon skills(which have a gcd) on each class other than 57
          */
-        public static readonly Dictionary<uint, List<int>> WS_CooldownGroups = new()
-        {
+        public static readonly Dictionary<uint, List<int>> WS_CooldownGroups = new() {
             //SCH
             {27, new() {6} },
             //SAM
@@ -97,7 +94,6 @@ namespace GCDTracker.Data
             //SGE
             {40, new() {18} },
         };
-
         public static readonly List<uint> TeleportIds = new() {5,6};
     }
 

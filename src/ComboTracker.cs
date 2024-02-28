@@ -19,16 +19,15 @@ namespace GCDTracker
 
         //list because last combo actio might have multiple ids (empowered/not empowered)
         public List<uint> LastComboActionUsed;
-        public ComboTracker()
-        {
-            this.ComboUsed = new List<uint>();
-            this.LastComboActionUsed = new(){0,0};
+        public ComboTracker() {
+            ComboUsed = new List<uint>();
+            LastComboActionUsed = new(){0,0};
         }
 
-        public unsafe void OnActionUse(byte ret, ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp)
-        {
+        #pragma warning disable RCS1163
+        public unsafe void OnActionUse(byte ret, ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp) {
+            #pragma warning restore RCS1163
             var comboDict = ComboStore.GetCombos();
-
 
             Data.Action* act = DataStore.Action;
             var cAct = DataStore.ActionManager->GetAdjustedActionId(actionID);
@@ -42,30 +41,26 @@ namespace GCDTracker
             if (comboDict.Count == 0 || executingQueued || ret != 1)
                 return;
 
-            if (!HelperMethods.IsComboPreserving(cAct))
-            {
+            if (!HelperMethods.IsComboPreserving(cAct)) {
                 actTime = DateTime.Now + TimeSpan.FromMilliseconds(5000);
                 //If it's not the current continuation let's first clear the combo
                 var cCombo = LastComboActionUsed.Where(comboDict.ContainsKey).Select(x => comboDict[x]).FirstOrDefault();
-                if (cCombo is null || !(cCombo.Contains(cAct) || cCombo.Contains(actionID)))
-                {
+                if (cCombo is null || !(cCombo.Contains(cAct) || cCombo.Contains(actionID))) {
                     ComboUsed.Clear();
                     actTime = DateTime.Now + TimeSpan.FromMilliseconds(500);
                 }
-                this.LastComboActionUsed = new() { cAct, actionID };
+                LastComboActionUsed = new() { cAct, actionID };
                 ComboUsed.Add(cAct);
                 ComboUsed.Add(actionID);
             }
         }
 
-        public unsafe void Update(IFramework framework)
-        {
+        public unsafe void Update(IFramework framework) {
             if (DataStore.ClientState.LocalPlayer == null)
                 return;
-            if (ComboUsed.Count>0 && framework.LastUpdate > actTime && DataStore.Combo.Timer <= 0)
-            {
+            if (ComboUsed.Count>0 && framework.LastUpdate > actTime && DataStore.Combo.Timer <= 0) {
                 ComboUsed.Clear();
-                this.LastComboActionUsed = new() {0,0};
+                LastComboActionUsed = new() {0,0};
             }
         }
 
@@ -79,8 +74,7 @@ namespace GCDTracker
         ///  - Reuse the stored position if it exists
         ///  - finally draw action nodes on each of the stored positions
         ///</summary>
-        public void DrawComboLines(PluginUI ui, Configuration conf)
-        {
+        public static void DrawComboLines(PluginUI ui, Configuration conf) {
             var xsep = conf.ctsep.X * ui.Scale;
             var ysep = conf.ctsep.Y* ui.Scale;
             var circRad = 8 * ui.Scale;
@@ -89,10 +83,8 @@ namespace GCDTracker
             var nodepos = new Dictionary<uint, Vector2>();
 
             var startpos = ui.w_cent - (ui.w_size/3);
-            Vector2 cpos;
-            foreach (var (node, follows) in combos.OrderBy(x=>x.Key))
-            {
-                if (!nodepos.TryGetValue(node, out cpos)) {
+            foreach (var (node, follows) in combos.OrderBy(x => x.Key)) {
+                if (!nodepos.TryGetValue(node, out Vector2 cpos)) {
                     startpos += new Vector2(0, ysep); //New combo, advance position
                     cpos = startpos;
                     nodepos.Add(node, cpos);
@@ -100,25 +92,19 @@ namespace GCDTracker
 
                 var followPositions = GetFollowupPos(cpos, follows.Count, xsep, ysep, circRad);
                 if (followPositions.Length > 1) startpos += new Vector2(0, ysep);
-                for (int i = 0; i < followPositions.Length; i++)
-                {
-                    ui.DrawConnectingLine(cpos, followPositions[i],circRad);
+                for (int i = 0; i < followPositions.Length; i++) {
+                    ui.DrawConnectingLine(cpos, followPositions[i], circRad);
                     nodepos.Add(follows[i], followPositions[i]);
                 }
             }
             foreach (var (actionId, pos) in nodepos)
-            {
                 ui.DrawActionCircle(pos,circRad,actionId);
-            }
         }
 
-        private static Vector2[] GetFollowupPos(Vector2 cpos, int nChild,float xsep, float ysep, float circRad)
-        {
+        private static Vector2[] GetFollowupPos(Vector2 cpos, int nChild,float xsep, float ysep, float circRad) {
             Vector2[] positions = new Vector2[nChild];
             for(int i = 0; i < nChild; i++)
-            {
-                positions[i] = cpos + new Vector2((xsep + circRad * 2), ysep * (i==2? -1:i));
-            }
+                positions[i] = cpos + new Vector2(xsep + (circRad * 2), ysep * (i==2? -1:i));
             return positions;
         }
     }

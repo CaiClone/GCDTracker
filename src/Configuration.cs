@@ -43,8 +43,7 @@ namespace GCDTracker
 
         // ID Main Class, Name, Supported in GW, Supported in CT
         [JsonIgnore]
-        private readonly List<(uint, string,bool,bool)> infoJobs = new()
-        {
+        private readonly List<(uint, string,bool,bool)> infoJobs = new() {
             (19,"PLD",true,true),
             (21,"WAR",true,true),
             (32,"DRK",true,true),
@@ -66,8 +65,7 @@ namespace GCDTracker
             (40,"SGE",true,false)
         };
 
-        public Dictionary<uint, bool> EnabledGWJobs = new()
-        {
+        public Dictionary<uint, bool> EnabledGWJobs = new() {
             {1,true},
             {19,true},
             {3,true},
@@ -98,8 +96,7 @@ namespace GCDTracker
             {40,true}
         };
 
-        public Dictionary<uint, bool> EnabledCTJobs = new()
-        {
+        public Dictionary<uint, bool> EnabledCTJobs = new() {
             { 1, true },
             { 19, true },
             { 3, true },
@@ -133,25 +130,17 @@ namespace GCDTracker
         // Add any other properties or methods here.
         [JsonIgnore] private DalamudPluginInterface pluginInterface;
 
-        public void Initialize(DalamudPluginInterface pluginInterface)
-        {
-            this.pluginInterface = pluginInterface;
-        }
+        public void Initialize(DalamudPluginInterface pluginInterface) => this.pluginInterface = pluginInterface;
+        public void Save() => pluginInterface.SavePluginConfig(this);
 
-        public void Save()
-        {
-            this.pluginInterface.SavePluginConfig(this);
-        }
-        public void DrawConfig()
-        {
-            if (!this.configEnabled) return;
+        public void DrawConfig() {
+            if (!configEnabled) return;
             var scale = ImGui.GetIO().FontGlobalScale;
             ImGui.SetNextWindowSizeConstraints(new Vector2(500 * scale, 100 * scale),new Vector2(500 * scale,1000 * scale));
             ImGui.Begin("GCDTracker Settings",ref configEnabled,ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize);
 
             if (ImGui.BeginTabBar("GCDConfig")){
-                if (ImGui.BeginTabItem("GCDWheel"))
-                {
+                if (ImGui.BeginTabItem("GCDWheel")) {
                     ImGui.Checkbox("Enable GCDWheel", ref WheelEnabled);
                     if (WheelEnabled) {
                         ImGui.Checkbox("Move/resize window", ref WindowMoveableGW);
@@ -162,8 +151,7 @@ namespace GCDTracker
 
                         ImGui.Checkbox("Color wheel on clipped GCD", ref ColorClipEnabled);
                         ImGui.Checkbox("Show clip alert", ref ClipAlertEnabled);
-                        if (ClipAlertEnabled)
-                        {
+                        if (ClipAlertEnabled) {
                             ImGui.SameLine();
                             ImGui.RadioButton("CLIP", ref ClipAlertPrecision, 0);
                             ImGui.SameLine();
@@ -188,11 +176,9 @@ namespace GCDTracker
                     }
                     ImGui.EndTabItem();
                 }
-                if (ImGui.BeginTabItem("ComboTrack"))
-                {
+                if (ImGui.BeginTabItem("ComboTrack")) {
                     ImGui.Checkbox("Enable ComboTrack", ref ComboEnabled);
-                    if (ComboEnabled)
-                    {
+                    if (ComboEnabled) {
                         ImGui.Checkbox("Move/resize window", ref WindowMoveableCT);
                         if (WindowMoveableCT)
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
@@ -212,21 +198,17 @@ namespace GCDTracker
             ImGui.End();
         }
 
-        private void DrawJobGrid(ref Dictionary<uint, bool> enabledDict,bool colorPos)
-        {
+        private void DrawJobGrid(ref Dictionary<uint, bool> enabledDict,bool colorPos) {
             var redCol = ImGui.GetColorU32(new Vector4(1f, 0, 0, 1f));
             ImGui.Text("Enabled jobs:");
-            if (ImGui.BeginTable("Job Grid", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchSame))
-            {
-                for (int i = 0; i < infoJobs.Count; i++)
-                {
+            if (ImGui.BeginTable("Job Grid", 3, ImGuiTableFlags.Borders | ImGuiTableFlags.SizingStretchSame)) {
+                for (int i = 0; i < infoJobs.Count; i++) {
                     ImGui.TableNextColumn();
 
                     var enabled = enabledDict[infoJobs[i].Item1];
                     var supported = colorPos ? infoJobs[i].Item3 : infoJobs[i].Item4;
                     if (!supported) ImGui.PushStyleColor(ImGuiCol.Text, redCol);
-                    if (ImGui.Checkbox(infoJobs[i].Item2, ref enabled))
-                    {
+                    if (ImGui.Checkbox(infoJobs[i].Item2, ref enabled)) {
                         enabledDict[infoJobs[i].Item1] = enabled;
                         enabledDict[HelperMethods.GetParentJob(infoJobs[i].Item1) ?? 0] = enabled;
                     }

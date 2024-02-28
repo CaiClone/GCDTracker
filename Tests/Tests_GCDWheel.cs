@@ -9,16 +9,15 @@ namespace Tests
     public class Tests_GCDWheel
     {
         [TestMethod]
-        public void test_ogcd_queue()
-        {
+        public void Test_ogcd_queue() {
             const uint job = 22;
 
             //Weaponskill
-            Assert.AreEqual((true,false,false),GetActionPressStatus(job,new MockAction(){
+            Assert.AreEqual((true,false,false), GetActionPressStatus(job,new MockAction(){
                 TotalGCD = 2.312f
             }));
             //Queued skill
-            Assert.AreEqual((false, true, false),GetActionPressStatus(job, new MockAction()
+            Assert.AreEqual((false, true, false), GetActionPressStatus(job, new MockAction()
             {
                 InQueue = true,
                 ElapsedGCD = 0.301f,
@@ -34,18 +33,17 @@ namespace Tests
             }));
         }
         [TestMethod]
-        public void test_mudra_queue()
-        {
+        public void Test_mudra_queue() {
             const uint job = 30;
 
             //Mudra
-            Assert.AreEqual((true,false,false),GetActionPressStatus(job,new MockAction(){
+            Assert.AreEqual((true,false,false), GetActionPressStatus(job,new MockAction(){
                 TotalGCD = 0.5f,
                 AnimationLock = 0.35f,
                 recast_group = 8
             }));
             //Queued Ninjutsu
-            Assert.AreEqual((true, true, false),GetActionPressStatus(job, new MockAction()
+            Assert.AreEqual((true, true, false), GetActionPressStatus(job, new MockAction()
             {
                 InQueue = true,
                 ElapsedGCD = 0.2810f,
@@ -60,18 +58,17 @@ namespace Tests
             }));
         }
         [TestMethod]
-        public void test_mudra_double_queue()
-        {
+        public void Test_mudra_double_queue() {
             const uint job = 30;
 
             //Mudra 1
-            Assert.AreEqual((true,false,false),GetActionPressStatus(job,new MockAction(){
+            Assert.AreEqual((true,false,false), GetActionPressStatus(job,new MockAction(){
                 TotalGCD = 0.5f,
                 AnimationLock = 0.35f,
                 recast_group = 8
             }));
             //Queued Mudra 2
-            Assert.AreEqual((true, true, false),GetActionPressStatus(job, new MockAction()
+            Assert.AreEqual((true, true, false), GetActionPressStatus(job, new MockAction()
             {
                 InQueue = true,
                 ElapsedGCD = 0.1818f,
@@ -87,7 +84,7 @@ namespace Tests
                 AnimationLock = 0.35f,
             }));
             //Queued Ninjutsu
-            Assert.AreEqual((true, true, false),GetActionPressStatus(job, new MockAction()
+            Assert.AreEqual((true, true, false), GetActionPressStatus(job, new MockAction()
             {
                 InQueue = true,
                 ElapsedGCD = 0.007f,
@@ -95,14 +92,14 @@ namespace Tests
                 AnimationLock = 0.342f,
             }));
             //Execute Ninjutsu
-            Assert.AreEqual((true, false, true),GetActionPressStatus(job, new MockAction()
+            Assert.AreEqual((true, false, true), GetActionPressStatus(job, new MockAction()
             {
                 InQueue = true,
                 TotalGCD = 1.5f
             }));
         }
         [TestMethod]
-        public void test_exact_slidegcd_end() {
+        public void Test_exact_slidegcd_end() {
             GCDWheel wheel = new()
             {
                 ogcds = new()
@@ -119,7 +116,7 @@ namespace Tests
             Assert.AreEqual((0.64f, false), wheel.ogcds.Values.First());
         }
 
-        public (bool, bool, bool) GetActionPressStatus(uint job, MockAction act)
+        public static (bool, bool, bool) GetActionPressStatus(uint job, MockAction act)
         {
             var isWeaponSkill = HelperMethods._isWeaponSkill(act.recast_group, job);
             var AddingToQueue = HelperMethods._isAddingToQueue(isWeaponSkill, act.InQueue, act.ElapsedGCD, act.TotalGCD, act.AnimationLock);
