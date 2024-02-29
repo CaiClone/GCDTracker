@@ -78,6 +78,7 @@ namespace GCDTracker
             if (DataStore.ClientState.LocalPlayer == null)
                 return;
 
+            CleanFailedOGCDs();
             if (lastActionCast && !HelperMethods.IsCasting())
                 HandleCancelCast();
             else if (DataStore.Action->ElapsedGCD < lastElapsedGCD)
@@ -85,6 +86,16 @@ namespace GCDTracker
             else if (DataStore.Action->ElapsedGCD < 0.0001f)
                 SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
             lastElapsedGCD = DataStore.Action->ElapsedGCD;
+        }
+
+        private void CleanFailedOGCDs() {
+            if (DataStore.Action->AnimationLock == 0 && ogcds.Count > 0) {
+                var toRemove = ogcds.Where(
+                    x => x.Key < DataStore.Action->ElapsedGCD && x.Key + x.Value.Item1 > DataStore.Action->ElapsedGCD
+                ).ToList();
+                foreach (var (k, _) in toRemove)
+                    ogcds.Remove(k);
+            }
         }
 
         private void HandleCancelCast() {
@@ -95,8 +106,7 @@ namespace GCDTracker
         /// <summary>
         /// This function slides all the GCDs forward by a delta and deletes the ones that reach 0
         /// </summary>
-        internal void SlideGCDs(float delta, bool isOver)
-        {
+        internal void SlideGCDs(float delta, bool isOver) {
             if (delta <= 0) return; //avoid problem with float precision
             var ogcdsNew = new Dictionary<float, (float,bool)>();
             foreach (var (k, (v,vt)) in ogcds) {
