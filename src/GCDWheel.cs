@@ -42,12 +42,18 @@ namespace GCDTracker
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var AddingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act);
             var ExecutingQueued = act->InQueue && !AddingToQueue;
+
             if (ret != 1) {
                 if (ExecutingQueued && Math.Abs(act->ElapsedCastTime-act->TotalCastTime)<0.0001f)
                     ogcds.Clear();
                 return;
             }
             if (AddingToQueue) {
+                var IsHigherAbility = act->QueuedAction != actionID && act->QueuedAction != 0;
+                if (IsHigherAbility) {
+                    //we already added the previous version so skip.
+                    return;
+                }
                 if (!act->IsCast)
                     ogcds[Math.Max(isWeaponSkill ? act->TotalGCD : 0, act->ElapsedGCD + act->AnimationLock)] = (0.64f,false);
                 else
