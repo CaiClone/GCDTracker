@@ -79,6 +79,8 @@ namespace GCDTracker.Data
          * Dict of cooldown groups considered weapon skills(which have a gcd) on each class other than 57
          */
         public static readonly Dictionary<uint, List<int>> WS_CooldownGroups = new() {
+            //PLD
+            {19, new () {12}},
             //SCH
             {27, new() {6} },
             //SAM
