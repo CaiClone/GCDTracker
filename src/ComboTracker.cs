@@ -35,7 +35,7 @@ namespace GCDTracker
             var addingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act);
             var executingQueued = act->InQueue && !addingToQueue;
 
-            if(ret == 1 &&  isWeaponSkill && (executingQueued || !act->InQueue))
+            if(ret == 1 && isWeaponSkill && (executingQueued || !act->InQueue))
                 actTime = new[] {DateTime.Now + TimeSpan.FromMilliseconds(500),actTime}.Max();
 
             if (comboDict.Count == 0 || executingQueued || ret != 1)
@@ -45,6 +45,7 @@ namespace GCDTracker
                 actTime = DateTime.Now + TimeSpan.FromMilliseconds(5000);
                 //If it's not the current continuation let's first clear the combo
                 var cCombo = LastComboActionUsed.Where(comboDict.ContainsKey).Select(x => comboDict[x]).FirstOrDefault();
+
                 if (cCombo is null || !(cCombo.Contains(cAct) || cCombo.Contains(actionID))) {
                     ComboUsed.Clear();
                     actTime = DateTime.Now + TimeSpan.FromMilliseconds(500);
@@ -58,7 +59,7 @@ namespace GCDTracker
         public unsafe void Update(IFramework framework) {
             if (DataStore.ClientState.LocalPlayer == null)
                 return;
-            if (ComboUsed.Count>0 && framework.LastUpdate > actTime && DataStore.Combo.Timer <= 0) {
+            if (ComboUsed.Count>0 && framework.LastUpdate > actTime && DataStore.Action->ComboTimer <= 0) {
                 ComboUsed.Clear();
                 LastComboActionUsed = new() {0,0};
             }
@@ -98,7 +99,7 @@ namespace GCDTracker
                 }
             }
             foreach (var (actionId, pos) in nodepos)
-                ui.DrawActionCircle(pos,circRad,actionId);
+                ui.DrawActionCircle(pos, circRad, actionId);
         }
 
         private static Vector2[] GetFollowupPos(Vector2 cpos, int nChild,float xsep, float ysep, float circRad) {

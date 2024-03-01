@@ -94,7 +94,7 @@ namespace GCDTracker
         }
 
         public unsafe void DrawActionCircle(Vector2 cpos,float circRad,uint action) {
-            if (DataStore.Combo.Action == action || ct.LastComboActionUsed.Contains(action))
+            if (DataStore.Action->ComboID == action || ct.LastComboActionUsed.Contains(action))
                 draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.ctComboActive));
             else if (ct.ComboUsed.Contains(action))
                 draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.ctComboUsed));
