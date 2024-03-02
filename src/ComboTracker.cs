@@ -34,6 +34,8 @@ namespace GCDTracker
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, cAct);
             var addingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act);
             var executingQueued = act->InQueue && !addingToQueue;
+            cAct = AdjustDRGCombo(cAct);
+            actionID = AdjustDRGCombo(actionID);
 
             if(ret == 1 && isWeaponSkill && (executingQueued || !act->InQueue))
                 actTime = new[] {DateTime.Now + TimeSpan.FromMilliseconds(500),actTime}.Max();
@@ -75,7 +77,7 @@ namespace GCDTracker
         ///  - Reuse the stored position if it exists
         ///  - finally draw action nodes on each of the stored positions
         ///</summary>
-        public static void DrawComboLines(PluginUI ui, Configuration conf) {
+        public unsafe void DrawComboLines(PluginUI ui, Configuration conf) {
             var xsep = conf.ctsep.X * ui.Scale;
             var ysep = conf.ctsep.Y* ui.Scale;
             var circRad = 8 * ui.Scale;
@@ -98,8 +100,10 @@ namespace GCDTracker
                     nodepos.Add(follows[i], followPositions[i]);
                 }
             }
+            var lastAction = DataStore.Action->ComboID;
+            lastAction = AdjustDRGCombo(lastAction);
             foreach (var (actionId, pos) in nodepos)
-                ui.DrawActionCircle(pos, circRad, actionId);
+                ui.DrawActionCircle(pos, circRad, actionId, lastAction);
         }
 
         private static Vector2[] GetFollowupPos(Vector2 cpos, int nChild,float xsep, float ysep, float circRad) {
@@ -107,6 +111,14 @@ namespace GCDTracker
             for(int i = 0; i < nChild; i++)
                 positions[i] = cpos + new Vector2(xsep + (circRad * 2), ysep * (i==2? -1:i));
             return positions;
+        }
+
+        private uint AdjustDRGCombo(uint actionID) {
+            // Hardcoded DRG Wheeling Thrust -> Fang and Claw, if done after Chaos Thrust we add +500 to the actionID
+            if ((actionID == 3556 || actionID == 3554) && ComboUsed.Contains(88)) {
+                return actionID + 500;
+            }
+            return actionID;
         }
     }
 }

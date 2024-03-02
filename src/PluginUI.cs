@@ -59,8 +59,10 @@ namespace GCDTracker
 
             if (conf.ComboEnabled && !noUI && (conf.WindowMoveableCT || (enabledJobCT && (conf.ShowOutOfCombatCT || inCombat)))) {
                 SetupWindow("GCDTracker_ComboTracker", conf.WindowMoveableCT);
-                ComboTracker.DrawComboLines(this, conf);
+                ct.DrawComboLines(this, conf);
                 ImGui.End();
+                // Hardcoded DRG Wheeling Thrust -> Fang and Claw that can be done both ways
+                PluginLog.Log($"cAct: {cAct}, actionID: {actionID}, ComboUsed: {string.Join(",", ComboUsed)}");
             }
         }
 
@@ -93,8 +95,8 @@ namespace GCDTracker
             draw.PathStroke(ImGui.GetColorU32(col), ImDrawFlags.None, thickness);
         }
 
-        public unsafe void DrawActionCircle(Vector2 cpos,float circRad,uint action) {
-            if (DataStore.Action->ComboID == action || ct.LastComboActionUsed.Contains(action))
+        public unsafe void DrawActionCircle(Vector2 cpos,float circRad,uint action, uint lastAction) {
+            if (lastAction == action || ct.LastComboActionUsed.Contains(action))
                 draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.ctComboActive));
             else if (ct.ComboUsed.Contains(action))
                 draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.ctComboUsed));
@@ -106,7 +108,7 @@ namespace GCDTracker
         public void DrawConnectingLine(Vector2 from, Vector2 to, float circRad) {
             var comparison = Math.Sign(from.Y.CompareTo(to.Y));
             //We can only go either 0º or 45º. Sorry for maths but this is probably more efficient
-            var vx = circRad + (Math.Abs(comparison)*-1 * (circRad / 2));
+            var vx = circRad + (Math.Abs(comparison)* -1 * (circRad / 2));
             var vy = comparison * (circRad / 2);
 
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backColBorder), 5f * Scale);
