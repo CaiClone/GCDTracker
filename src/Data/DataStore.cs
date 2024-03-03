@@ -76,30 +76,6 @@ namespace GCDTracker.Data
                 }
             }
         };
-
-        /*
-         * Dict of cooldown groups considered weapon skills(which have a gcd) on each class other than 57
-         */
-        public static readonly Dictionary<uint, List<int>> WS_CooldownGroups = new() {
-            //PLD
-            {19, new () {12}},
-            //SCH
-            {27, new() {6} },
-            //SAM
-            {34, new() {10} },
-            //NIN
-            {30, new() {8} },
-            //MCH
-            {31, new() {6,7,8,11,12} },
-            //GNB
-            {37, new() {5} },
-            //DNC
-            {38, new() {8, 19} },
-            //RPR
-            {39, new() {4} },
-            //SGE
-            {40, new() {18} },
-        };
         public static readonly List<uint> TeleportIds = new() {5,6};
     }
 

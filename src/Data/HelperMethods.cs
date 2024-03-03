@@ -17,15 +17,10 @@ namespace GCDTracker.Data
         public static bool IsWeaponSkill(ActionType actionType, uint actionID) {
             return _isWeaponSkill(
                 DataStore.ActionManager->GetRecastGroup((int)actionType, actionID),
-                DataStore.ClientState.LocalPlayer.ClassJob.Id);
+                DataStore.ActionManager->GetAdditionalRecastGroup(actionType, actionID));
         }
 
-        internal static bool _isWeaponSkill(int recastGroup, uint job) {
-            if (recastGroup == 57) return true;
-            if (DataStore.WS_CooldownGroups.TryGetValue(job, out var ws_groups))
-                return ws_groups.Contains(recastGroup);
-            return false;
-        }
+        internal static bool _isWeaponSkill(int recastGroup, int additionalRecast) => recastGroup == 57 || additionalRecast == 57;
 
         public static bool IsComboPreserving(uint actionID) => DataStore.ComboPreserving.ContainsKey((int)actionID);
 
