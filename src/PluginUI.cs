@@ -61,8 +61,6 @@ namespace GCDTracker
                 SetupWindow("GCDTracker_ComboTracker", conf.WindowMoveableCT);
                 ct.DrawComboLines(this, conf);
                 ImGui.End();
-                // Hardcoded DRG Wheeling Thrust -> Fang and Claw that can be done both ways
-                PluginLog.Log($"cAct: {cAct}, actionID: {actionID}, ComboUsed: {string.Join(",", ComboUsed)}");
             }
         }
 

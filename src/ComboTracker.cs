@@ -42,13 +42,13 @@ namespace GCDTracker
 
             if (comboDict.Count == 0 || executingQueued || ret != 1)
                 return;
-
-            if (!HelperMethods.IsComboPreserving(cAct)) {
+            //Check continuation of currentCombo
+            var cCombo = LastComboActionUsed.Where(comboDict.ContainsKey).Select(x => comboDict[x]).FirstOrDefault();
+            bool isContinuation = cCombo?.Contains(cAct) == true || cCombo?.Contains(actionID) == true;
+            bool isComboStart = comboDict.ContainsKey(cAct);
+            if (!HelperMethods.IsComboPreserving(cAct) || isContinuation || isComboStart) {
                 actTime = DateTime.Now + TimeSpan.FromMilliseconds(5000);
-                //If it's not the current continuation let's first clear the combo
-                var cCombo = LastComboActionUsed.Where(comboDict.ContainsKey).Select(x => comboDict[x]).FirstOrDefault();
-
-                if (cCombo is null || !(cCombo.Contains(cAct) || cCombo.Contains(actionID))) {
+                if (!isContinuation) {
                     ComboUsed.Clear();
                     actTime = DateTime.Now + TimeSpan.FromMilliseconds(500);
                 }
