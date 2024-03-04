@@ -48,10 +48,17 @@ namespace GCDTracker
                 return;
             }
             if (AddingToQueue) {
-                if (!act->IsCast)
-                    ogcds[Math.Max(isWeaponSkill ? act->TotalGCD : 0, act->ElapsedGCD + act->AnimationLock)] = (0.64f,false);
-                else
-                    ogcds[Math.Max(isWeaponSkill ? act->TotalGCD : 0, act->TotalCastTime + 0.1f)] = (0.64f,false);
+                var timings = new List<float>() {
+                    isWeaponSkill ? act->TotalGCD : 0, // Weapon skills
+                };
+                if (!act->IsCast) {
+                    timings.Add(act->ElapsedGCD + act->AnimationLock); // OGCDs
+                } else if (act->ElapsedCastTime < act->TotalGCD) {
+                    timings.Add(act->TotalCastTime + 0.1f); // Casts
+                } else {
+                    timings.Add(act->TotalCastTime - act->ElapsedCastTime + 0.1f); // Casts that are longer than GCD
+                }
+                ogcds[timings.Max()] = (0.64f,false);
             } else {
                 if (isWeaponSkill) {
                     EndCurrentGCD(TotalGCD);
