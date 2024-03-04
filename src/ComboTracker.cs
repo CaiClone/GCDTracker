@@ -16,9 +16,9 @@ namespace GCDTracker
         public List<uint> ComboUsed;
 
         private DateTime actTime;
-
         //list because last combo actio might have multiple ids (empowered/not empowered)
         public List<uint> LastComboActionUsed;
+
         public ComboTracker() {
             ComboUsed = new List<uint>();
             LastComboActionUsed = new(){0,0};
@@ -30,11 +30,11 @@ namespace GCDTracker
             var comboDict = ComboStore.GetCombos();
 
             Data.Action* act = DataStore.Action;
-            var cAct = DataStore.ActionManager->GetAdjustedActionId(actionID);
-            var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, cAct);
+            var adjActionID = DataStore.ActionManager->GetAdjustedActionId(actionID);
+            var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, adjActionID);
             var addingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act);
             var executingQueued = act->InQueue && !addingToQueue;
-            cAct = AdjustDRGCombo(cAct);
+            adjActionID = AdjustDRGCombo(adjActionID);
             actionID = AdjustDRGCombo(actionID);
 
             if(ret == 1 && isWeaponSkill && (executingQueued || !act->InQueue))
@@ -44,16 +44,16 @@ namespace GCDTracker
                 return;
             //Check continuation of currentCombo
             var cCombo = LastComboActionUsed.Where(comboDict.ContainsKey).Select(x => comboDict[x]).FirstOrDefault();
-            bool isContinuation = cCombo?.Contains(cAct) == true || cCombo?.Contains(actionID) == true;
-            bool isComboStart = comboDict.ContainsKey(cAct);
-            if (!HelperMethods.IsComboPreserving(cAct) || isContinuation || isComboStart) {
+            bool isContinuation = cCombo?.Contains(adjActionID) == true || cCombo?.Contains(actionID) == true;
+            bool isComboStart = comboDict.ContainsKey(adjActionID);
+            if (!HelperMethods.IsComboPreserving(adjActionID) || isContinuation || isComboStart) {
                 actTime = DateTime.Now + TimeSpan.FromMilliseconds(5000);
                 if (!isContinuation) {
                     ComboUsed.Clear();
                     actTime = DateTime.Now + TimeSpan.FromMilliseconds(500);
                 }
-                LastComboActionUsed = new() { cAct, actionID };
-                ComboUsed.Add(cAct);
+                LastComboActionUsed = new() { adjActionID, actionID };
+                ComboUsed.Add(adjActionID);
                 ComboUsed.Add(actionID);
             }
         }

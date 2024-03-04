@@ -1,12 +1,8 @@
-﻿using Dalamud.Game;
-using Dalamud.Game.ClientState;
-using Dalamud.Game.ClientState.Conditions;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Runtime.InteropServices;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using Lumina.Excel;
-using Dalamud.Data;
 using System.Linq;
 using Dalamud.Plugin.Services;
 
