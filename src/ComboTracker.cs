@@ -20,8 +20,8 @@ namespace GCDTracker
         public List<uint> LastComboActionUsed;
 
         public ComboTracker() {
-            ComboUsed = new List<uint>();
-            LastComboActionUsed = new(){0,0};
+            ComboUsed = [];
+            LastComboActionUsed = [0,0];
         }
 
         #pragma warning disable RCS1163
@@ -52,7 +52,7 @@ namespace GCDTracker
                     ComboUsed.Clear();
                     actTime = DateTime.Now + TimeSpan.FromMilliseconds(500);
                 }
-                LastComboActionUsed = new() { adjActionID, actionID };
+                LastComboActionUsed = [adjActionID, actionID];
                 ComboUsed.Add(adjActionID);
                 ComboUsed.Add(actionID);
             }
@@ -63,7 +63,7 @@ namespace GCDTracker
                 return;
             if (ComboUsed.Count>0 && framework.LastUpdate > actTime && DataStore.Action->ComboTimer <= 0) {
                 ComboUsed.Clear();
-                LastComboActionUsed = new() {0,0};
+                LastComboActionUsed = [0,0];
             }
         }
 

@@ -46,10 +46,10 @@ namespace GCDTracker.Data
             {
                 22,
                 new(){ //DRG
-                (lvl=>lvl>=56,comboDict=>comboDict[84] = new(){3554}),                //Add True Thrust to Fang and Claw
-                (lvl=>lvl>=58,comboDict=>comboDict[88] = new(){3556+500}),            //Add Chaos Thrust to Wheeling Thrust
-                (lvl=>lvl>=64,comboDict=>comboDict[3554] = new(){3556}),              //Add Wheeling Thrust
-                (lvl=>lvl>=64,comboDict=>comboDict[3556+500] = new(){3554+500}),        //Add Fang and Claw
+                (lvl=>lvl>=56,comboDict=>comboDict[84] = [3554]),                //Add True Thrust to Fang and Claw
+                (lvl=>lvl>=58,comboDict=>comboDict[88] = [3556+500]),            //Add Chaos Thrust to Wheeling Thrust
+                (lvl=>lvl>=64,comboDict=>comboDict[3554] = [3556]),              //Add Wheeling Thrust
+                (lvl=>lvl>=64,comboDict=>comboDict[3556+500] = [3554+500]),        //Add Fang and Claw
                 }
             },
             {

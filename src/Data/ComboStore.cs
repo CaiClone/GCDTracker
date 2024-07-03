@@ -8,7 +8,7 @@ namespace GCDTracker.Data {
         private static Configuration conf;
         public static void Init(Configuration config) {
             conf = config;
-            comboCache = new Dictionary<(uint, uint, bool, Dictionary<uint, bool>), Dictionary<uint, List<uint>>>();
+            comboCache = [];
         }
 
         private static Dictionary<uint,List<uint>> GetCombos(uint jobclass, uint level, bool isPvp) {
@@ -26,7 +26,7 @@ namespace GCDTracker.Data {
         public static Dictionary<uint, List<uint>> GetCombos() {
             var par = (DataStore.ClientState.LocalPlayer.ClassJob.Id, DataStore.ClientState.LocalPlayer.Level, false,conf.EnabledCTJobs);
             par.EnabledCTJobs.TryGetValue(par.Id, out bool enabled);
-            if (!enabled) return new Dictionary<uint, List<uint>>();
+            if (!enabled) return [];
             if(comboCache.TryGetValue(par, out var comboDict))
                 return comboDict;
             comboDict = GetCombos(par.Id, par.Level, par.Item3);

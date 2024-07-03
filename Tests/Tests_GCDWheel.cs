@@ -97,12 +97,11 @@ namespace Tests
         }
         [TestMethod]
         public void Test_exact_slidegcd_end() {
-            GCDWheel wheel = new()
-            {
+            GCDWheel wheel = new() {
                 ogcds = new()
                 {
-                    { 0, (0.35f, false) },
-                    { 0.5f, (0.64f, false) }
+                    { 0, new AbilityTiming(0.35f, false) },
+                    { 0.5f, new AbilityTiming(0.64f, false) }
                 },
                 TotalGCD = 0.5f
             };
@@ -110,7 +109,7 @@ namespace Tests
 
             Assert.AreEqual(1, wheel.ogcds.Count);
             Assert.AreEqual(0, wheel.ogcds.Keys.First());
-            Assert.AreEqual((0.64f, false), wheel.ogcds.Values.First());
+            Assert.AreEqual(new AbilityTiming(0.64f, false), wheel.ogcds.Values.First());
         }
         [TestMethod]
         public void Test_additional_weaponskills() {
