@@ -1,9 +1,6 @@
 ﻿using Dalamud.Logging;
-using FFXIVClientStructs.Attributes;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.Interop.Attributes;
 using System;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Tests")]
@@ -25,12 +22,6 @@ namespace GCDTracker.Data
         public static bool IsComboPreserving(uint actionID) => DataStore.ComboPreserving.ContainsKey((int)actionID);
 
         public static bool IsCasting() => DataStore.ClientState.LocalPlayer.CurrentCastTime > 0;
-
-        public static string GetSignature<T>(string methodName) {
-            MethodBase method = typeof(T).GetMethod(methodName);
-            MemberFunctionAttribute attribute = (MemberFunctionAttribute)method.GetCustomAttributes(typeof(MemberFunctionAttribute), true)[0];
-            return attribute.Signature;
-        }
 
         /// <summary>
         /// Describes if a skill is being added to the Queue, 0.5 and 0.6 are the default Animation locks with and without noclippy respectively

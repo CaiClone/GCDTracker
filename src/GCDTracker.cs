@@ -14,31 +14,24 @@ namespace GCDTracker
     public unsafe class GCDTracker : IDalamudPlugin
     {
         [PluginService]
-        [RequiredVersion("1.0")]
-        private DalamudPluginInterface PluginInterface { get; init; }
+        private IDalamudPluginInterface PluginInterface { get; init; }
 
         [PluginService]
-        [RequiredVersion("1.0")]
         private ICommandManager Commands { get; init; }
 
         [PluginService]
-        [RequiredVersion("1.0")]
         public static IFramework Framework { get; private set; }
 
         [PluginService]
-        [RequiredVersion("1.0")]
         private IClientState ClientState { get; init; }
 
         [PluginService]
-        [RequiredVersion("1.0")]
         private IDataManager Data { get; init; }
 
         [PluginService]
-        [RequiredVersion("1.0")]
         private ICondition Condition { get; init; }
 
         [PluginService]
-        [RequiredVersion("1.0")]
         private IGameInteropProvider GameInteropProvider { get; init; }
 
         [PluginService]
@@ -60,8 +53,6 @@ namespace GCDTracker
         private readonly ComboTracker ct;
 
         public GCDTracker() {
-            Resolver.GetInstance.SetupSearchSpace();
-            Resolver.GetInstance.Resolve();
             config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             config.Initialize(PluginInterface);
 
@@ -77,13 +68,14 @@ namespace GCDTracker
 
             PluginInterface.UiBuilder.Draw += ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
+            PluginInterface.UiBuilder.OpenMainUi += OpenConfig;
             Framework.Update += ct.Update;
             Framework.Update += gcd.Update;
 
             commandManager = new PluginCommandManager<GCDTracker>(this, Commands);
 
             UseActionHook = GameInteropProvider.HookFromAddress<HelperMethods.UseActionDelegate>((nint)ActionManager.MemberFunctionPointers.UseAction, UseActionDetour);
-            ReceiveActionEffectHook = GameInteropProvider.HookFromAddress<HelperMethods.ReceiveActionEffectDetour>(SigScanner.ScanText("E8 ?? ?? ?? ?? 48 8B 8D F0 03 00 00"), ReceiveActionEffect);
+            ReceiveActionEffectHook = GameInteropProvider.HookFromAddress<HelperMethods.ReceiveActionEffectDetour>(SigScanner.ScanModule("40 55 56 57 41 54 41 55 41 56 48 8D AC 24"), ReceiveActionEffect);
             UseActionHook.Enable();
             ReceiveActionEffectHook.Enable();
         }

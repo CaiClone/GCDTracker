@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Dalamud.Plugin.Services;
-using static Dalamud.Game.Command.CommandInfo;
+using static Dalamud.Game.Command.IReadOnlyCommandInfo;
 // ReSharper disable ForCanBeConvertedToForeach
 
 namespace GCDTracker
