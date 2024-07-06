@@ -14,7 +14,7 @@ namespace GCDTracker {
     public record AbilityTiming(float AnimationLock, bool IsCasted);
 
     public unsafe class GCDWheel {
-        public Dictionary<float, AbilityTiming> ogcds = new();
+        public Dictionary<float, AbilityTiming> ogcds = [];
         public float TotalGCD;
 
         private DateTime lastGCDEnd;

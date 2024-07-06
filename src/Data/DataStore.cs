@@ -72,7 +72,7 @@ namespace GCDTracker.Data
                 }
             }
         };
-        public static readonly List<uint> TeleportIds = new() {5,6};
+        public static readonly List<uint> TeleportIds = [5,6];
     }
 
     [StructLayout(LayoutKind.Explicit)]

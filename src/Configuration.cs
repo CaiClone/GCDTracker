@@ -43,7 +43,7 @@ namespace GCDTracker
 
         // ID Main Class, Name, Supported in GW, Supported in CT
         [JsonIgnore]
-        private readonly List<(uint, string,bool,bool)> infoJobs = new() {
+        private readonly List<(uint, string,bool,bool)> infoJobs = [
             (19,"PLD",true,true),
             (21,"WAR",true,true),
             (32,"DRK",true,true),
@@ -62,8 +62,10 @@ namespace GCDTracker
             (31,"MCH",true,true),
             (38,"DNC",true,false),
             (39,"RPR",true,true),
-            (40,"SGE",true,false)
-        };
+            (40,"SGE",true,false),
+            (41,"VPR",true,false),
+            (42,"PCT",true,false)
+        ];
 
         public Dictionary<uint, bool> EnabledGWJobs = new() {
             {1,true},
@@ -93,7 +95,9 @@ namespace GCDTracker
             {31,true},
             {38,true},
             {39,true},
-            {40,true}
+            {40,true},
+            {41,true},
+            {42,true},
         };
 
         public Dictionary<uint, bool> EnabledCTJobs = new() {
@@ -124,7 +128,9 @@ namespace GCDTracker
             { 31, true },
             { 38, false },
             { 39, true },
-            { 40, false }
+            { 40, false },
+            { 41, false },
+            { 42, false },
         };
 
         // Add any other properties or methods here.
