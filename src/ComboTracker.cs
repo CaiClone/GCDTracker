@@ -24,9 +24,7 @@ namespace GCDTracker
             LastComboActionUsed = [0,0];
         }
 
-        #pragma warning disable RCS1163
         public unsafe void OnActionUse(byte ret, ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp) {
-            #pragma warning restore RCS1163
             var comboDict = ComboStore.GetCombos();
 
             Data.Action* act = DataStore.Action;

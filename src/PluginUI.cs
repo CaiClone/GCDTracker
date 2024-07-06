@@ -50,12 +50,20 @@ namespace GCDTracker
                         || DataStore.ClientState.IsPvP;
 
             conf.EnabledGWJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGW);
+            conf.EnabledGBJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGB);
             conf.EnabledCTJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobCT);
             if (conf.WheelEnabled && !noUI && (conf.WindowMoveableGW || (enabledJobGW && (conf.ShowOutOfCombatGW || inCombat)))) {
                 SetupWindow("GCDTracker_GCDWheel", conf.WindowMoveableGW);
                 gcd.DrawGCDWheel(this, conf);
                 ImGui.End();
             }
+
+            if (conf.BarEnabled && !noUI && (conf.WindowMoveableBar || (enabledJobGB && (conf.ShowOutOfCombatBar || inCombat)))) {
+                SetupWindow("GCDTracker_Bar", conf.WindowMoveableBar);
+                gcd.DrawGCDBar(this, conf);
+                ImGui.End();
+            }
+
 
             if (conf.ComboEnabled && !noUI && (conf.WindowMoveableCT || (enabledJobCT && (conf.ShowOutOfCombatCT || inCombat)))) {
                 SetupWindow("GCDTracker_ComboTracker", conf.WindowMoveableCT);
@@ -83,6 +91,23 @@ namespace GCDTracker
             w_size = ImGui.GetWindowSize();
             w_cent = new Vector2(w_pos.X + (w_size.X * 0.5f), w_pos.Y + (w_size.Y * 0.5f));
             Scale = w_size.X / 200f;
+        }
+
+        public void DrawBar(float startRatio, float endRatio, float width, float thickness, Vector4 color) {
+            float start =  w_cent.X + (startRatio * width) - (width / 2);
+            float end = w_cent.X + (endRatio * width) - (width / 2);
+            draw.AddRectFilled(
+                new Vector2(start, w_cent.Y - (thickness / 2)),
+                new Vector2(end, w_cent.Y + (thickness / 2)),
+                ImGui.GetColorU32(color), 0, ImDrawFlags.None);
+        }
+
+        public void DrawRect(Vector2 start, Vector2 end, Vector4 color, float thickness) {
+            draw.AddRect(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None, thickness);
+        }
+
+        public void DrawRectFilled(Vector2 start, Vector2 end, Vector4 color) {
+            draw.AddRectFilled(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None);
         }
 
         public void DrawCircSegment(float start_rad, float end_rad, float thickness,Vector4 col) {

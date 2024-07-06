@@ -7,6 +7,7 @@ using GCDTracker.Data;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 
 [assembly: InternalsVisibleTo("Tests")]
@@ -33,9 +34,7 @@ namespace GCDTracker {
             checkClip = false;
         }
 
-        #pragma warning disable RCS1163
         public void OnActionUse(byte ret, ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp) {
-            #pragma warning restore RCS1163
             var act = DataStore.Action;
 
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
@@ -156,25 +155,80 @@ namespace GCDTracker {
                 clippedGCD = false;
 
             var backgroundCol = clippedGCD ? conf.clipCol : conf.backCol;
-            ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); //Background
+            // Background
+            ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); 
             ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, backgroundCol);
-
-            ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); //Queue lock
+            //Queue lock
+            ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); 
             ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, backgroundCol);
             ui.DrawClip();
 
             ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
 
             foreach (var (ogcd, (anlock, iscast)) in ogcds) {
-                var isClipping = !iscast && DateTime.Now > lastGCDEnd + TimeSpan.FromMilliseconds(50)  &&
-                    (
-                        (ogcd < (gcdTotal - 0.05f) && ogcd + anlock > gcdTotal) // You will clip next GCD
-                        || (gcdTime < 0.001f && ogcd < 0.001f && (anlock > (lastActionCast? 0.125:0.025))) // anlock when no gcdRolling nor CastEndAnimation
-                    );
+                var isClipping = CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
                 ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * ui.Scale, isClipping ? conf.clipCol : conf.anLockCol);
                 if (!iscast) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * ui.Scale, conf.ogcdCol);
             }
         }
+
+        public void DrawGCDBar(PluginUI ui, Configuration conf) {
+            float gcdTotal = TotalGCD;
+            float gcdTime = lastElapsedGCD;
+            if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
+                gcdTime = gcdTotal;
+            if (gcdTotal < 0.1f) return;
+            if (checkClip && ShouldStartClip()) {
+                ui.StartClip(lastClipDelta);
+                lastClipDelta = 0;
+            }
+            if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
+                clippedGCD = false;
+
+                
+            var backgroundCol = clippedGCD ? conf.bar_clipCol : conf.bar_backCol;
+            float barHeight = ui.w_size.Y * 0.5f;
+            float barWidth = ui.w_size.X * 0.7f;
+            float borderSize = 2f;
+
+            Vector2 start = new(ui.w_cent.X - barWidth / 2, ui.w_cent.Y - barHeight / 2);
+            Vector2 end = new(ui.w_cent.X + barWidth / 2, ui.w_cent.Y + barHeight / 2);
+            // Background
+            ui.DrawBar(0f, 1f, barWidth, barHeight, backgroundCol);
+            // TODO: Clip
+
+            ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.bar_frontCol);
+            ui.DrawRect(
+                start - new Vector2(borderSize, borderSize),
+                end + new Vector2(borderSize, borderSize),
+                conf.bar_backColBorder, borderSize);
+            foreach (var (ogcd, (anlock, iscast)) in ogcds) {
+                var isClipping = CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
+                Vector2 clipPos = new(
+                    ui.w_cent.X + (ogcd / gcdTotal * barWidth) - (barWidth / 2),
+                    ui.w_cent.Y - (barHeight / 2)
+                );
+                ui.DrawBar(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, barWidth, barHeight, isClipping ? conf.bar_clipCol : conf.bar_anLockCol);
+                if (!iscast) ui.DrawRectFilled(clipPos,
+                    clipPos + new Vector2(borderSize*2, barHeight),
+                    conf.ogcdCol);
+            }
+
+            //Border and queue lock
+            Vector2 queueLock = new(
+                ui.w_cent.X + (0.8f * barWidth) - (barWidth / 2),
+                ui.w_cent.Y - (barHeight / 2)
+            );
+            ui.DrawRectFilled(queueLock, queueLock + new Vector2(borderSize, barHeight), conf.bar_backColBorder);
+        }
+
+        private bool CheckClip(bool iscast, float ogcd, float anlock, float gcdTotal, float gcdTime) =>
+            !iscast && DateTime.Now > lastGCDEnd + TimeSpan.FromMilliseconds(50)  &&
+            (
+                (ogcd < (gcdTotal - 0.05f) && ogcd + anlock > gcdTotal) // You will clip next GCD
+                || (gcdTime < 0.001f && ogcd < 0.001f && (anlock > (lastActionCast? 0.125:0.025))) // anlock when no gcdRolling nor CastEndAnimation
+            );
+        
 
         private void EndCurrentGCD(float GCDtime) {
             SlideGCDs(GCDtime, true);
