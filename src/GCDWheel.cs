@@ -198,28 +198,32 @@ namespace GCDTracker {
             ui.DrawClip(0.9f, -0.3f, conf.BarClipTextSize, conf.BarFrontCol, conf.BarclipCol);
 
             ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.BarFrontCol);
-            ui.DrawRect(
-                start - new Vector2(borderSize-1, borderSize),
-                end + new Vector2(borderSize-1, borderSize),
-                conf.BarBackColBorder, borderSize);
+            if (borderSize > 0) {
+                ui.DrawRect(
+                    start - new Vector2(borderSize, borderSize)/2,
+                    end + new Vector2(borderSize, borderSize)/2,
+                    conf.BarBackColBorder, borderSize);
+            }
             foreach (var (ogcd, (anlock, iscast)) in ogcds) {
                 var isClipping = CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
                 Vector2 clipPos = new(
                     ui.w_cent.X + (ogcd / gcdTotal * barWidth) - (barWidth / 2),
-                    ui.w_cent.Y - (barHeight / 2)
+                    ui.w_cent.Y - (barHeight / 2) + 1f
                 );
                 ui.DrawBar(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, barWidth, barHeight, isClipping ? conf.BarclipCol : conf.BarAnLockCol);
                 if (!iscast) ui.DrawRectFilled(clipPos,
-                    clipPos + new Vector2(borderSize*2, barHeight),
+                    clipPos + new Vector2(2f*ui.Scale, barHeight-2f),
                     conf.BarOgcdCol);
             }
 
             //Border and queue lock
             Vector2 queueLock = new(
                 ui.w_cent.X + (0.8f * barWidth) - (barWidth / 2),
-                ui.w_cent.Y - (barHeight / 2) - borderSize
+                ui.w_cent.Y - (barHeight / 2) - (borderSize / 2)
             );
-            ui.DrawRectFilled(queueLock, queueLock + new Vector2(borderSize, barHeight+borderSize), conf.BarBackColBorder);
+            ui.DrawRectFilled(queueLock,
+                queueLock + new Vector2(borderSize, barHeight + (borderSize / 2)),
+                conf.BarBackColBorder);
         }
 
         private bool CheckClip(bool iscast, float ogcd, float anlock, float gcdTotal, float gcdTime) =>

@@ -46,7 +46,7 @@ namespace GCDTracker
         public float BarBorderSize = 2f;
         public float BarWidthRatio = 0.9f;
         public float BarHeightRatio = 0.5f;
-        public Vector4 BarBackCol = new(0.376f, 0.376f, 0.376f, 1);
+        public Vector4 BarBackCol = new(0.376f, 0.376f, 0.376f, 0.667f);
         public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
         public Vector4 BarFrontCol = new(0.9f, 0.9f, 0.9f, 1f);
         public Vector4 BarOgcdCol = new(1f, 1f, 1f, 1f);
