@@ -161,7 +161,7 @@ namespace GCDTracker {
             //Queue lock
             ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); 
             ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, backgroundCol);
-            ui.DrawClip();
+            ui.DrawClip(0.5f, 0, conf.ClipTextSize, conf.frontCol, conf.clipCol);
 
             ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
 
@@ -186,40 +186,40 @@ namespace GCDTracker {
                 clippedGCD = false;
 
                 
-            var backgroundCol = clippedGCD ? conf.bar_clipCol : conf.bar_backCol;
-            float barHeight = ui.w_size.Y * 0.5f;
-            float barWidth = ui.w_size.X * 0.7f;
-            float borderSize = 2f;
+            var backgroundCol = clippedGCD ? conf.BarclipCol : conf.BarBackCol;
+            float barHeight = ui.w_size.Y * conf.BarHeightRatio;
+            float barWidth = ui.w_size.X * conf.BarWidthRatio;
+            float borderSize = conf.BarBorderSize;
 
             Vector2 start = new(ui.w_cent.X - barWidth / 2, ui.w_cent.Y - barHeight / 2);
             Vector2 end = new(ui.w_cent.X + barWidth / 2, ui.w_cent.Y + barHeight / 2);
             // Background
             ui.DrawBar(0f, 1f, barWidth, barHeight, backgroundCol);
-            // TODO: Clip
+            ui.DrawClip(0.9f, -0.3f, conf.BarClipTextSize, conf.BarFrontCol, conf.BarclipCol);
 
-            ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.bar_frontCol);
+            ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.BarFrontCol);
             ui.DrawRect(
-                start - new Vector2(borderSize, borderSize),
-                end + new Vector2(borderSize, borderSize),
-                conf.bar_backColBorder, borderSize);
+                start - new Vector2(borderSize-1, borderSize),
+                end + new Vector2(borderSize-1, borderSize),
+                conf.BarBackColBorder, borderSize);
             foreach (var (ogcd, (anlock, iscast)) in ogcds) {
                 var isClipping = CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
                 Vector2 clipPos = new(
                     ui.w_cent.X + (ogcd / gcdTotal * barWidth) - (barWidth / 2),
                     ui.w_cent.Y - (barHeight / 2)
                 );
-                ui.DrawBar(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, barWidth, barHeight, isClipping ? conf.bar_clipCol : conf.bar_anLockCol);
+                ui.DrawBar(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, barWidth, barHeight, isClipping ? conf.BarclipCol : conf.BarAnLockCol);
                 if (!iscast) ui.DrawRectFilled(clipPos,
                     clipPos + new Vector2(borderSize*2, barHeight),
-                    conf.ogcdCol);
+                    conf.BarOgcdCol);
             }
 
             //Border and queue lock
             Vector2 queueLock = new(
                 ui.w_cent.X + (0.8f * barWidth) - (barWidth / 2),
-                ui.w_cent.Y - (barHeight / 2)
+                ui.w_cent.Y - (barHeight / 2) - borderSize
             );
-            ui.DrawRectFilled(queueLock, queueLock + new Vector2(borderSize, barHeight), conf.bar_backColBorder);
+            ui.DrawRectFilled(queueLock, queueLock + new Vector2(borderSize, barHeight+borderSize), conf.BarBackColBorder);
         }
 
         private bool CheckClip(bool iscast, float ogcd, float anlock, float gcdTotal, float gcdTime) =>

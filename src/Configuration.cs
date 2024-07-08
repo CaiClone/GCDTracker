@@ -14,7 +14,7 @@ namespace GCDTracker
     [Serializable]
     public class Configuration : IPluginConfiguration
     {
-        public int Version { get; set; } = 1;
+        public int Version { get; set; } = 3;
 
         [JsonIgnore]
         public bool configEnabled;
@@ -26,14 +26,35 @@ namespace GCDTracker
         public bool ColorClipEnabled = true;
         public bool ClipAlertEnabled = true;
         public int ClipAlertPrecision = 0;
+        public float ClipTextSize = 0.86f;
         public Vector4 backCol = new(0.376f, 0.376f, 0.376f, 1);
         public Vector4 backColBorder = new(0f, 0f, 0f, 1f);
         public Vector4 frontCol = new(0.9f, 0.9f, 0.9f, 1f);
         public Vector4 ogcdCol = new(1f, 1f, 1f, 1f);
         public Vector4 anLockCol = new(0.334f, 0.334f, 0.334f, 0.667f);
         public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
+
+        //GCDBar
+        public bool BarEnabled = false;
+        [JsonIgnore]
+        public bool BarWindowMoveable = false;
+        public bool BarShowOutOfCombat = false;
+        public bool BarColorClipEnabled = true;
+        public bool BarClipAlertEnabled = true;
+        public int BarClipAlertPrecision = 0;
+        public float BarClipTextSize = 0.8f;
+        public float BarBorderSize = 2f;
+        public float BarWidthRatio = 0.9f;
+        public float BarHeightRatio = 0.5f;
+        public Vector4 BarBackCol = new(0.376f, 0.376f, 0.376f, 1);
+        public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
+        public Vector4 BarFrontCol = new(0.9f, 0.9f, 0.9f, 1f);
+        public Vector4 BarOgcdCol = new(1f, 1f, 1f, 1f);
+        public Vector4 BarAnLockCol = new(0.334f, 0.334f, 0.334f, 0.667f);
+        public Vector4 BarclipCol = new(1f, 0f, 0f, 0.667f);
+
         //Combo
-        public bool ComboEnabled = true;
+        public bool ComboEnabled = false;
         [JsonIgnore]
         public bool WindowMoveableCT = false;
         public bool ShowOutOfCombatCT = false;
@@ -68,6 +89,39 @@ namespace GCDTracker
         ];
 
         public Dictionary<uint, bool> EnabledGWJobs = new() {
+            {1,true},
+            {19,true},
+            {3,true},
+            {21,true},
+            {32,true},
+            {37,true},
+            {26,true},
+            {28,true},
+            {6,true},
+            {24,true},
+            {33,true},
+            {2,true},
+            {20,true},
+            {4,true},
+            {22,true},
+            {29,true},
+            {30,true},
+            {34,true},
+            {7,true},
+            {25,true},
+            {27,true},
+            {35,true},
+            {5,true},
+            {23,true},
+            {31,true},
+            {38,true},
+            {39,true},
+            {40,true},
+            {41,true},
+            {42,true},
+        };
+
+        public Dictionary<uint, bool> EnabledGBJobs = new() {
             {1,true},
             {19,true},
             {3,true},
@@ -165,6 +219,7 @@ namespace GCDTracker
                             ImGui.SameLine();
                             ImGui.RadioButton("0.XX", ref ClipAlertPrecision, 2);
                         }
+                        ImGui.SliderFloat("Clip text size", ref ClipTextSize, 0.2f, 2f);
 
                         ImGui.Separator();
                         ImGui.Columns(2);
@@ -179,6 +234,49 @@ namespace GCDTracker
                         ImGui.Separator();
 
                         DrawJobGrid(ref EnabledGWJobs, true);
+                    }
+                    ImGui.EndTabItem();
+                }
+                if (ImGui.BeginTabItem("GCDBar")) {
+                    ImGui.Checkbox("Enable GCDBar", ref BarEnabled);
+                    if (BarEnabled) {
+                        ImGui.Checkbox("Move/resize window", ref BarWindowMoveable);
+                        if (BarWindowMoveable)
+                            ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
+                        ImGui.Checkbox("Show out of combat", ref BarShowOutOfCombat);
+                        ImGui.Separator();
+
+                        ImGui.Checkbox("Color bar on clipped GCD", ref BarColorClipEnabled);
+                        ImGui.Checkbox("Show clip alert", ref BarClipAlertEnabled);
+                        if (BarClipAlertEnabled) {
+                            ImGui.SameLine();
+                            ImGui.RadioButton("CLIP", ref BarClipAlertPrecision, 0);
+                            ImGui.SameLine();
+                            ImGui.RadioButton("0.X", ref BarClipAlertPrecision, 1);
+                            ImGui.SameLine();
+                            ImGui.RadioButton("0.XX", ref BarClipAlertPrecision, 2);
+                        }
+                        ImGui.SliderFloat("Clip text size", ref BarClipTextSize, 0.2f, 2f);
+
+                        ImGui.Separator();
+                        ImGui.Columns(2);
+                        ImGui.ColorEdit4("Background bar color", ref BarBackCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("Background border color", ref BarBackColBorder, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("GCD bar color", ref BarFrontCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.NextColumn();
+                        ImGui.ColorEdit4("GCD start indicator color", ref BarOgcdCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("Animation lock bar color", ref BarAnLockCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("Clipping color", ref BarclipCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.Columns(1);
+                        ImGui.Separator();
+                        ImGui.SliderFloat("Border size", ref BarBorderSize, 0f, 10f);
+                        Vector2 size = new(BarWidthRatio, BarHeightRatio);
+                        ImGui.SliderFloat2("Width and height ratio", ref size, 0.1f, 1f);
+                        BarWidthRatio = size.X;
+                        BarHeightRatio = size.Y;
+                        ImGui.Separator();
+
+                        DrawJobGrid(ref EnabledGBJobs, true);
                     }
                     ImGui.EndTabItem();
                 }

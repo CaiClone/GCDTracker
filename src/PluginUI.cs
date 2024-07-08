@@ -58,8 +58,8 @@ namespace GCDTracker
                 ImGui.End();
             }
 
-            if (conf.BarEnabled && !noUI && (conf.WindowMoveableBar || (enabledJobGB && (conf.ShowOutOfCombatBar || inCombat)))) {
-                SetupWindow("GCDTracker_Bar", conf.WindowMoveableBar);
+            if (conf.BarEnabled && !noUI && (conf.BarWindowMoveable || (enabledJobGB && (conf.BarShowOutOfCombat || inCombat)))) {
+                SetupWindow("GCDTracker_Bar", conf.BarWindowMoveable);
                 gcd.DrawGCDBar(this, conf);
                 ImGui.End();
             }
@@ -146,15 +146,19 @@ namespace GCDTracker
             clipAnimPos.Restart();
         }
 
-        public void DrawClip() {
+        public void DrawClip(float relx, float rely, float textSize, Vector4 frontCol, Vector4 clipCol) {
             if (!clipAnimAlpha.IsRunning || clipAnimAlpha.IsDone) return;
 
             ImGui.PushFont(UiBuilder.MonoFont);
-            ImGui.SetWindowFontScale(1.3f * Scale);
+            ImGui.SetWindowFontScale(textSize);
 
             var textSz = ImGui.CalcTextSize(clipText);
-            var textStartPos = w_cent - (textSz / 2) - new Vector2(0, (w_size.X * 0.3f) + (20 * Scale));
-            var padding = new Vector2(10, 5) * Scale;
+            var textStartPos =
+                w_cent
+                - (w_size / 2)
+                + new Vector2(w_size.X * relx, w_size.Y * rely)
+                - (textSz / 2);
+            var padding = new Vector2(10, 5) * textSize;
 
             if (!clipAnimAlpha.IsDone) clipAnimAlpha.Update();
             if (!clipAnimPos.IsDone) clipAnimPos.Update();
@@ -165,10 +169,10 @@ namespace GCDTracker
             draw.AddRectFilled(
                 textStartPos - padding + animPos,
                 textStartPos + textSz + padding + animPos,
-                ImGui.GetColorU32(new Vector4(conf.clipCol.X, conf.clipCol.Y, conf.clipCol.Z, 1-animAlpha)), 10f);
+                ImGui.GetColorU32(new Vector4(clipCol.X, clipCol.Y, clipCol.Z, 1-animAlpha)), 10f);
             draw.AddText(
                 textStartPos + animPos,
-                ImGui.GetColorU32(new Vector4(conf.frontCol.X, conf.frontCol.Y, conf.frontCol.Z,1 - animAlpha)),
+                ImGui.GetColorU32(new Vector4(frontCol.X, frontCol.Y, frontCol.Z,1 - animAlpha)),
                 clipText);
 
             ImGui.SetWindowFontScale(1f);
