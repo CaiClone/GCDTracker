@@ -154,14 +154,15 @@ namespace GCDTracker {
             if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
                 clippedGCD = false;
 
-            var backgroundCol = clippedGCD ? conf.clipCol : conf.backCol;
+            var backgroundCol = clippedGCD && conf.ColorClipEnabled ? conf.clipCol : conf.backCol;
             // Background
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); 
             ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, backgroundCol);
             //Queue lock
             ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); 
             ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, backgroundCol);
-            ui.DrawClip(0.5f, 0, conf.ClipTextSize, conf.frontCol, conf.clipCol);
+            if (conf.ClipAlertEnabled)
+                ui.DrawClip(0.5f, 0, conf.ClipTextSize, conf.frontCol, conf.clipCol);
 
             ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
 
@@ -186,7 +187,7 @@ namespace GCDTracker {
                 clippedGCD = false;
 
                 
-            var backgroundCol = clippedGCD ? conf.BarclipCol : conf.BarBackCol;
+            var backgroundCol = clippedGCD && conf.BarColorClipEnabled ? conf.BarclipCol : conf.BarBackCol;
             float barHeight = ui.w_size.Y * conf.BarHeightRatio;
             float barWidth = ui.w_size.X * conf.BarWidthRatio;
             float borderSize = conf.BarBorderSize;
@@ -195,7 +196,8 @@ namespace GCDTracker {
             Vector2 end = new(ui.w_cent.X + barWidth / 2, ui.w_cent.Y + barHeight / 2);
             // Background
             ui.DrawBar(0f, 1f, barWidth, barHeight, backgroundCol);
-            ui.DrawClip(0.9f, -0.3f, conf.BarClipTextSize, conf.BarFrontCol, conf.BarclipCol);
+            if (conf.BarClipAlertEnabled)
+                ui.DrawClip(1 - (conf.BarWidthRatio / 2), -0.3f, conf.BarClipTextSize, conf.BarFrontCol, conf.BarclipCol);
 
             ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.BarFrontCol);
             if (borderSize > 0) {

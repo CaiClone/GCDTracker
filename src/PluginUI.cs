@@ -139,7 +139,7 @@ namespace GCDTracker
         }
 
         public void StartClip(float ms) {
-            if (!conf.ClipAlertEnabled) return;
+            if (!conf.ClipAlertEnabled && !conf.BarClipAlertEnabled) return;
             if (conf.ClipAlertPrecision == 0) clipText = "CLIP";
             else clipText = string.Format(conf.ClipAlertPrecision == 1 ? "{0:0.0}": "{0:0.00}", ms);
             clipAnimAlpha.Restart();

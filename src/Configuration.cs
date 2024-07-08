@@ -41,7 +41,6 @@ namespace GCDTracker
         public bool BarShowOutOfCombat = false;
         public bool BarColorClipEnabled = true;
         public bool BarClipAlertEnabled = true;
-        public int BarClipAlertPrecision = 0;
         public float BarClipTextSize = 0.8f;
         public float BarBorderSize = 2f;
         public float BarWidthRatio = 0.9f;
@@ -248,14 +247,6 @@ namespace GCDTracker
 
                         ImGui.Checkbox("Color bar on clipped GCD", ref BarColorClipEnabled);
                         ImGui.Checkbox("Show clip alert", ref BarClipAlertEnabled);
-                        if (BarClipAlertEnabled) {
-                            ImGui.SameLine();
-                            ImGui.RadioButton("CLIP", ref BarClipAlertPrecision, 0);
-                            ImGui.SameLine();
-                            ImGui.RadioButton("0.X", ref BarClipAlertPrecision, 1);
-                            ImGui.SameLine();
-                            ImGui.RadioButton("0.XX", ref BarClipAlertPrecision, 2);
-                        }
                         ImGui.SliderFloat("Clip text size", ref BarClipTextSize, 0.2f, 2f);
 
                         ImGui.Separator();
