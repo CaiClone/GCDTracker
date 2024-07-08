@@ -185,7 +185,6 @@ namespace GCDTracker {
             }
             if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
                 clippedGCD = false;
-
                 
             var backgroundCol = clippedGCD && conf.BarColorClipEnabled ? conf.BarclipCol : conf.BarBackCol;
             float barHeight = ui.w_size.Y * conf.BarHeightRatio;
@@ -208,11 +207,12 @@ namespace GCDTracker {
             }
             foreach (var (ogcd, (anlock, iscast)) in ogcds) {
                 var isClipping = CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
+                var mogcd = (gcdTotal - ogcd <0.2f) && conf.BarRollGCDs ? ogcd - gcdTotal : ogcd;
                 Vector2 clipPos = new(
-                    ui.w_cent.X + (ogcd / gcdTotal * barWidth) - (barWidth / 2),
+                    ui.w_cent.X + (mogcd / gcdTotal * barWidth) - (barWidth / 2),
                     ui.w_cent.Y - (barHeight / 2) + 1f
                 );
-                ui.DrawBar(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, barWidth, barHeight, isClipping ? conf.BarclipCol : conf.BarAnLockCol);
+                ui.DrawBar(mogcd / gcdTotal, (mogcd + anlock) / gcdTotal, barWidth, barHeight, isClipping ? conf.BarclipCol : conf.BarAnLockCol);
                 if (!iscast) ui.DrawRectFilled(clipPos,
                     clipPos + new Vector2(2f*ui.Scale, barHeight-2f),
                     conf.BarOgcdCol);

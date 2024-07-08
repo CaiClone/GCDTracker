@@ -41,6 +41,7 @@ namespace GCDTracker
         public bool BarShowOutOfCombat = false;
         public bool BarColorClipEnabled = true;
         public bool BarClipAlertEnabled = true;
+        public bool BarRollGCDs = true;
         public float BarClipTextSize = 0.8f;
         public float BarBorderSize = 2f;
         public float BarWidthRatio = 0.9f;
@@ -243,12 +244,17 @@ namespace GCDTracker
                         if (BarWindowMoveable)
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         ImGui.Checkbox("Show out of combat", ref BarShowOutOfCombat);
-                        ImGui.Separator();
+                        ImGui.Checkbox("Roll GCDs", ref BarRollGCDs);
+                        if (ImGui.IsItemHovered()){
+                            ImGui.BeginTooltip();
+                            ImGui.Text("If enabled abilities that start on the next GCD will always be shown inside the bar, even if it overlaps the current GCD.");
+                            ImGui.EndTooltip();
+                        }
 
+                        ImGui.Separator();
                         ImGui.Checkbox("Color bar on clipped GCD", ref BarColorClipEnabled);
                         ImGui.Checkbox("Show clip alert", ref BarClipAlertEnabled);
                         ImGui.SliderFloat("Clip text size", ref BarClipTextSize, 0.2f, 2f);
-
                         ImGui.Separator();
                         ImGui.Columns(2);
                         ImGui.ColorEdit4("Background bar color", ref BarBackCol, ImGuiColorEditFlags.NoInputs);
