@@ -1,13 +1,11 @@
 ﻿using Dalamud.Configuration;
-using Dalamud.Logging;
+using Dalamud.Interface;
 using Dalamud.Plugin;
-using Dalamud.Utility.Numerics;
 using GCDTracker.Data;
 using ImGuiNET;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 
@@ -31,12 +29,15 @@ namespace GCDTracker
         public bool ClipAlertEnabled = true;
         public int ClipAlertPrecision = 0;
         public float ClipTextSize = 0.86f;
+        public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
+        public Vector4 ClipTextColor = new(0.9f, 0.9f, 0.9f, 1f);
+        public Vector4 ClipBackColor = new(1f, 0f, 0f, 1f);
+
         public Vector4 backCol = new(0.376f, 0.376f, 0.376f, 1);
         public Vector4 backColBorder = new(0f, 0f, 0f, 1f);
         public Vector4 frontCol = new(0.9f, 0.9f, 0.9f, 1f);
         public Vector4 ogcdCol = new(1f, 1f, 1f, 1f);
         public Vector4 anLockCol = new(0.334f, 0.334f, 0.334f, 0.667f);
-        public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
 
         //GCDBar
         public bool BarEnabled = false;
@@ -48,6 +49,9 @@ namespace GCDTracker
         public int BarClipAlertPrecision = 0;
         public bool BarRollGCDs = true;
         public float BarClipTextSize = 0.8f;
+        public Vector4 BarclipCol = new(1f, 0f, 0f, 0.667f);
+        public Vector4 BarClipTextColor = new(0.9f, 0.9f, 0.9f, 1f);
+        public Vector4 BarClipBackColor = new(1f, 0f, 0f, 1f);
         public float BarBorderSize = 2f;
         public float BarWidthRatio = 0.9f;
         public float BarHeightRatio = 0.5f;
@@ -56,7 +60,6 @@ namespace GCDTracker
         public Vector4 BarFrontCol = new(0.9f, 0.9f, 0.9f, 1f);
         public Vector4 BarOgcdCol = new(1f, 1f, 1f, 1f);
         public Vector4 BarAnLockCol = new(0.334f, 0.334f, 0.334f, 0.667f);
-        public Vector4 BarclipCol = new(1f, 0f, 0f, 0.667f);
 
         //Combo
         public bool ComboEnabled = false;
@@ -201,11 +204,11 @@ namespace GCDTracker
             while (Version < LastVersion) {
                 switch (Version) {
                     case 3:
-                        ClipTextColor = frontCol.WithW(1f);
-                        ClipBackColor = clipCol.WithW(1f);
+                        ClipTextColor = frontCol.WithAlpha(1f);
+                        ClipBackColor = clipCol.WithAlpha(1f);
 
-                        BarClipTextColor = BarFrontCol.WithW(1f);
-                        BarClipBackColor = BarclipCol.WithW(1f);
+                        BarClipTextColor = BarFrontCol.WithAlpha(1f);
+                        BarClipBackColor = BarclipCol.WithAlpha(1f);
                         break;
                 }
                 Version++;
@@ -239,6 +242,10 @@ namespace GCDTracker
                             ImGui.RadioButton("0.X", ref ClipAlertPrecision, 1);
                             ImGui.SameLine();
                             ImGui.RadioButton("0.XX", ref ClipAlertPrecision, 2);
+
+                            ImGui.ColorEdit4("Clip text color", ref ClipTextColor, ImGuiColorEditFlags.NoInputs);
+                            ImGui.SameLine();
+                            ImGui.ColorEdit4("Clip background color", ref ClipBackColor, ImGuiColorEditFlags.NoInputs);
                         }
                         ImGui.SliderFloat("Clip text size", ref ClipTextSize, 0.2f, 2f);
 
@@ -282,6 +289,10 @@ namespace GCDTracker
                             ImGui.RadioButton("0.X", ref BarClipAlertPrecision, 1);
                             ImGui.SameLine();
                             ImGui.RadioButton("0.XX", ref BarClipAlertPrecision, 2);
+
+                            ImGui.ColorEdit4("Clip text color", ref BarClipTextColor, ImGuiColorEditFlags.NoInputs);
+                            ImGui.SameLine();
+                            ImGui.ColorEdit4("Clip background color", ref BarClipBackColor, ImGuiColorEditFlags.NoInputs);
                         }
                         ImGui.SliderFloat("Clip text size", ref BarClipTextSize, 0.2f, 2f);
                         ImGui.Separator();

@@ -2,6 +2,7 @@
 using Dalamud.Interface.Animation;
 using Dalamud.Interface.Animation.EasingFunctions;
 using Dalamud.Logging;
+using Dalamud.Utility.Numerics;
 using GCDTracker.Data;
 using ImGuiNET;
 using System;
@@ -146,7 +147,7 @@ namespace GCDTracker
             clipAnimPos.Restart();
         }
 
-        public void DrawClip(float relx, float rely, float textSize, Vector4 frontCol, Vector4 clipCol, int clipTextPrecision = 0) {
+        public void DrawClip(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol, int clipTextPrecision = 0) {
             if (!clipAnimAlpha.IsRunning || clipAnimAlpha.IsDone) return;
             if (clipTextPrecision > clipText.Length - 1){
                 GCDTracker.Log.Error("Clip text precision invalid");
@@ -173,10 +174,10 @@ namespace GCDTracker
             draw.AddRectFilled(
                 textStartPos - padding + animPos,
                 textStartPos + textSz + padding + animPos,
-                ImGui.GetColorU32(new Vector4(clipCol.X, clipCol.Y, clipCol.Z, 1-animAlpha)), 10f);
+                ImGui.GetColorU32(backCol.WithAlpha(1-animAlpha)), 10f);
             draw.AddText(
                 textStartPos + animPos,
-                ImGui.GetColorU32(new Vector4(frontCol.X, frontCol.Y, frontCol.Z, 1 - animAlpha)),
+                ImGui.GetColorU32(textCol.WithAlpha(1-animAlpha)),
                 clipText[clipTextPrecision]);
 
             ImGui.SetWindowFontScale(1f);

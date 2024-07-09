@@ -162,7 +162,7 @@ namespace GCDTracker {
             ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); 
             ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, backgroundCol);
             if (conf.ClipAlertEnabled)
-                ui.DrawClip(0.5f, 0, conf.ClipTextSize, conf.frontCol, conf.clipCol, conf.ClipAlertPrecision);
+                ui.DrawClip(0.5f, 0, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
 
             ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
 
@@ -196,7 +196,7 @@ namespace GCDTracker {
             // Background
             ui.DrawBar(0f, 1f, barWidth, barHeight, backgroundCol);
             if (conf.BarClipAlertEnabled)
-                ui.DrawClip(1 - (conf.BarWidthRatio / 2), -0.3f, conf.BarClipTextSize, conf.BarFrontCol, conf.BarclipCol, conf.BarClipAlertPrecision);
+                ui.DrawClip(1 - (conf.BarWidthRatio / 2), -0.3f, conf.BarClipTextSize, conf.BarClipTextColor, conf.BarClipBackColor, conf.BarClipAlertPrecision);
 
             ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.BarFrontCol);
             if (borderSize > 0) {
