@@ -23,7 +23,7 @@ namespace GCDTracker
         public Vector2 w_size;
         public float Scale;
         private ImDrawListPtr draw;
-        private string clipText;
+        private string[] clipText;
 
         public PluginUI(Configuration conf) {
             this.conf = conf;
@@ -35,7 +35,7 @@ namespace GCDTracker
                 Point1 = new(0, 0),
                 Point2 = new(0, -20)
             };
-            clipText = "CLIP";
+            clipText = ["CLIP", "0.0", "0.00"];
         }
 
         public void Draw() {
@@ -140,19 +140,23 @@ namespace GCDTracker
 
         public void StartClip(float ms) {
             if (!conf.ClipAlertEnabled && !conf.BarClipAlertEnabled) return;
-            if (conf.ClipAlertPrecision == 0) clipText = "CLIP";
-            else clipText = string.Format(conf.ClipAlertPrecision == 1 ? "{0:0.0}": "{0:0.00}", ms);
+            clipText[1] = string.Format("{0:0.0}", ms);
+            clipText[2] = string.Format("{0:0.00}", ms);
             clipAnimAlpha.Restart();
             clipAnimPos.Restart();
         }
 
-        public void DrawClip(float relx, float rely, float textSize, Vector4 frontCol, Vector4 clipCol) {
+        public void DrawClip(float relx, float rely, float textSize, Vector4 frontCol, Vector4 clipCol, int clipTextPrecision = 0) {
             if (!clipAnimAlpha.IsRunning || clipAnimAlpha.IsDone) return;
+            if (clipTextPrecision > clipText.Length - 1){
+                GCDTracker.Log.Error("Clip text precision invalid");
+                return;
+            }
 
             ImGui.PushFont(UiBuilder.MonoFont);
             ImGui.SetWindowFontScale(textSize);
 
-            var textSz = ImGui.CalcTextSize(clipText);
+            var textSz = ImGui.CalcTextSize(clipText[clipTextPrecision]);
             var textStartPos =
                 w_cent
                 - (w_size / 2)
@@ -172,8 +176,8 @@ namespace GCDTracker
                 ImGui.GetColorU32(new Vector4(clipCol.X, clipCol.Y, clipCol.Z, 1-animAlpha)), 10f);
             draw.AddText(
                 textStartPos + animPos,
-                ImGui.GetColorU32(new Vector4(frontCol.X, frontCol.Y, frontCol.Z,1 - animAlpha)),
-                clipText);
+                ImGui.GetColorU32(new Vector4(frontCol.X, frontCol.Y, frontCol.Z, 1 - animAlpha)),
+                clipText[clipTextPrecision]);
 
             ImGui.SetWindowFontScale(1f);
             ImGui.PopFont();
