@@ -1,11 +1,13 @@
 ﻿using Dalamud.Configuration;
 using Dalamud.Logging;
 using Dalamud.Plugin;
+using Dalamud.Utility.Numerics;
 using GCDTracker.Data;
 using ImGuiNET;
 using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 
@@ -14,6 +16,8 @@ namespace GCDTracker
     [Serializable]
     public class Configuration : IPluginConfiguration
     {
+        [JsonIgnore]
+        public int LastVersion = 4;
         public int Version { get; set; } = 4;
 
         [JsonIgnore]
@@ -188,10 +192,26 @@ namespace GCDTracker
             { 42, false },
         };
 
-        // Add any other properties or methods here.
         [JsonIgnore] private IDalamudPluginInterface pluginInterface;
 
         public void Initialize(IDalamudPluginInterface pluginInterface) => this.pluginInterface = pluginInterface;
+        public void Migrate() {
+            if (Version == LastVersion) return;
+            GCDTracker.Log.Warning($"Migrating config from version {Version} to version {LastVersion}");
+            while (Version < LastVersion) {
+                switch (Version) {
+                    case 3:
+                        ClipTextColor = frontCol.WithW(1f);
+                        ClipBackColor = clipCol.WithW(1f);
+
+                        BarClipTextColor = BarFrontCol.WithW(1f);
+                        BarClipBackColor = BarclipCol.WithW(1f);
+                        break;
+                }
+                Version++;
+            }
+            Save();
+        }
         public void Save() => pluginInterface.SavePluginConfig(this);
 
         public void DrawConfig() {

@@ -5,7 +5,6 @@ using Dalamud.IoC;
 using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using FFXIVClientStructs.Interop;
 using GCDTracker.Attributes;
 using GCDTracker.Data;
 
@@ -55,6 +54,7 @@ namespace GCDTracker
         public GCDTracker() {
             config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
             config.Initialize(PluginInterface);
+            config.Migrate();
 
             DataStore.Init(Data,ClientState,Condition);
             ComboStore.Init(config);
@@ -111,7 +111,7 @@ namespace GCDTracker
 
             commandManager.Dispose();
 
-            PluginInterface.SavePluginConfig(config);
+            config.Save();
 
             PluginInterface.UiBuilder.Draw -= ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi -= OpenConfig;
