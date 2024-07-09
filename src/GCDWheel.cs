@@ -196,7 +196,7 @@ namespace GCDTracker {
             // Background
             ui.DrawBar(0f, 1f, barWidth, barHeight, backgroundCol);
             if (conf.BarClipAlertEnabled)
-                ui.DrawClip(1 - (conf.BarWidthRatio / 2), -0.3f, conf.BarClipTextSize, conf.BarClipTextColor, conf.BarClipBackColor, conf.BarClipAlertPrecision);
+                ui.DrawClip((conf.BarWidthRatio + 1) / 2, -0.3f, conf.BarClipTextSize, conf.BarClipTextColor, conf.BarClipBackColor, conf.BarClipAlertPrecision);
 
             ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.BarFrontCol);
             if (borderSize > 0) {
