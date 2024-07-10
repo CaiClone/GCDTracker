@@ -25,6 +25,7 @@ namespace GCDTracker
         [JsonIgnore]
         public bool WindowMoveableGW = false;
         public bool ShowOutOfCombatGW = false;
+        public bool WheelQueueLockEnabled = true;
         public bool ColorClipEnabled = true;
         public bool ClipAlertEnabled = true;
         public int ClipAlertPrecision = 0;
@@ -44,6 +45,7 @@ namespace GCDTracker
         [JsonIgnore]
         public bool BarWindowMoveable = false;
         public bool BarShowOutOfCombat = false;
+        public bool BarQueueLockEnabled = true;
         public bool BarColorClipEnabled = true;
         public bool BarClipAlertEnabled = true;
         public int BarClipAlertPrecision = 0;
@@ -231,6 +233,12 @@ namespace GCDTracker
                         if (WindowMoveableGW)
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         ImGui.Checkbox("Show out of combat", ref ShowOutOfCombatGW);
+                        ImGui.Checkbox("Show queue lock", ref WheelQueueLockEnabled);
+                        if (ImGui.IsItemHovered()){
+                            ImGui.BeginTooltip();
+                            ImGui.Text("If enabled, the wheel background will expand on the timing where you can queue the next GCD.");
+                            ImGui.EndTooltip();
+                        }
                         ImGui.Separator();
 
                         ImGui.Checkbox("Color wheel on clipped GCD", ref ColorClipEnabled);
@@ -272,6 +280,12 @@ namespace GCDTracker
                         if (BarWindowMoveable)
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         ImGui.Checkbox("Show out of combat", ref BarShowOutOfCombat);
+                        ImGui.Checkbox("Show queue lock", ref BarQueueLockEnabled);
+                        if (ImGui.IsItemHovered()){
+                            ImGui.BeginTooltip();
+                            ImGui.Text("Displays a background bar on the timing where you can queue the next GCD.");
+                            ImGui.EndTooltip();
+                        }
                         ImGui.Checkbox("Roll GCDs", ref BarRollGCDs);
                         if (ImGui.IsItemHovered()){
                             ImGui.BeginTooltip();

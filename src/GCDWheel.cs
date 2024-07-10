@@ -158,9 +158,10 @@ namespace GCDTracker {
             // Background
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); 
             ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, backgroundCol);
-            //Queue lock
-            ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); 
-            ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, backgroundCol);
+            if (conf.WheelQueueLockEnabled) {
+                ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); 
+                ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, backgroundCol);
+            }
             if (conf.ClipAlertEnabled)
                 ui.DrawClip(0.5f, 0, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
 
@@ -217,15 +218,15 @@ namespace GCDTracker {
                     clipPos + new Vector2(2f*ui.Scale, barHeight-2f),
                     conf.BarOgcdCol);
             }
-
-            //Border and queue lock
-            Vector2 queueLock = new(
-                ui.w_cent.X + (0.8f * barWidth) - (barWidth / 2),
-                ui.w_cent.Y - (barHeight / 2) - (borderSize / 2)
-            );
-            ui.DrawRectFilled(queueLock,
-                queueLock + new Vector2(borderSize, barHeight + (borderSize / 2)),
-                conf.BarBackColBorder);
+            if (conf.BarQueueLockEnabled) {
+                Vector2 queueLock = new(
+                    ui.w_cent.X + (0.8f * barWidth) - (barWidth / 2),
+                    ui.w_cent.Y - (barHeight / 2) - (borderSize / 2)
+                );
+                ui.DrawRectFilled(queueLock,
+                    queueLock + new Vector2(borderSize, barHeight + (borderSize / 2)),
+                    conf.BarBackColBorder);
+            }
         }
 
         private bool CheckClip(bool iscast, float ogcd, float anlock, float gcdTotal, float gcdTime) =>
