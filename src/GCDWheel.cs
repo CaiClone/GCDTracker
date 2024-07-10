@@ -208,15 +208,25 @@ namespace GCDTracker {
             }
             foreach (var (ogcd, (anlock, iscast)) in ogcds) {
                 var isClipping = CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
-                var mogcd = (gcdTotal - ogcd <0.2f) && conf.BarRollGCDs ? ogcd - gcdTotal : ogcd;
-                Vector2 clipPos = new(
-                    ui.w_cent.X + (mogcd / gcdTotal * barWidth) - (barWidth / 2),
-                    ui.w_cent.Y - (barHeight / 2) + 1f
-                );
-                ui.DrawBar(mogcd / gcdTotal, (mogcd + anlock) / gcdTotal, barWidth, barHeight, isClipping ? conf.BarclipCol : conf.BarAnLockCol);
-                if (!iscast) ui.DrawRectFilled(clipPos,
-                    clipPos + new Vector2(2f*ui.Scale, barHeight-2f),
-                    conf.BarOgcdCol);
+                float ogcdStart = conf.BarRollGCDs && gcdTotal - ogcd < 0.2f ? 0 : ogcd;
+                float ogcdEnd = ogcdStart + anlock;
+                // Ends next GCD
+                if (conf.BarRollGCDs && ogcdStart + anlock > gcdTotal) {
+                    ogcdEnd = gcdTotal;
+                    // Draw the clipped part at the beggining
+                    ui.DrawBar(0, (ogcdStart + anlock - gcdTotal)/gcdTotal, barWidth, barHeight, conf.BarclipCol);
+                }
+                
+                ui.DrawBar(ogcdStart / gcdTotal, ogcdEnd / gcdTotal, barWidth, barHeight, isClipping ? conf.BarclipCol : conf.BarAnLockCol);
+                if (!iscast) { 
+                    Vector2 clipPos = new(
+                        ui.w_cent.X + (ogcdStart / gcdTotal * barWidth) - (barWidth / 2),
+                        ui.w_cent.Y - (barHeight / 2) + 1f
+                    );
+                    ui.DrawRectFilled(clipPos,
+                        clipPos + new Vector2(2f*ui.Scale, barHeight-2f),
+                        conf.BarOgcdCol);
+                }
             }
             if (conf.BarQueueLockEnabled) {
                 Vector2 queueLock = new(
