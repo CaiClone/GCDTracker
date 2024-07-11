@@ -25,6 +25,8 @@ namespace GCDTracker {
         private bool clippedGCD;
         private bool checkClip;
 
+        public float SecondsSinceGCDEnd =>
+            lastElapsedGCD > 0 ? 0 : (float)(DateTime.Now - lastGCDEnd).TotalSeconds;
         public GCDWheel() {
             TotalGCD = 3.5f;
             lastGCDEnd = DateTime.Now;
@@ -221,7 +223,7 @@ namespace GCDTracker {
                 }
                 
                 ui.DrawBar(ogcdStart / gcdTotal, ogcdEnd / gcdTotal, barWidth, barHeight, isClipping ? conf.BarclipCol : conf.BarAnLockCol);
-                if (!iscast && (!isClipping || ogcdStart > 0.1f)) {
+                if (!iscast && (!isClipping || ogcdStart > 0.01f)) {
                     Vector2 clipPos = new(
                         ui.w_cent.X + (ogcdStart / gcdTotal * barWidth) - (barWidth / 2),
                         ui.w_cent.Y - (barHeight / 2) + 1f
@@ -279,4 +281,5 @@ namespace GCDTracker {
                 ogcds.Remove(ogcd.Key);
         }
     }
+
 }

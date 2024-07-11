@@ -53,20 +53,31 @@ namespace GCDTracker
             conf.EnabledGWJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGW);
             conf.EnabledGBJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGB);
             conf.EnabledCTJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobCT);
-            if (conf.WheelEnabled && !noUI && (conf.WindowMoveableGW || (enabledJobGW && (conf.ShowOutOfCombatGW || inCombat)))) {
+            if (conf.WheelEnabled && !noUI && (conf.WindowMoveableGW || 
+                (enabledJobGW
+                    && (conf.ShowOutOfCombatGW || inCombat)
+                    && (!conf.ShowOnlyGCDRunningGW || gcd.SecondsSinceGCDEnd < 2f)
+                    ))) {
                 SetupWindow("GCDTracker_GCDWheel", conf.WindowMoveableGW);
                 gcd.DrawGCDWheel(this, conf);
                 ImGui.End();
             }
 
-            if (conf.BarEnabled && !noUI && (conf.BarWindowMoveable || (enabledJobGB && (conf.BarShowOutOfCombat || inCombat)))) {
+            if (conf.BarEnabled && !noUI && (conf.BarWindowMoveable || 
+                (enabledJobGB 
+                    && (conf.BarShowOutOfCombat || inCombat)
+                    && (!conf.BarShowOnlyGCDRunning || gcd.SecondsSinceGCDEnd < 2f)
+                    ))) {
                 SetupWindow("GCDTracker_Bar", conf.BarWindowMoveable);
                 gcd.DrawGCDBar(this, conf);
                 ImGui.End();
             }
 
 
-            if (conf.ComboEnabled && !noUI && (conf.WindowMoveableCT || (enabledJobCT && (conf.ShowOutOfCombatCT || inCombat)))) {
+            if (conf.ComboEnabled && !noUI && (conf.WindowMoveableCT || 
+                (enabledJobCT 
+                    && (conf.ShowOutOfCombatCT || inCombat)
+                    ))) {
                 SetupWindow("GCDTracker_ComboTracker", conf.WindowMoveableCT);
                 ct.DrawComboLines(this, conf);
                 ImGui.End();

@@ -25,6 +25,7 @@ namespace GCDTracker
         [JsonIgnore]
         public bool WindowMoveableGW = false;
         public bool ShowOutOfCombatGW = false;
+        public bool ShowOnlyGCDRunningGW = false;
         public bool WheelQueueLockEnabled = true;
         public bool ColorClipEnabled = true;
         public bool ClipAlertEnabled = true;
@@ -45,6 +46,7 @@ namespace GCDTracker
         [JsonIgnore]
         public bool BarWindowMoveable = false;
         public bool BarShowOutOfCombat = false;
+        public bool BarShowOnlyGCDRunning = false;
         public bool BarQueueLockEnabled = true;
         public bool BarColorClipEnabled = true;
         public bool BarClipAlertEnabled = true;
@@ -233,6 +235,7 @@ namespace GCDTracker
                         if (WindowMoveableGW)
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         ImGui.Checkbox("Show out of combat", ref ShowOutOfCombatGW);
+                        ImGui.Checkbox("Show only when GCD running", ref ShowOnlyGCDRunningGW);
                         ImGui.Checkbox("Show queue lock", ref WheelQueueLockEnabled);
                         if (ImGui.IsItemHovered()){
                             ImGui.BeginTooltip();
@@ -280,6 +283,7 @@ namespace GCDTracker
                         if (BarWindowMoveable)
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         ImGui.Checkbox("Show out of combat", ref BarShowOutOfCombat);
+                        ImGui.Checkbox("Show only when GCD running", ref BarShowOnlyGCDRunning);
                         ImGui.Checkbox("Show queue lock", ref BarQueueLockEnabled);
                         if (ImGui.IsItemHovered()){
                             ImGui.BeginTooltip();
