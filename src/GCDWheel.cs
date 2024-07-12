@@ -202,12 +202,7 @@ namespace GCDTracker {
                 ui.DrawClip((conf.BarWidthRatio + 1) / 2, -0.3f, conf.BarClipTextSize, conf.BarClipTextColor, conf.BarClipBackColor, conf.BarClipAlertPrecision);
 
             ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.BarFrontCol);
-            if (borderSize > 0) {
-                ui.DrawRect(
-                    start - new Vector2(borderSize, borderSize)/2,
-                    end + new Vector2(borderSize, borderSize)/2,
-                    conf.BarBackColBorder, borderSize);
-            }
+
             float barGCDClipTime = 0;
             foreach (var (ogcd, (anlock, iscast)) in ogcds) {
                 var isClipping = CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
@@ -232,6 +227,13 @@ namespace GCDTracker {
                         clipPos + new Vector2(2f*ui.Scale, barHeight-2f),
                         conf.BarOgcdCol);
                 }
+            }
+            //borders last so they're on top of all elements
+            if (borderSize > 0) {
+                ui.DrawRect(
+                    start - new Vector2(borderSize, borderSize)/2,
+                    end + new Vector2(borderSize, borderSize)/2,
+                    conf.BarBackColBorder, borderSize);
             }
             if (conf.BarQueueLockEnabled) {
                 Vector2 queueLock = new(
