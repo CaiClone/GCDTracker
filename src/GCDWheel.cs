@@ -1,4 +1,4 @@
-﻿
+
 using Dalamud.Game;
 using Dalamud.Logging;
 using Dalamud.Plugin.Services;
@@ -186,7 +186,7 @@ namespace GCDTracker {
             if (conf.ClipAlertEnabled)
                 ui.DrawClip(0.5f, 0, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
             if (conf.abcAlertEnabled)
-                ui.DrawABC(0.8f, 0, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor);
+                ui.DrawABC(0.5f, 0, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor);
 
             ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
 
@@ -226,7 +226,7 @@ namespace GCDTracker {
             if (conf.BarClipAlertEnabled)
                 ui.DrawClip((conf.BarWidthRatio + 1) / 2.1f, -0.3f, conf.BarClipTextSize, conf.BarClipTextColor, conf.BarClipBackColor, conf.BarClipAlertPrecision);
             if (conf.BarABCAlertEnabled)
-                ui.DrawABC(((conf.BarWidthRatio + 1) / 1.9f) - conf.BarWidthRatio, -0.3f, conf.BarABCTextSize, conf.BarABCTextColor, conf.BarABCBackColor);
+                ui.DrawABC((conf.BarWidthRatio + 1) / 2.1f, -0.3f, conf.BarABCTextSize, conf.BarABCTextColor, conf.BarABCBackColor);
             ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.BarFrontCol);
 
             float barGCDClipTime = 0;
