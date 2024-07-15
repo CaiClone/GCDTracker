@@ -29,12 +29,15 @@ namespace GCDTracker
         public bool WheelQueueLockEnabled = true;
         public bool ColorClipEnabled = true;
         public bool ClipAlertEnabled = true;
+        public bool abcAlertEnabled = true;
         public int ClipAlertPrecision = 0;
         public float ClipTextSize = 0.86f;
+        public float abcTextSize = 0.8f;
         public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
         public Vector4 ClipTextColor = new(0.9f, 0.9f, 0.9f, 1f);
         public Vector4 ClipBackColor = new(1f, 0f, 0f, 1f);
-
+        public Vector4 abcTextColor = new(0f, 0f, 0f, 1f);
+        public Vector4 abcBackColor = new(1f, .7f, 0f, 1f);
         public Vector4 backCol = new(0.376f, 0.376f, 0.376f, 1);
         public Vector4 backColBorder = new(0f, 0f, 0f, 1f);
         public Vector4 frontCol = new(0.9f, 0.9f, 0.9f, 1f);
@@ -50,12 +53,16 @@ namespace GCDTracker
         public bool BarQueueLockEnabled = true;
         public bool BarColorClipEnabled = true;
         public bool BarClipAlertEnabled = true;
+        public bool BarABCAlertEnabled = true;
         public int BarClipAlertPrecision = 0;
         public bool BarRollGCDs = true;
         public float BarClipTextSize = 0.8f;
+        public float BarABCTextSize = 0.8f;
         public Vector4 BarclipCol = new(1f, 0f, 0f, 0.667f);
         public Vector4 BarClipTextColor = new(0.9f, 0.9f, 0.9f, 1f);
         public Vector4 BarClipBackColor = new(1f, 0f, 0f, 1f);
+        public Vector4 BarABCTextColor = new(0f, 0f, 0f, 1f);
+        public Vector4 BarABCBackColor = new(1f, .7f, 0f, 1f);
         public float BarBorderSize = 2f;
         public float BarWidthRatio = 0.9f;
         public float BarHeightRatio = 0.5f;
@@ -244,6 +251,15 @@ namespace GCDTracker
                         }
                         ImGui.Separator();
 
+                        ImGui.Checkbox("Show ABC failure alert", ref abcAlertEnabled);
+                        if (abcAlertEnabled) {
+                            ImGui.ColorEdit4("ABC text color", ref abcTextColor, ImGuiColorEditFlags.NoInputs);
+                            ImGui.SameLine();
+                            ImGui.ColorEdit4("ABC background color", ref abcBackColor, ImGuiColorEditFlags.NoInputs);
+                        }
+                        ImGui.SliderFloat("Clip text size", ref abcTextSize, 0.2f, 2f);
+                        ImGui.Separator();
+
                         ImGui.Checkbox("Color wheel on clipped GCD", ref ColorClipEnabled);
                         ImGui.Checkbox("Show clip alert", ref ClipAlertEnabled);
                         if (ClipAlertEnabled) {
@@ -298,6 +314,15 @@ namespace GCDTracker
                         }
 
                         ImGui.Separator();
+                        ImGui.Checkbox("Show ABC failure alert", ref BarABCAlertEnabled);
+                        if (BarABCAlertEnabled) {
+                            ImGui.ColorEdit4("ABC text color", ref BarABCTextColor, ImGuiColorEditFlags.NoInputs);
+                            ImGui.SameLine();
+                            ImGui.ColorEdit4("ABC background color", ref BarABCBackColor, ImGuiColorEditFlags.NoInputs);
+                        }
+                        ImGui.SliderFloat("Clip text size", ref BarABCTextSize, 0.2f, 2f);
+                        ImGui.Separator();
+
                         ImGui.Checkbox("Color bar on clipped GCD", ref BarColorClipEnabled);
                         ImGui.Checkbox("Show clip alert", ref BarClipAlertEnabled);
                         if (BarClipAlertEnabled) {

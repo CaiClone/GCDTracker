@@ -16,6 +16,8 @@ namespace GCDTracker
         public bool IsVisible { get; set; }
         private readonly Easing clipAnimAlpha;
         private readonly Easing clipAnimPos;
+        private readonly Easing abcAnimAlpha;
+        private readonly Easing abcAnimPos;
         public GCDWheel gcd;
         public ComboTracker ct;
         public Configuration conf;
@@ -36,6 +38,15 @@ namespace GCDTracker
                 Point1 = new(0, 0),
                 Point2 = new(0, -20)
             };
+            abcAnimAlpha = new OutCubic(new(0, 0, 0, 2, 1000)) {
+                Point1 = new(0.25f, 0),
+                Point2 = new(1f, 0)
+            };
+            abcAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
+                Point1 = new(0, 0),
+                Point2 = new(0, -20)
+            };
+
             clipText = ["CLIP", "0.0", "0.00"];
         }
 
@@ -190,6 +201,44 @@ namespace GCDTracker
                 textStartPos + animPos,
                 ImGui.GetColorU32(textCol.WithAlpha(1-animAlpha)),
                 clipText[clipTextPrecision]);
+
+            ImGui.SetWindowFontScale(1f);
+            ImGui.PopFont();
+        } 
+
+        public void StartABC() {
+            if (!conf.abcAlertEnabled && !conf.BarABCAlertEnabled) return;
+            abcAnimAlpha.Restart();
+            abcAnimPos.Restart();
+        }
+        public void DrawABC(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol) {
+            if (!abcAnimAlpha.IsRunning || abcAnimAlpha.IsDone) return;
+
+            ImGui.PushFont(UiBuilder.MonoFont);
+            ImGui.SetWindowFontScale(textSize);
+
+            var textSz = ImGui.CalcTextSize("ABC");
+            var textStartPos =
+                w_cent
+                - (w_size / 2)
+                + new Vector2(w_size.X * relx, w_size.Y * rely)
+                - (textSz / 2);
+            var padding = new Vector2(10, 5) * textSize;
+
+            if (!abcAnimAlpha.IsDone) abcAnimAlpha.Update();
+            if (!abcAnimPos.IsDone) abcAnimPos.Update();
+
+            var animAlpha = abcAnimAlpha.EasedPoint.X;
+            var animPos = abcAnimPos.EasedPoint;
+
+            draw.AddRectFilled(
+                textStartPos - padding + animPos,
+                textStartPos + textSz + padding + animPos,
+                ImGui.GetColorU32(backCol.WithAlpha(1-animAlpha)), 10f);
+            draw.AddText(
+                textStartPos + animPos,
+                ImGui.GetColorU32(textCol.WithAlpha(1-animAlpha)),
+                "ABC");
 
             ImGui.SetWindowFontScale(1f);
             ImGui.PopFont();
