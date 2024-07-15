@@ -24,7 +24,9 @@ namespace GCDTracker {
         private float lastClipDelta;
         private bool clippedGCD;
         private bool checkClip;
-
+        private bool showABCAlert;
+        private ulong targetBuffer;
+        private ulong hackBuffer;
         public float SecondsSinceGCDEnd =>
             lastElapsedGCD > 0 ? 0 : (float)(DateTime.Now - lastGCDEnd).TotalSeconds;
         public GCDWheel() {
@@ -34,6 +36,8 @@ namespace GCDTracker {
             lastClipDelta = 0f;
             clippedGCD = false;
             checkClip = false;
+            showABCAlert = false; 
+            targetBuffer = 1;
         }
 
         public void OnActionUse(byte ret, ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp) {
@@ -42,7 +46,11 @@ namespace GCDTracker {
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var addingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act) && useType != 1;
             var executingQueued = act->InQueue && !addingToQueue;
-
+            
+            //check to make sure that the player is targeting something, so that if they are spamming an action
+            //button after the mob dies it won't update the targetBuffer and trigger an ABC
+            if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
+            targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
             if (ret != 1) {
                 if (executingQueued && Math.Abs(act->ElapsedCastTime-act->TotalCastTime)<0.0001f && isWeaponSkill)
                     ogcds.Clear();
@@ -100,6 +108,16 @@ namespace GCDTracker {
                 EndCurrentGCD(lastElapsedGCD);
             else if (DataStore.Action->ElapsedGCD < 0.0001f)
                 SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
+
+            //someone who knows how to code can probably come up with a way better solution to this problem.
+            //we cache whatever the targetid was when we called OnActionUse and compare it to whatever it is
+            //now.  hackBuffer because I couldn't get conditional to be true without it (something to do
+            //with the type cast going on to ulong, probably)
+            hackBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
+            if (hackBuffer == targetBuffer)
+                //flag for alert if more than 50ms but less than 100ms have passed with no GCD in queue
+                showABCAlert = SecondsSinceGCDEnd >= 0.05f && SecondsSinceGCDEnd < 0.1f;
+
             lastElapsedGCD = DataStore.Action->ElapsedGCD;
         }
 
@@ -153,6 +171,10 @@ namespace GCDTracker {
                 ui.StartClip(lastClipDelta);
                 lastClipDelta = 0;
             }
+            if (showABCAlert && !clippedGCD) {
+                ui.StartABC();
+                showABCAlert = false;
+            }
             if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
                 clippedGCD = false;
 
@@ -166,6 +188,8 @@ namespace GCDTracker {
             }
             if (conf.ClipAlertEnabled)
                 ui.DrawClip(0.5f, 0, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
+            if (conf.abcAlertEnabled)
+                ui.DrawABC(0.5f, 0, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor);
 
             ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
 
@@ -186,6 +210,10 @@ namespace GCDTracker {
                 ui.StartClip(lastClipDelta);
                 lastClipDelta = 0;
             }
+            if (showABCAlert && !clippedGCD) {
+                ui.StartABC();
+                showABCAlert = false;
+            }
             if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
                 clippedGCD = false;
                 
@@ -199,15 +227,11 @@ namespace GCDTracker {
             // Background
             ui.DrawBar(0f, 1f, barWidth, barHeight, backgroundCol);
             if (conf.BarClipAlertEnabled)
-                ui.DrawClip((conf.BarWidthRatio + 1) / 2, -0.3f, conf.BarClipTextSize, conf.BarClipTextColor, conf.BarClipBackColor, conf.BarClipAlertPrecision);
-
+                ui.DrawClip((conf.BarWidthRatio + 1) / 2.1f, -0.3f, conf.BarClipTextSize, conf.BarClipTextColor, conf.BarClipBackColor, conf.BarClipAlertPrecision);
+            if (conf.BarABCAlertEnabled)
+                ui.DrawABC((conf.BarWidthRatio + 1) / 2.1f, -0.3f, conf.BarABCTextSize, conf.BarABCTextColor, conf.BarABCBackColor);
             ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.BarFrontCol);
-            if (borderSize > 0) {
-                ui.DrawRect(
-                    start - new Vector2(borderSize, borderSize)/2,
-                    end + new Vector2(borderSize, borderSize)/2,
-                    conf.BarBackColBorder, borderSize);
-            }
+
             float barGCDClipTime = 0;
             foreach (var (ogcd, (anlock, iscast)) in ogcds) {
                 var isClipping = CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
@@ -232,6 +256,13 @@ namespace GCDTracker {
                         clipPos + new Vector2(2f*ui.Scale, barHeight-2f),
                         conf.BarOgcdCol);
                 }
+            }
+            //borders last so they're on top of all elements
+            if (borderSize > 0) {
+                ui.DrawRect(
+                    start - new Vector2(borderSize, borderSize)/2,
+                    end + new Vector2(borderSize, borderSize)/2,
+                    conf.BarBackColBorder, borderSize);
             }
             if (conf.BarQueueLockEnabled) {
                 Vector2 queueLock = new(
