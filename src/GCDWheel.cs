@@ -24,7 +24,6 @@ namespace GCDTracker {
         private float lastClipDelta;
         private bool clippedGCD;
         private bool checkClip;
-        private bool showABCAlert;
         private ulong targetBuffer;
         public float SecondsSinceGCDEnd =>
             lastElapsedGCD > 0 ? 0 : (float)(DateTime.Now - lastGCDEnd).TotalSeconds;
@@ -35,7 +34,6 @@ namespace GCDTracker {
             lastClipDelta = 0f;
             clippedGCD = false;
             checkClip = false;
-            showABCAlert = false; 
             targetBuffer = 1;
         }
 
@@ -107,12 +105,7 @@ namespace GCDTracker {
                 EndCurrentGCD(lastElapsedGCD);
             else if (DataStore.Action->ElapsedGCD < 0.0001f)
                 SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
-
-            // compare cached target object ID at the time of action use to the current target object ID
-            if (DataStore.ClientState.LocalPlayer.TargetObjectId == targetBuffer)
-                // Flag for alert if more than 50ms but less than 100ms have passed with no GCD in queue
-                showABCAlert = SecondsSinceGCDEnd >= 0.05f && SecondsSinceGCDEnd < 0.1f;
-
+            
             lastElapsedGCD = DataStore.Action->ElapsedGCD;
         }
 
@@ -155,6 +148,14 @@ namespace GCDTracker {
             clippedGCD = lastClipDelta > 0.01f;
             return clippedGCD;
         }
+        
+        private bool ShowABCAlert() {
+            // compare cached target object ID at the time of action use to the current target object ID
+            if (DataStore.ClientState.LocalPlayer.TargetObjectId == targetBuffer)
+                // Flag for alert if more than 50ms but less than 100ms have passed with no GCD in queue
+                return SecondsSinceGCDEnd >= 0.05f && SecondsSinceGCDEnd < 0.1f;
+            return false;
+        }
 
         public void DrawGCDWheel(PluginUI ui, Configuration conf) {
             float gcdTotal = TotalGCD;
@@ -166,9 +167,8 @@ namespace GCDTracker {
                 ui.StartClip(lastClipDelta);
                 lastClipDelta = 0;
             }
-            if (showABCAlert && !clippedGCD) {
+            if (!clippedGCD && ShowABCAlert()) {
                 ui.StartABC();
-                showABCAlert = false;
             }
             if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
                 clippedGCD = false;
@@ -205,9 +205,8 @@ namespace GCDTracker {
                 ui.StartClip(lastClipDelta);
                 lastClipDelta = 0;
             }
-            if (showABCAlert && !clippedGCD) {
+            if (!clippedGCD && ShowABCAlert()) {
                 ui.StartABC();
-                showABCAlert = false;
             }
             if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
                 clippedGCD = false;
