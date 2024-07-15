@@ -217,7 +217,7 @@ namespace GCDTracker
             ImGui.PushFont(UiBuilder.MonoFont);
             ImGui.SetWindowFontScale(textSize);
 
-            var textSz = ImGui.CalcTextSize("ABC");
+            var textSz = ImGui.CalcTextSize("A-B-C");
             var textStartPos =
                 w_cent
                 - (w_size / 2)
@@ -238,7 +238,7 @@ namespace GCDTracker
             draw.AddText(
                 textStartPos + animPos,
                 ImGui.GetColorU32(textCol.WithAlpha(1-animAlpha)),
-                "ABC");
+                "A-B-C");
 
             ImGui.SetWindowFontScale(1f);
             ImGui.PopFont();
