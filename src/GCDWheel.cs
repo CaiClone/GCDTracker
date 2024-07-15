@@ -26,7 +26,6 @@ namespace GCDTracker {
         private bool checkClip;
         private bool showABCAlert;
         private ulong targetBuffer;
-        private ulong hackBuffer;
         public float SecondsSinceGCDEnd =>
             lastElapsedGCD > 0 ? 0 : (float)(DateTime.Now - lastGCDEnd).TotalSeconds;
         public GCDWheel() {
@@ -109,13 +108,9 @@ namespace GCDTracker {
             else if (DataStore.Action->ElapsedGCD < 0.0001f)
                 SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
 
-            //someone who knows how to code can probably come up with a way better solution to this problem.
-            //we cache whatever the targetid was when we called OnActionUse and compare it to whatever it is
-            //now.  hackBuffer because I couldn't get conditional to be true without it (something to do
-            //with the type cast going on to ulong, probably)
-            hackBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
-            if (hackBuffer == targetBuffer)
-                //flag for alert if more than 50ms but less than 100ms have passed with no GCD in queue
+            // compare cached target object ID at the time of action use to the current target object ID
+            if (DataStore.ClientState.LocalPlayer.TargetObjectId == targetBuffer)
+                // Flag for alert if more than 50ms but less than 100ms have passed with no GCD in queue
                 showABCAlert = SecondsSinceGCDEnd >= 0.05f && SecondsSinceGCDEnd < 0.1f;
 
             lastElapsedGCD = DataStore.Action->ElapsedGCD;
