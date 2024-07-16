@@ -172,12 +172,17 @@ namespace GCDTracker {
                 ui.StartClip(lastClipDelta);
                 lastClipDelta = 0;
             }
-            if (!clippedGCD && ShowABCAlert()) {
-                ui.StartABC();
-                abcOnThisGCD = true;
+            //This is probably computationaly intensive.  Let's only do it if it's actually enabled
+            if (conf.abcAlertEnabled){
+                if (!clippedGCD && ShowABCAlert()) {
+                    ui.StartABC();
+                    abcOnThisGCD = true;
+                }
             }
             if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
                 clippedGCD = false;
+            //this doesn't seem to work
+            //TODO: figure out why
             if (abcOnLastGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
                 abcOnLastGCD = false;
             var backgroundCol = clippedGCD && conf.ColorClipEnabled ? conf.clipCol : conf.backCol;
@@ -215,12 +220,17 @@ namespace GCDTracker {
                 ui.StartClip(lastClipDelta);
                 lastClipDelta = 0;
             }
-            if (!clippedGCD && ShowABCAlert()) {
-                ui.StartABC();
-                abcOnThisGCD = true;
+            //This is probably computationaly intensive.  Let's only do it if it's actually enabled
+            if (conf.BarABCAlertEnabled){
+                if (!clippedGCD && ShowABCAlert()) {
+                    ui.StartABC();
+                    abcOnThisGCD = true;
+                }
             }
             if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
                 clippedGCD = false;
+            //this doesn't seem to work
+            //TODO: figure out why
             if (abcOnLastGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
                 abcOnLastGCD = false;
             var backgroundCol = clippedGCD && conf.BarColorClipEnabled ? conf.BarclipCol : conf.BarBackCol;
