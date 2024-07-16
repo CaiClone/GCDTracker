@@ -64,6 +64,7 @@ namespace GCDTracker
             conf.EnabledGWJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGW);
             conf.EnabledGBJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGB);
             conf.EnabledCTJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobCT);
+            
             if (conf.WheelEnabled && !noUI && (conf.WindowMoveableGW || 
                 (enabledJobGW
                     && (conf.ShowOutOfCombatGW || inCombat)
