@@ -1,8 +1,9 @@
-﻿
+﻿﻿
 using Dalamud.Game;
 using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using FFXIVClientStructs.FFXIV.Client.UI;
 using GCDTracker.Data;
 using System;
 using System.Collections.Generic;
@@ -24,6 +25,8 @@ namespace GCDTracker {
         private float lastClipDelta;
         private bool clippedGCD;
         private bool checkClip;
+        private bool abcOnThisGCD;
+        private bool abcOnLastGCD;
         private ulong targetBuffer;
         public float SecondsSinceGCDEnd =>
             lastElapsedGCD > 0 ? 0 : (float)(DateTime.Now - lastGCDEnd).TotalSeconds;
@@ -34,6 +37,8 @@ namespace GCDTracker {
             lastClipDelta = 0f;
             clippedGCD = false;
             checkClip = false;
+            abcOnThisGCD = false;
+            abcOnLastGCD = false;
             targetBuffer = 1;
         }
 
@@ -169,11 +174,16 @@ namespace GCDTracker {
             }
             if (!clippedGCD && ShowABCAlert()) {
                 ui.StartABC();
+                abcOnThisGCD = true;
             }
             if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
                 clippedGCD = false;
-
+            if (abcOnLastGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
+                abcOnLastGCD = false;
             var backgroundCol = clippedGCD && conf.ColorClipEnabled ? conf.clipCol : conf.backCol;
+            if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))
+            backgroundCol = conf.abcCol;
+
             // Background
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); 
             ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, backgroundCol);
@@ -207,11 +217,15 @@ namespace GCDTracker {
             }
             if (!clippedGCD && ShowABCAlert()) {
                 ui.StartABC();
+                abcOnThisGCD = true;
             }
             if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
                 clippedGCD = false;
-                
+            if (abcOnLastGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
+                abcOnLastGCD = false;
             var backgroundCol = clippedGCD && conf.BarColorClipEnabled ? conf.BarclipCol : conf.BarBackCol;
+            if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))
+                backgroundCol = conf.BarABCCol;
             float barHeight = ui.w_size.Y * conf.BarHeightRatio;
             float barWidth = ui.w_size.X * conf.BarWidthRatio;
             float borderSize = conf.BarBorderSize;
@@ -282,6 +296,9 @@ namespace GCDTracker {
             if (lastElapsedGCD > 0) checkClip = true;
             lastElapsedGCD = DataStore.Action->ElapsedGCD;
             lastGCDEnd = DateTime.Now;
+            //I'm sure there's a better way to accomplish this
+            abcOnLastGCD = abcOnThisGCD;
+            abcOnThisGCD = false;
         }
 
         public void UpdateAnlock(float oldLock, float newLock) {

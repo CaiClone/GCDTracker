@@ -28,12 +28,15 @@ namespace GCDTracker
         public bool ShowOnlyGCDRunningGW = false;
         public bool WheelQueueLockEnabled = true;
         public bool ColorClipEnabled = true;
+        public bool ColorABCEnabled = true;
         public bool ClipAlertEnabled = true;
         public bool abcAlertEnabled = true;
         public int ClipAlertPrecision = 0;
+        public float GCDTimeout = 2f;
         public float ClipTextSize = 0.86f;
         public float abcTextSize = 0.8f;
         public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
+        public Vector4 abcCol = new(1f, .7f, 0f, 0.667f);
         public Vector4 ClipTextColor = new(0.9f, 0.9f, 0.9f, 1f);
         public Vector4 ClipBackColor = new(1f, 0f, 0f, 1f);
         public Vector4 abcTextColor = new(0f, 0f, 0f, 1f);
@@ -52,13 +55,16 @@ namespace GCDTracker
         public bool BarShowOnlyGCDRunning = false;
         public bool BarQueueLockEnabled = true;
         public bool BarColorClipEnabled = true;
+        public bool BarColorABCEnabled = true;
         public bool BarClipAlertEnabled = true;
         public bool BarABCAlertEnabled = true;
         public int BarClipAlertPrecision = 0;
         public bool BarRollGCDs = true;
+        public float BarGCDTimeout = 2f;
         public float BarClipTextSize = 0.8f;
         public float BarABCTextSize = 0.8f;
         public Vector4 BarclipCol = new(1f, 0f, 0f, 0.667f);
+        public Vector4 BarABCCol = new(1f, .7f, 0f, 0.667f);
         public Vector4 BarClipTextColor = new(0.9f, 0.9f, 0.9f, 1f);
         public Vector4 BarClipBackColor = new(1f, 0f, 0f, 1f);
         public Vector4 BarABCTextColor = new(0f, 0f, 0f, 1f);
@@ -243,6 +249,8 @@ namespace GCDTracker
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         ImGui.Checkbox("Show out of combat", ref ShowOutOfCombatGW);
                         ImGui.Checkbox("Show only when GCD running", ref ShowOnlyGCDRunningGW);
+                        if (ShowOnlyGCDRunningGW)
+                            ImGui.SliderFloat("GCD Timeout)", ref GCDTimeout, 0.75f, 5f);
                         ImGui.Checkbox("Show queue lock", ref WheelQueueLockEnabled);
                         if (ImGui.IsItemHovered()){
                             ImGui.BeginTooltip();
@@ -251,13 +259,14 @@ namespace GCDTracker
                         }
                         ImGui.Separator();
 
+                        ImGui.Checkbox("Color wheel on ABC failure", ref ColorABCEnabled);
                         ImGui.Checkbox("Show ABC failure alert", ref abcAlertEnabled);
                         if (abcAlertEnabled) {
                             ImGui.ColorEdit4("ABC text color", ref abcTextColor, ImGuiColorEditFlags.NoInputs);
                             ImGui.SameLine();
                             ImGui.ColorEdit4("ABC background color", ref abcBackColor, ImGuiColorEditFlags.NoInputs);
                         }
-                        ImGui.SliderFloat("Clip text size", ref abcTextSize, 0.2f, 2f);
+                        ImGui.SliderFloat("A-B-C text size", ref abcTextSize, 0.2f, 2f);
                         ImGui.Separator();
 
                         ImGui.Checkbox("Color wheel on clipped GCD", ref ColorClipEnabled);
@@ -285,6 +294,7 @@ namespace GCDTracker
                         ImGui.ColorEdit4("GCD start indicator color", ref ogcdCol, ImGuiColorEditFlags.NoInputs);
                         ImGui.ColorEdit4("Animation lock bar color", ref anLockCol, ImGuiColorEditFlags.NoInputs);
                         ImGui.ColorEdit4("Clipping color", ref clipCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("ABC failure color", ref abcCol, ImGuiColorEditFlags.NoInputs);
                         ImGui.Columns(1);
                         ImGui.Separator();
 
@@ -300,6 +310,8 @@ namespace GCDTracker
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         ImGui.Checkbox("Show out of combat", ref BarShowOutOfCombat);
                         ImGui.Checkbox("Show only when GCD running", ref BarShowOnlyGCDRunning);
+                        if (BarShowOnlyGCDRunning)
+                            ImGui.SliderFloat("GCD Timeout", ref BarGCDTimeout, 0.75f, 5f);
                         ImGui.Checkbox("Show queue lock", ref BarQueueLockEnabled);
                         if (ImGui.IsItemHovered()){
                             ImGui.BeginTooltip();
@@ -314,13 +326,14 @@ namespace GCDTracker
                         }
 
                         ImGui.Separator();
+                        ImGui.Checkbox("Color bar on ABC failure", ref BarColorABCEnabled);
                         ImGui.Checkbox("Show ABC failure alert", ref BarABCAlertEnabled);
                         if (BarABCAlertEnabled) {
                             ImGui.ColorEdit4("ABC text color", ref BarABCTextColor, ImGuiColorEditFlags.NoInputs);
                             ImGui.SameLine();
                             ImGui.ColorEdit4("ABC background color", ref BarABCBackColor, ImGuiColorEditFlags.NoInputs);
                         }
-                        ImGui.SliderFloat("Clip text size", ref BarABCTextSize, 0.2f, 2f);
+                        ImGui.SliderFloat("A-B-C text size", ref BarABCTextSize, 0.2f, 2f);
                         ImGui.Separator();
 
                         ImGui.Checkbox("Color bar on clipped GCD", ref BarColorClipEnabled);
@@ -347,6 +360,7 @@ namespace GCDTracker
                         ImGui.ColorEdit4("GCD start indicator color", ref BarOgcdCol, ImGuiColorEditFlags.NoInputs);
                         ImGui.ColorEdit4("Animation lock bar color", ref BarAnLockCol, ImGuiColorEditFlags.NoInputs);
                         ImGui.ColorEdit4("Clipping color", ref BarclipCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("ABC failure color", ref BarABCCol, ImGuiColorEditFlags.NoInputs);
                         ImGui.Columns(1);
                         ImGui.Separator();
                         ImGui.SliderFloat("Border size", ref BarBorderSize, 0f, 10f);
