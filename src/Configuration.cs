@@ -249,8 +249,7 @@ namespace GCDTracker
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         ImGui.Checkbox("Show out of combat", ref ShowOutOfCombatGW);
                         ImGui.Checkbox("Show only when GCD running", ref ShowOnlyGCDRunningGW);
-                        if (ShowOnlyGCDRunningGW)
-                            ImGui.SliderFloat("GCD Timeout)", ref GCDTimeout, 0.75f, 5f);
+                        ImGui.SliderFloat("GCD Timeout)", ref GCDTimeout, 0.75f, 5f);
                         ImGui.Checkbox("Show queue lock", ref WheelQueueLockEnabled);
                         if (ImGui.IsItemHovered()){
                             ImGui.BeginTooltip();
@@ -310,8 +309,7 @@ namespace GCDTracker
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         ImGui.Checkbox("Show out of combat", ref BarShowOutOfCombat);
                         ImGui.Checkbox("Show only when GCD running", ref BarShowOnlyGCDRunning);
-                        if (BarShowOnlyGCDRunning)
-                            ImGui.SliderFloat("GCD Timeout", ref BarGCDTimeout, 0.75f, 5f);
+                        ImGui.SliderFloat("GCD Timeout", ref BarGCDTimeout, 0.75f, 5f);
                         ImGui.Checkbox("Show queue lock", ref BarQueueLockEnabled);
                         if (ImGui.IsItemHovered()){
                             ImGui.BeginTooltip();

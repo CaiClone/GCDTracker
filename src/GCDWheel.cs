@@ -18,7 +18,6 @@ namespace GCDTracker {
     public unsafe class GCDWheel {
         public Dictionary<float, AbilityTiming> ogcds = [];
         public float TotalGCD;
-
         private DateTime lastGCDEnd;
         private float lastElapsedGCD;
         private bool lastActionCast;
@@ -44,11 +43,9 @@ namespace GCDTracker {
 
         public void OnActionUse(byte ret, ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp) {
             var act = DataStore.Action;
-
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var addingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act) && useType != 1;
             var executingQueued = act->InQueue && !addingToQueue;
-            
             //check to make sure that the player is targeting something, so that if they are spamming an action
             //button after the mob dies it won't update the targetBuffer and trigger an ABC
             if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
@@ -102,7 +99,6 @@ namespace GCDTracker {
         public void Update(IFramework framework) {
             if (DataStore.ClientState.LocalPlayer == null)
                 return;
-
             CleanFailedOGCDs();
             if (lastActionCast && !HelperMethods.IsCasting())
                 HandleCancelCast();
@@ -110,7 +106,6 @@ namespace GCDTracker {
                 EndCurrentGCD(lastElapsedGCD);
             else if (DataStore.Action->ElapsedGCD < 0.0001f)
                 SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
-            
             lastElapsedGCD = DataStore.Action->ElapsedGCD;
         }
 
@@ -179,12 +174,15 @@ namespace GCDTracker {
                     abcOnThisGCD = true;
                 }
             }
-            if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
-                clippedGCD = false;
-            //this doesn't seem to work
-            //TODO: figure out why
-            if (abcOnLastGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
-                abcOnLastGCD = false;
+            //if we are using ShowOnlyGCDRunning, we don't invoke DrawGCDWheel after the timeout.
+            //reset state for the bar background here 50ms before the user selected timeout
+            //would occur to make sure it clears before the wheel disapears
+            if (SecondsSinceGCDEnd >= conf.GCDTimeout - 0.05f){
+                    clippedGCD = false;
+                    checkClip = false;
+                    abcOnLastGCD = false;
+                    abcOnThisGCD = false;
+            }
             var backgroundCol = clippedGCD && conf.ColorClipEnabled ? conf.clipCol : conf.backCol;
             if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))
             backgroundCol = conf.abcCol;
@@ -227,12 +225,14 @@ namespace GCDTracker {
                     abcOnThisGCD = true;
                 }
             }
-            if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
-                clippedGCD = false;
-            //this doesn't seem to work
-            //TODO: figure out why
-            if (abcOnLastGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
-                abcOnLastGCD = false;
+            //if we are using BarShowOnlyGCDRunning, we don't invoke DrawGCDBar after the timeout.
+            //reset state for the bar background here 50ms before the user selected timeout
+            //would occur to make sure it clears before the bar disapears
+            if (SecondsSinceGCDEnd >= conf.BarGCDTimeout - 0.05f){
+                    clippedGCD = false;
+                    abcOnLastGCD = false;
+                    abcOnThisGCD = false;
+            }
             var backgroundCol = clippedGCD && conf.BarColorClipEnabled ? conf.BarclipCol : conf.BarBackCol;
             if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))
                 backgroundCol = conf.BarABCCol;
@@ -300,7 +300,6 @@ namespace GCDTracker {
                 || (gcdTime < 0.001f && ogcd < 0.001f && (anlock > (lastActionCast? 0.125:0.025))) // anlock when no gcdRolling nor CastEndAnimation
             );
         
-
         private void EndCurrentGCD(float GCDtime) {
             SlideGCDs(GCDtime, true);
             if (lastElapsedGCD > 0) checkClip = true;
