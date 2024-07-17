@@ -4,6 +4,7 @@ using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
+using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -167,43 +168,54 @@ namespace GCDTracker {
             return false;
         }
 
-        public void DrawGCDWheel(PluginUI ui, Configuration conf) {
-            float gcdTotal = TotalGCD;
-            float gcdTime = lastElapsedGCD;
-            if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
-                gcdTime = gcdTotal;
-            if (gcdTotal < 0.1f) return;
-            if (checkClip && ShouldStartClip()) {
-                ui.StartClip(lastClipDelta);
-                lastClipDelta = 0;
+        public Vector4 BackgroundColor(Configuration conf){
+            var bg = conf.backCol;  
+            if (conf.ColorClipEnabled && clippedGCD)  
+                bg = conf.clipCol;  
+            if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))  
+                bg = conf.abcCol;
+            return bg;
+        }
+
+        private void FlagAlerts(PluginUI ui, Configuration conf){
+            if(conf.clipAlertEnabled){
+                if (checkClip && ShouldStartClip()) {
+                    ui.StartAlert(true, lastClipDelta);
+                    lastClipDelta = 0;
+                }
             }
-            //This is probably computationaly intensive.  Let's only do it if it's actually enabled
             if (conf.abcAlertEnabled){
                 if (!clippedGCD && ShowABCAlert()) {
-                    ui.StartABC();
+                    ui.StartAlert(false, 0);
                     abcOnThisGCD = true;
                 }
             }
-            var backgroundCol = conf.backCol;  
-                if (conf.ColorClipEnabled && clippedGCD)  
-                    backgroundCol = conf.clipCol;  
-                if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))  
-                    backgroundCol = conf.abcCol;
+        }
 
+        private void InvokeAlerts(float relx, float rely, PluginUI ui, Configuration conf){
+            if (conf.clipAlertEnabled && clippedGCD)
+                ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
+            if (conf.abcAlertEnabled && (abcOnThisGCD || abcOnLastGCD))
+                ui.DrawAlert(relx, rely, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, 3);
+           }
+
+        public void DrawGCDWheel(PluginUI ui, Configuration conf) {
+            float gcdTotal = TotalGCD;
+            float gcdTime = lastElapsedGCD;
+
+            if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
+                gcdTime = gcdTotal;
+            if (gcdTotal < 0.1f) return;
+            FlagAlerts(ui, conf);
+            InvokeAlerts(0.5f, 0, ui, conf);
             // Background
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); 
-            ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, backgroundCol);
-            if (conf.WheelQueueLockEnabled) {
+            ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, BackgroundColor(conf));
+            if (conf.QueueLockEnabled) {
                 ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); 
-                ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, backgroundCol);
+                ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, BackgroundColor(conf));
             }
-            if (conf.ClipAlertEnabled)
-                ui.DrawClip(0.5f, 0, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
-            if (conf.abcAlertEnabled)
-                ui.DrawABC(0.5f, 0, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor);
-
             ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
-
             foreach (var (ogcd, (anlock, iscast)) in ogcds) {
                 var isClipping = CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
                 ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * ui.Scale, isClipping ? conf.clipCol : conf.anLockCol);
@@ -214,40 +226,22 @@ namespace GCDTracker {
         public void DrawGCDBar(PluginUI ui, Configuration conf) {
             float gcdTotal = TotalGCD;
             float gcdTime = lastElapsedGCD;
-            if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
-                gcdTime = gcdTotal;
-            if (gcdTotal < 0.1f) return;
-            if (checkClip && ShouldStartClip()) {
-                ui.StartClip(lastClipDelta);
-                lastClipDelta = 0;
-            }
-            //This is probably computationaly intensive.  Let's only do it if it's actually enabled
-            if (conf.BarABCAlertEnabled){
-                if (!clippedGCD && ShowABCAlert()) {
-                    ui.StartABC();
-                    abcOnThisGCD = true;
-                }
-            }
-            var backgroundCol = conf.BarBackCol;
-            if (conf.BarColorClipEnabled && clippedGCD)
-                backgroundCol = conf.BarclipCol;
-            if (conf.BarColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))
-                backgroundCol = conf.BarABCCol;
             float barHeight = ui.w_size.Y * conf.BarHeightRatio;
             float barWidth = ui.w_size.X * conf.BarWidthRatio;
             float borderSize = conf.BarBorderSize;
-
+            float barGCDClipTime = 0;
             Vector2 start = new(ui.w_cent.X - barWidth / 2, ui.w_cent.Y - barHeight / 2);
             Vector2 end = new(ui.w_cent.X + barWidth / 2, ui.w_cent.Y + barHeight / 2);
-            // Background
-            ui.DrawBar(0f, 1f, barWidth, barHeight, backgroundCol);
-            if (conf.BarClipAlertEnabled)
-                ui.DrawClip((conf.BarWidthRatio + 1) / 2.1f, -0.3f, conf.BarClipTextSize, conf.BarClipTextColor, conf.BarClipBackColor, conf.BarClipAlertPrecision);
-            if (conf.BarABCAlertEnabled)
-                ui.DrawABC((conf.BarWidthRatio + 1) / 2.1f, -0.3f, conf.BarABCTextSize, conf.BarABCTextColor, conf.BarABCBackColor);
-            ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.BarFrontCol);
 
-            float barGCDClipTime = 0;
+            if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
+                gcdTime = gcdTotal;
+            if (gcdTotal < 0.1f) return;
+            FlagAlerts(ui, conf);
+            InvokeAlerts((conf.BarWidthRatio + 1) / 2.1f, -0.3f, ui, conf);
+            // Background
+            ui.DrawBar(0f, 1f, barWidth, barHeight, BackgroundColor(conf));
+            ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.frontCol);
+
             foreach (var (ogcd, (anlock, iscast)) in ogcds) {
                 var isClipping = CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
                 float ogcdStart = (conf.BarRollGCDs && gcdTotal - ogcd < 0.2f) ? 0 + barGCDClipTime : ogcd;
@@ -258,10 +252,9 @@ namespace GCDTracker {
                     barGCDClipTime += ogcdStart + anlock - gcdTotal;
                     
                     // Draw the clipped part at the beggining
-                    ui.DrawBar(0, barGCDClipTime/gcdTotal, barWidth, barHeight, conf.BarclipCol);
+                    ui.DrawBar(0, barGCDClipTime/gcdTotal, barWidth, barHeight, conf.clipCol);
                 }
-                
-                ui.DrawBar(ogcdStart / gcdTotal, ogcdEnd / gcdTotal, barWidth, barHeight, isClipping ? conf.BarclipCol : conf.BarAnLockCol);
+                ui.DrawBar(ogcdStart / gcdTotal, ogcdEnd / gcdTotal, barWidth, barHeight, isClipping ? conf.clipCol : conf.anLockCol);
                 if (!iscast && (!isClipping || ogcdStart > 0.01f)) {
                     Vector2 clipPos = new(
                         ui.w_cent.X + (ogcdStart / gcdTotal * barWidth) - (barWidth / 2),
@@ -269,17 +262,11 @@ namespace GCDTracker {
                     );
                     ui.DrawRectFilled(clipPos,
                         clipPos + new Vector2(2f*ui.Scale, barHeight-2f),
-                        conf.BarOgcdCol);
+                        conf.ogcdCol);
                 }
             }
             //borders last so they're on top of all elements
-            if (borderSize > 0) {
-                ui.DrawRect(
-                    start - new Vector2(borderSize, borderSize)/2,
-                    end + new Vector2(borderSize, borderSize)/2,
-                    conf.BarBackColBorder, borderSize);
-            }
-            if (conf.BarQueueLockEnabled) {
+            if (conf.QueueLockEnabled) {
                 Vector2 queueLock = new(
                     ui.w_cent.X + (0.8f * barWidth) - (barWidth / 2),
                     ui.w_cent.Y - (barHeight / 2) - (borderSize / 2)
@@ -287,6 +274,12 @@ namespace GCDTracker {
                 ui.DrawRectFilled(queueLock,
                     queueLock + new Vector2(borderSize, barHeight + (borderSize / 2)),
                     conf.BarBackColBorder);
+            }
+            if (borderSize > 0) {
+                ui.DrawRect(
+                    start - new Vector2(borderSize, borderSize)/2,
+                    end + new Vector2(borderSize, borderSize)/2,
+                    conf.BarBackColBorder, borderSize);
             }
         }
 

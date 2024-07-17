@@ -14,10 +14,8 @@ namespace GCDTracker
     public class PluginUI
     {
         public bool IsVisible { get; set; }
-        private readonly Easing clipAnimAlpha;
-        private readonly Easing clipAnimPos;
-        private readonly Easing abcAnimAlpha;
-        private readonly Easing abcAnimPos;
+        private readonly Easing alertAlertEnabled;
+        private readonly Easing alertAnimPos;
         public GCDWheel gcd;
         public ComboTracker ct;
         public Configuration conf;
@@ -26,28 +24,20 @@ namespace GCDTracker
         public Vector2 w_size;
         public float Scale;
         private ImDrawListPtr draw;
-        private string[] clipText;
+        private string[] alertText;
 
         public PluginUI(Configuration conf) {
             this.conf = conf;
-            clipAnimAlpha = new OutCubic(new(0, 0, 0, 2, 1000)) {
+            alertAlertEnabled = new OutCubic(new(0, 0, 0, 2, 1000)) {
                 Point1 = new(0.25f, 0),
                 Point2 = new(1f, 0)
             };
-            clipAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
-                Point1 = new(0, 0),
-                Point2 = new(0, -20)
-            };
-            abcAnimAlpha = new OutCubic(new(0, 0, 0, 2, 1000)) {
-                Point1 = new(0.25f, 0),
-                Point2 = new(1f, 0)
-            };
-            abcAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
+            alertAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
                 Point1 = new(0, 0),
                 Point2 = new(0, -20)
             };
 
-            clipText = ["CLIP", "0.0", "0.00"];
+            alertText = ["CLIP", "0.0", "0.00", "A-B-C"];
         }
 
         public void Draw() {
@@ -67,8 +57,8 @@ namespace GCDTracker
             
             if (conf.WheelEnabled && !noUI && (conf.WindowMoveableGW || 
                 (enabledJobGW
-                    && (conf.ShowOutOfCombatGW || inCombat)
-                    && (!conf.ShowOnlyGCDRunningGW || gcd.SecondsSinceGCDEnd < conf.GCDTimeout)
+                    && (conf.ShowOutOfCombat || inCombat)
+                    && (!conf.ShowOnlyGCDRunning || gcd.SecondsSinceGCDEnd < conf.GCDTimeout)
                     ))) {
                 SetupWindow("GCDTracker_GCDWheel", conf.WindowMoveableGW);
                 gcd.DrawGCDWheel(this, conf);
@@ -77,8 +67,8 @@ namespace GCDTracker
 
             if (conf.BarEnabled && !noUI && (conf.BarWindowMoveable || 
                 (enabledJobGB 
-                    && (conf.BarShowOutOfCombat || inCombat)
-                    && (!conf.BarShowOnlyGCDRunning || gcd.SecondsSinceGCDEnd < conf.GCDTimeout)
+                    && (conf.ShowOutOfCombat || inCombat)
+                    && (!conf.ShowOnlyGCDRunning || gcd.SecondsSinceGCDEnd < conf.GCDTimeout)
                     ))) {
                 SetupWindow("GCDTracker_Bar", conf.BarWindowMoveable);
                 gcd.DrawGCDBar(this, conf);
@@ -162,25 +152,26 @@ namespace GCDTracker
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backCol), 3f * Scale);
         }
 
-        public void StartClip(float ms) {
-            if (!conf.ClipAlertEnabled && !conf.BarClipAlertEnabled) return;
-            clipText[1] = string.Format("{0:0.0}", ms);
-            clipText[2] = string.Format("{0:0.00}", ms);
-            clipAnimAlpha.Restart();
-            clipAnimPos.Restart();
+        public void StartAlert(bool isClip, float ms) {
+            if (isClip) {
+                alertText[1] = string.Format("{0:0.0}", ms);
+                alertText[2] = string.Format("{0:0.00}", ms);
+            }
+            alertAlertEnabled.Restart();
+            alertAnimPos.Restart();
         }
 
-        public void DrawClip(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol, int clipTextPrecision = 0) {
-            if (!clipAnimAlpha.IsRunning || clipAnimAlpha.IsDone) return;
-            if (clipTextPrecision > clipText.Length - 1){
-                GCDTracker.Log.Error("Clip text precision invalid");
+        public void DrawAlert(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol, int alertTextPrecision = 0) {
+            if (!alertAlertEnabled.IsRunning || alertAlertEnabled.IsDone) return;
+            if (alertTextPrecision > alertText.Length - 1){
+                GCDTracker.Log.Error("Alert text precision invalid");
                 return;
             }
 
             ImGui.PushFont(UiBuilder.MonoFont);
             ImGui.SetWindowFontScale(textSize);
 
-            var textSz = ImGui.CalcTextSize(clipText[clipTextPrecision]);
+            var textSz = ImGui.CalcTextSize(alertText[alertTextPrecision]);
             var textStartPos =
                 w_cent
                 - (w_size / 2)
@@ -188,11 +179,11 @@ namespace GCDTracker
                 - (textSz / 2);
             var padding = new Vector2(10, 5) * textSize;
 
-            if (!clipAnimAlpha.IsDone) clipAnimAlpha.Update();
-            if (!clipAnimPos.IsDone) clipAnimPos.Update();
+            if (!alertAlertEnabled.IsDone) alertAlertEnabled.Update();
+            if (!alertAnimPos.IsDone) alertAnimPos.Update();
 
-            var animAlpha = clipAnimAlpha.EasedPoint.X;
-            var animPos = clipAnimPos.EasedPoint;
+            var animAlpha = alertAlertEnabled.EasedPoint.X;
+            var animPos = alertAnimPos.EasedPoint;
 
             draw.AddRectFilled(
                 textStartPos - padding + animPos,
@@ -201,48 +192,10 @@ namespace GCDTracker
             draw.AddText(
                 textStartPos + animPos,
                 ImGui.GetColorU32(textCol.WithAlpha(1-animAlpha)),
-                clipText[clipTextPrecision]);
+                alertText[alertTextPrecision]);
 
             ImGui.SetWindowFontScale(1f);
             ImGui.PopFont();
         } 
-
-        public void StartABC() {
-            if (!conf.abcAlertEnabled && !conf.BarABCAlertEnabled) return;
-            abcAnimAlpha.Restart();
-            abcAnimPos.Restart();
-        }
-        public void DrawABC(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol) {
-            if (!abcAnimAlpha.IsRunning || abcAnimAlpha.IsDone) return;
-
-            ImGui.PushFont(UiBuilder.MonoFont);
-            ImGui.SetWindowFontScale(textSize);
-
-            var textSz = ImGui.CalcTextSize("A-B-C");
-            var textStartPos =
-                w_cent
-                - (w_size / 2)
-                + new Vector2(w_size.X * relx, w_size.Y * rely)
-                - (textSz / 2);
-            var padding = new Vector2(10, 5) * textSize;
-
-            if (!abcAnimAlpha.IsDone) abcAnimAlpha.Update();
-            if (!abcAnimPos.IsDone) abcAnimPos.Update();
-
-            var animAlpha = abcAnimAlpha.EasedPoint.X;
-            var animPos = abcAnimPos.EasedPoint;
-
-            draw.AddRectFilled(
-                textStartPos - padding + animPos,
-                textStartPos + textSz + padding + animPos,
-                ImGui.GetColorU32(backCol.WithAlpha(1-animAlpha)), 10f);
-            draw.AddText(
-                textStartPos + animPos,
-                ImGui.GetColorU32(textCol.WithAlpha(1-animAlpha)),
-                "A-B-C");
-
-            ImGui.SetWindowFontScale(1f);
-            ImGui.PopFont();
-        }
     }
 }
