@@ -60,7 +60,6 @@ namespace GCDTracker
         public bool BarABCAlertEnabled = true;
         public int BarClipAlertPrecision = 0;
         public bool BarRollGCDs = true;
-        public float BarGCDTimeout = 2f;
         public float BarClipTextSize = 0.8f;
         public float BarABCTextSize = 0.8f;
         public Vector4 BarclipCol = new(1f, 0f, 0f, 0.667f);
@@ -309,7 +308,7 @@ namespace GCDTracker
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         ImGui.Checkbox("Show out of combat", ref BarShowOutOfCombat);
                         ImGui.Checkbox("Show only when GCD running", ref BarShowOnlyGCDRunning);
-                        ImGui.SliderFloat("GCD Timeout", ref BarGCDTimeout, 0.75f, 5f);
+                        ImGui.SliderFloat("GCD Timeout", ref GCDTimeout, 0.75f, 5f);
                         ImGui.Checkbox("Show queue lock", ref BarQueueLockEnabled);
                         if (ImGui.IsItemHovered()){
                             ImGui.BeginTooltip();
@@ -325,7 +324,7 @@ namespace GCDTracker
 
                         ImGui.Separator();
                         ImGui.Checkbox("Color bar on ABC failure", ref BarColorABCEnabled);
-                        ImGui.Checkbox("Show ABC failure alert", ref BarABCAlertEnabled);
+                        ImGui.Checkbox("Show ABC failure alert", ref abcAlertEnabled);
                         if (BarABCAlertEnabled) {
                             ImGui.ColorEdit4("ABC text color", ref BarABCTextColor, ImGuiColorEditFlags.NoInputs);
                             ImGui.SameLine();
@@ -335,7 +334,7 @@ namespace GCDTracker
                         ImGui.Separator();
 
                         ImGui.Checkbox("Color bar on clipped GCD", ref BarColorClipEnabled);
-                        ImGui.Checkbox("Show clip alert", ref BarClipAlertEnabled);
+                        ImGui.Checkbox("Show clip alert", ref ClipAlertEnabled);
                         if (BarClipAlertEnabled) {
                             ImGui.SameLine();
                             ImGui.RadioButton("CLIP", ref BarClipAlertPrecision, 0);

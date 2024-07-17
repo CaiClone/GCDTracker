@@ -48,7 +48,7 @@ namespace GCDTracker {
             //check to make sure that the player is targeting something, so that if they are spamming an action
             //button after the mob dies it won't update the targetBuffer and trigger an ABC
             if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
-            targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
+                targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
             if (ret != 1) {
                 if (executingQueued && Math.Abs(act->ElapsedCastTime-act->TotalCastTime)<0.0001f && isWeaponSkill)
                     ogcds.Clear();
@@ -95,10 +95,11 @@ namespace GCDTracker {
             }
         }
 
-        public void Update(IFramework framework) {
+        public void Update(IFramework framework, Configuration conf) {
             if (DataStore.ClientState.LocalPlayer == null)
                 return;
             CleanFailedOGCDs();
+            ResetOnGCDTimeout(conf.GCDTimeout);
             if (lastActionCast && !HelperMethods.IsCasting())
                 HandleCancelCast();
             else if (DataStore.Action->ElapsedGCD < lastElapsedGCD)
@@ -113,6 +114,16 @@ namespace GCDTracker {
                 ogcds = ogcds
                     .Where(x => x.Key > DataStore.Action->ElapsedGCD || x.Key + x.Value.AnimationLock < DataStore.Action->ElapsedGCD)
                     .ToDictionary(x => x.Key, x => x.Value);
+            }
+        }
+
+        private void ResetOnGCDTimeout(float resetTimeout){
+            //reset state for the wheel/bar background after the GCDTimeout
+            if (SecondsSinceGCDEnd > resetTimeout){
+                    clippedGCD = false;
+                    checkClip = false;
+                    abcOnLastGCD = false;
+                    abcOnThisGCD = false;
             }
         }
 
@@ -173,18 +184,11 @@ namespace GCDTracker {
                     abcOnThisGCD = true;
                 }
             }
-            //if we are using ShowOnlyGCDRunning, we don't invoke DrawGCDWheel after the timeout.
-            //reset state for the bar background here 50ms before the user selected timeout
-            //would occur to make sure it clears before the wheel disapears
-            if (SecondsSinceGCDEnd >= conf.GCDTimeout - 0.05f){
-                    clippedGCD = false;
-                    checkClip = false;
-                    abcOnLastGCD = false;
-                    abcOnThisGCD = false;
-            }
-            var backgroundCol = clippedGCD && conf.ColorClipEnabled ? conf.clipCol : conf.backCol;
-            if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))
-            backgroundCol = conf.abcCol;
+            var backgroundCol = conf.backCol;  
+                if (conf.ColorClipEnabled && clippedGCD)  
+                    backgroundCol = conf.clipCol;  
+                if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))  
+                    backgroundCol = conf.abcCol;
 
             // Background
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); 
@@ -224,16 +228,10 @@ namespace GCDTracker {
                     abcOnThisGCD = true;
                 }
             }
-            //if we are using BarShowOnlyGCDRunning, we don't invoke DrawGCDBar after the timeout.
-            //reset state for the bar background here 50ms before the user selected timeout
-            //would occur to make sure it clears before the bar disapears
-            if (SecondsSinceGCDEnd >= conf.BarGCDTimeout - 0.05f){
-                    clippedGCD = false;
-                    abcOnLastGCD = false;
-                    abcOnThisGCD = false;
-            }
-            var backgroundCol = clippedGCD && conf.BarColorClipEnabled ? conf.BarclipCol : conf.BarBackCol;
-            if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))
+            var backgroundCol = conf.BarBackCol;
+            if (conf.BarColorClipEnabled && clippedGCD)
+                backgroundCol = conf.BarclipCol;
+            if (conf.BarColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))
                 backgroundCol = conf.BarABCCol;
             float barHeight = ui.w_size.Y * conf.BarHeightRatio;
             float barWidth = ui.w_size.X * conf.BarWidthRatio;
