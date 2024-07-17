@@ -78,7 +78,7 @@ namespace GCDTracker
             if (conf.BarEnabled && !noUI && (conf.BarWindowMoveable || 
                 (enabledJobGB 
                     && (conf.BarShowOutOfCombat || inCombat)
-                    && (!conf.BarShowOnlyGCDRunning || gcd.SecondsSinceGCDEnd < conf.BarGCDTimeout)
+                    && (!conf.BarShowOnlyGCDRunning || gcd.SecondsSinceGCDEnd < conf.GCDTimeout)
                     ))) {
                 SetupWindow("GCDTracker_Bar", conf.BarWindowMoveable);
                 gcd.DrawGCDBar(this, conf);
