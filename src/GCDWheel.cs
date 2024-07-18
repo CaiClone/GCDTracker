@@ -4,7 +4,6 @@ using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
-using Lumina.Excel.GeneratedSheets;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -238,6 +237,9 @@ namespace GCDTracker {
             if (gcdTotal < 0.1f) return;
             FlagAlerts(ui, conf);
             InvokeAlerts((conf.BarWidthRatio + 1) / 2.1f, -0.3f, ui, conf);
+            //
+            //ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -1f, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, " " );
+            //
             // Background
             ui.DrawBar(0f, 1f, barWidth, barHeight, BackgroundColor(conf));
             ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.frontCol);

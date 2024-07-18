@@ -16,6 +16,8 @@ namespace GCDTracker
         public bool IsVisible { get; set; }
         private readonly Easing alertAlertEnabled;
         private readonly Easing alertAnimPos;
+        private readonly Easing debugAlertEnabled;
+        private readonly Easing debugAnimPos;
         public GCDWheel gcd;
         public ComboTracker ct;
         public Configuration conf;
@@ -36,7 +38,14 @@ namespace GCDTracker
                 Point1 = new(0, 0),
                 Point2 = new(0, -20)
             };
-
+            debugAlertEnabled = new OutCubic(new(0, 0, 0, 2, 1000)) {
+                Point1 = new(0.25f, 0),
+                Point2 = new(1f, 0)
+            };
+            debugAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
+                Point1 = new(0, 0),
+                Point2 = new(0, -20)
+            };
             alertText = ["CLIP", "0.0", "0.00", "A-B-C"];
         }
 
@@ -193,6 +202,34 @@ namespace GCDTracker
                 textStartPos + animPos,
                 ImGui.GetColorU32(textCol.WithAlpha(1-animAlpha)),
                 alertText[alertTextPrecision]);
+
+            ImGui.SetWindowFontScale(1f);
+            ImGui.PopFont();
+        } 
+        
+        public void DrawDebugText(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol, string debugText) {
+            ImGui.PushFont(UiBuilder.MonoFont);
+            ImGui.SetWindowFontScale(textSize);
+
+            var textSz = ImGui.CalcTextSize(debugText);
+            var textStartPos =
+                w_cent
+                - (w_size / 2)
+                + new Vector2(w_size.X * relx, w_size.Y * rely)
+                - (textSz / 2);
+            var padding = new Vector2(10, 5) * textSize;
+
+            var debugAnimAlpha = debugAlertEnabled.EasedPoint.X;
+            var debugAnimPos2 = debugAnimPos.EasedPoint;
+
+            draw.AddRectFilled(
+                textStartPos - padding + debugAnimPos2,
+                textStartPos + textSz + padding + debugAnimPos2,
+                ImGui.GetColorU32(backCol.WithAlpha(1-debugAnimAlpha)), 10f);
+            draw.AddText(
+                textStartPos + debugAnimPos2,
+                ImGui.GetColorU32(textCol.WithAlpha(1-debugAnimAlpha)),
+                debugText);
 
             ImGui.SetWindowFontScale(1f);
             ImGui.PopFont();
