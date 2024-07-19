@@ -32,7 +32,8 @@ namespace GCDTracker
         public bool clipAlertEnabled = true;
         public bool abcAlertEnabled = true;
         public int ClipAlertPrecision = 0;
-        public float GCDTimeout = 2f;
+        public int GCDTimeout = 10;
+        public int abcSensMul = 10;
         public float ClipTextSize = 0.86f;
         public float abcTextSize = 0.8f;
         public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
@@ -221,7 +222,12 @@ namespace GCDTracker
                 if(ImGui.BeginTabItem("GCDTracker")){
                     ImGui.Checkbox("Show out of combat", ref ShowOutOfCombat);
                     ImGui.Checkbox("Show only when GCD running", ref ShowOnlyGCDRunning);
-                    ImGui.SliderFloat("GCD Timeout)", ref GCDTimeout, 0.75f, 5f);
+                    ImGui.SliderInt("GCD Timeout Multiplier", ref GCDTimeout, 1, 20);
+                    if (ImGui.IsItemHovered()){
+                        ImGui.BeginTooltip();
+                        ImGui.Text("Controls the length of the GCD Timeout.  The lower the number, the faster the timeout.");
+                        ImGui.EndTooltip();
+                    }
                     ImGui.Checkbox("Show queue lock", ref QueueLockEnabled);
                     if (ImGui.IsItemHovered()){
                         ImGui.BeginTooltip();
@@ -239,6 +245,12 @@ namespace GCDTracker
                         ImGui.ColorEdit4("ABC background color", ref abcBackColor, ImGuiColorEditFlags.NoInputs);
                     }
                     ImGui.SliderFloat("A-B-C text size", ref abcTextSize, 0.2f, 2f);
+                    ImGui.SliderInt("A-B-C alert sensitivity", ref abcSensMul, 1, 20);
+                    if (ImGui.IsItemHovered()){
+                        ImGui.BeginTooltip();
+                        ImGui.Text("Controls how much idle time is allowed between abilities. Higher = more gap.");
+                        ImGui.EndTooltip();
+                    }
 
                     ImGui.Separator();
 

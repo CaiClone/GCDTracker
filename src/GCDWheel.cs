@@ -17,27 +17,32 @@ namespace GCDTracker {
     public unsafe class GCDWheel {
         public Dictionary<float, AbilityTiming> ogcds = [];
         public float TotalGCD;
+        public int idleTimer;
         private DateTime lastGCDEnd;
         private float lastElapsedGCD;
-        private bool lastActionCast;
         private float lastClipDelta;
+        private float castTimeBuffer;
+        private ulong targetBuffer;
+        private bool lastActionCast;
         private bool clippedGCD;
         private bool checkClip;
         private bool abcOnThisGCD;
         private bool abcOnLastGCD;
-        private ulong targetBuffer;
-        public float SecondsSinceGCDEnd =>
-            lastElapsedGCD > 0 ? 0 : (float)(DateTime.Now - lastGCDEnd).TotalSeconds;
+        private bool isRunning;
+        private bool lastCastCanceled;
+
         public GCDWheel() {
             TotalGCD = 3.5f;
             lastGCDEnd = DateTime.Now;
             lastActionCast = false;
+            lastCastCanceled = false;
             lastClipDelta = 0f;
             clippedGCD = false;
             checkClip = false;
             abcOnThisGCD = false;
             abcOnLastGCD = false;
             targetBuffer = 1;
+
         }
 
         public void OnActionUse(byte ret, ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp) {
@@ -45,15 +50,18 @@ namespace GCDTracker {
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var addingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act) && useType != 1;
             var executingQueued = act->InQueue && !addingToQueue;
-            //check to make sure that the player is targeting something, so that if they are spamming an action
-            //button after the mob dies it won't update the targetBuffer and trigger an ABC
-            if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
-                targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
+                        idleTimer = 0;
+            lastCastCanceled = false;
             if (ret != 1) {
                 if (executingQueued && Math.Abs(act->ElapsedCastTime-act->TotalCastTime)<0.0001f && isWeaponSkill)
                     ogcds.Clear();
                 return;
             }
+            //check to make sure that the player is targeting something, so that if they are spamming an action
+            //button after the mob dies it won't update the targetBuffer and trigger an ABC
+            if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
+                targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
+
             if (addingToQueue) {
                 AddToQueue(act, isWeaponSkill);
             } else {
@@ -62,6 +70,7 @@ namespace GCDTracker {
                     //Store GCD in a variable in order to cache it when it goes back to 0
                     TotalGCD = act->TotalGCD;
                     AddWeaponSkill(act);
+
                 } else if (!executingQueued) {
                     ogcds[act->ElapsedGCD] = new(act->AnimationLock, false);
                 }
@@ -99,7 +108,7 @@ namespace GCDTracker {
             if (DataStore.ClientState.LocalPlayer == null)
                 return;
             CleanFailedOGCDs();
-            ResetOnGCDTimeout(conf.GCDTimeout);
+            GCDTimeoutHelper(conf.GCDTimeout);
             if (lastActionCast && !HelperMethods.IsCasting())
                 HandleCancelCast();
             else if (DataStore.Action->ElapsedGCD < lastElapsedGCD)
@@ -117,9 +126,16 @@ namespace GCDTracker {
             }
         }
 
-        private void ResetOnGCDTimeout(float resetTimeout){
+        private void GCDTimeoutHelper(float resetTimeout){
+            //handle edge case where isRunning would be false on subsequent gcds after player cancels a cast
+            castTimeBuffer = lastCastCanceled ? DataStore.Action->TotalCastTime : DataStore.Action->ElapsedCastTime;    
+           
+            //create isRunning bool and use it to create an idle "timer"
+            isRunning = (DataStore.Action->ElapsedGCD != DataStore.Action->TotalGCD) || (castTimeBuffer != DataStore.Action->TotalCastTime);
+            if (!isRunning && idleTimer < 25 * resetTimeout) idleTimer++;
+
             //reset state for the wheel/bar background after the GCDTimeout
-            if (SecondsSinceGCDEnd > resetTimeout){
+            if (idleTimer == 25 * resetTimeout){
                     clippedGCD = false;
                     checkClip = false;
                     abcOnLastGCD = false;
@@ -130,6 +146,7 @@ namespace GCDTracker {
         private void HandleCancelCast() {
             lastActionCast = false;
             EndCurrentGCD(DataStore.Action->TotalCastTime);
+            lastCastCanceled = true;
         }
 
         /// <summary>
@@ -153,19 +170,41 @@ namespace GCDTracker {
             ogcds = ogcdsNew;
         }
 
-        private bool ShouldStartClip() {
-            checkClip = false;
-            clippedGCD = lastClipDelta > 0.01f;
-            return clippedGCD;
+        private void FlagAlerts(PluginUI ui, Configuration conf){
+            if(conf.clipAlertEnabled){
+                if (checkClip && ShouldStartClip()) {
+                    ui.StartAlert(true, lastClipDelta);
+                    lastClipDelta = 0;
+                }
+            }
+            bool ShouldStartClip() {
+                checkClip = false;
+                clippedGCD = lastClipDelta > 0.01f;
+                return clippedGCD;
+            }
+
+            if (conf.abcAlertEnabled){
+                if (!clippedGCD && ShowABCAlert()) {
+                    ui.StartAlert(false, 0);
+                    abcOnThisGCD = true;
+                }
+            }
+            bool ShowABCAlert() {
+                // compare cached target object ID at the time of action use to the current target object ID
+                if (DataStore.ClientState.LocalPlayer.TargetObjectId == targetBuffer)
+                    // Flag for alert
+                    return idleTimer == conf.abcSensMul;
+                return false;
+            }
+            
         }
-        
-        private bool ShowABCAlert() {
-            // compare cached target object ID at the time of action use to the current target object ID
-            if (DataStore.ClientState.LocalPlayer.TargetObjectId == targetBuffer)
-                // Flag for alert if more than 50ms but less than 100ms have passed with no GCD in queue
-                return SecondsSinceGCDEnd >= 0.05f && SecondsSinceGCDEnd < 0.1f;
-            return false;
-        }
+
+        private void InvokeAlerts(float relx, float rely, PluginUI ui, Configuration conf){
+            if (conf.clipAlertEnabled && clippedGCD)
+                ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
+            if (conf.abcAlertEnabled && (abcOnThisGCD || abcOnLastGCD))
+                ui.DrawAlert(relx, rely, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, 3);
+           }
 
         public Vector4 BackgroundColor(Configuration conf){
             var bg = conf.backCol;  
@@ -175,28 +214,6 @@ namespace GCDTracker {
                 bg = conf.abcCol;
             return bg;
         }
-
-        private void FlagAlerts(PluginUI ui, Configuration conf){
-            if(conf.clipAlertEnabled){
-                if (checkClip && ShouldStartClip()) {
-                    ui.StartAlert(true, lastClipDelta);
-                    lastClipDelta = 0;
-                }
-            }
-            if (conf.abcAlertEnabled){
-                if (!clippedGCD && ShowABCAlert()) {
-                    ui.StartAlert(false, 0);
-                    abcOnThisGCD = true;
-                }
-            }
-        }
-
-        private void InvokeAlerts(float relx, float rely, PluginUI ui, Configuration conf){
-            if (conf.clipAlertEnabled && clippedGCD)
-                ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
-            if (conf.abcAlertEnabled && (abcOnThisGCD || abcOnLastGCD))
-                ui.DrawAlert(relx, rely, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, 3);
-           }
 
         public void DrawGCDWheel(PluginUI ui, Configuration conf) {
             float gcdTotal = TotalGCD;
@@ -237,9 +254,9 @@ namespace GCDTracker {
             if (gcdTotal < 0.1f) return;
             FlagAlerts(ui, conf);
             InvokeAlerts((conf.BarWidthRatio + 1) / 2.1f, -0.3f, ui, conf);
-            //
-            //ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -1f, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, " " );
-            //
+            /*/
+            ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -1f, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, " "););
+            /*/
             // Background
             ui.DrawBar(0f, 1f, barWidth, barHeight, BackgroundColor(conf));
             ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.frontCol);
