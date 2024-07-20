@@ -34,7 +34,7 @@ namespace GCDTracker
         public bool abcAlertEnabled = true;
         public int ClipAlertPrecision = 0;
         public int GCDTimeout = 10;
-        public int abcSensMul = 10;
+        public int abcDelayMul = 8;
         public float ClipTextSize = 0.86f;
         public float abcTextSize = 0.8f;
         public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
@@ -247,10 +247,10 @@ namespace GCDTracker
                         ImGui.ColorEdit4("ABC background color", ref abcBackColor, ImGuiColorEditFlags.NoInputs);
                     }
                     ImGui.SliderFloat("A-B-C text size", ref abcTextSize, 0.2f, 2f);
-                    ImGui.SliderInt("A-B-C alert sensitivity", ref abcSensMul, 1, 20);
+                    ImGui.SliderInt("A-B-C alert delay", ref abcDelayMul, 1, 20);
                     if (ImGui.IsItemHovered()){
                         ImGui.BeginTooltip();
-                        ImGui.Text("Controls how much idle time is allowed between abilities. Higher = more gap.");
+                        ImGui.Text("Controls how much delay is allowed between abilities. Higher = more delay.");
                         ImGui.EndTooltip();
                     }
 
