@@ -30,7 +30,7 @@ namespace GCDTracker {
         private bool isRunning;
         private bool isHardCast;
         
-        #if DEBUG
+        #if debug
         private DateTime isRunEnd;
         private string debugtext;
         private string debugtext2;
@@ -117,7 +117,7 @@ namespace GCDTracker {
                 SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
             lastElapsedGCD = DataStore.Action->ElapsedGCD;
             
-            #if DEBUG
+            #if debug
                 if (isRunning)
                     isRunEnd = System.DateTime.Now;
                 if (isHardCast)
@@ -213,7 +213,7 @@ namespace GCDTracker {
                     // Flag for alert
                     if (!isHardCast && idleTimer == conf.abcDelayMul) {
                         
-                        #if DEBUG
+                        #if debug
                             debugtext2 = "NC" + idleTimer.ToString() + " " + string.Format("{000:0.000}", (float)(DateTime.Now - isRunEnd).TotalSeconds);
                         #endif
                         
@@ -221,7 +221,7 @@ namespace GCDTracker {
                     }
                     if (isHardCast && idleTimer == conf.abcDelayMul + 11) {
                         
-                        #if DEBUG
+                        #if debug
                         debugtext2 = "HC" + idleTimer.ToString()+ " " + string.Format("{000:0.000}", (float)(DateTime.Now - isRunEnd).TotalSeconds);
                         #endif
                         
@@ -280,7 +280,7 @@ namespace GCDTracker {
             Vector2 start = new(ui.w_cent.X - barWidth / 2, ui.w_cent.Y - barHeight / 2);
             Vector2 end = new(ui.w_cent.X + barWidth / 2, ui.w_cent.Y + barHeight / 2);
 
-            #if DEBUG
+            #if debug
             ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -1f, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, debugtext + " " + debugtext2);
             #endif
 
