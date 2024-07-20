@@ -4,7 +4,6 @@ using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
-using Lumina.Data.Parsing.Layer;
 using System;
 using System.Collections.Generic;
 using System.Linq;
