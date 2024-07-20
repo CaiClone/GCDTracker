@@ -1,4 +1,4 @@
-﻿﻿
+﻿﻿//#define debug
 using Dalamud.Game;
 using Dalamud.Logging;
 using Dalamud.Plugin.Services;
@@ -30,6 +30,13 @@ namespace GCDTracker {
         private bool abcOnLastGCD;
         private bool isRunning;
         private bool isHardCast;
+        
+        #if DEBUG
+        private DateTime isRunEnd;
+        private string debugtext;
+        private string debugtext2;
+        #endif
+
         public GCDWheel() {
             TotalGCD = 3.5f;
             lastGCDEnd = DateTime.Now;
@@ -58,7 +65,6 @@ namespace GCDTracker {
                 targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
 
             if (addingToQueue) {
-
                 AddToQueue(act, isWeaponSkill);
             } else {
                 if (isWeaponSkill) {
@@ -111,6 +117,14 @@ namespace GCDTracker {
             else if (DataStore.Action->ElapsedGCD < 0.0001f)
                 SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
             lastElapsedGCD = DataStore.Action->ElapsedGCD;
+            
+            #if DEBUG
+                if (isRunning)
+                    isRunEnd = System.DateTime.Now;
+                if (isHardCast)
+                    debugtext = "IHC_TRANSITION" + string.Format("{000:0}", idleTimer);
+            #endif
+        
         }
 
         private void CleanFailedOGCDs() {
@@ -123,7 +137,6 @@ namespace GCDTracker {
 
         private void GCDTimeoutHelper(Configuration conf){
             //create isRunning bool and use it to create an idle "timer"
-
             isRunning = (DataStore.Action->ElapsedGCD != DataStore.Action->TotalGCD) || HelperMethods.IsCasting();
             if (!isRunning && idleTimer < 25 * conf.GCDTimeout) idleTimer++;
 
@@ -131,11 +144,11 @@ namespace GCDTracker {
             //or spells where the GCD is greater than the cast time, this "caster tax" is applied durring the
             //GCD and doesn't matter for our purposes.  However, when the cast time is longer than the GCD,
             //there is a 0.1s delay before the next action begins.  A 2.8s ability effectively takes 2.9s.
-            //This logic allows us to delay the ABC alert by 10 iterations so hard-casted abilites don't 
-            //always trigger an ABC.
+            //This logic allows us to delay the ABC alert by 11 iterations so hard-casted abilites don't 
+            //always trigger an ABC. (11 + 1 (min conf setting) = 12 iterations = ~0.1s [pc dependent])
             if (!isHardCast && HelperMethods.IsCasting() && DataStore.Action->TotalCastTime - 0.1f >= DataStore.Action->TotalGCD)
                 isHardCast = true;
-            if (isHardCast && idleTimer > (conf.abcDelayMul + 10))
+            if (isHardCast && idleTimer > (conf.abcDelayMul + 11))
                 isHardCast = false;
 
             //reset state for the wheel/bar background after the GCDTimeout
@@ -189,7 +202,6 @@ namespace GCDTracker {
                 clippedGCD = lastClipDelta > 0.01f;
                 return clippedGCD;
             }
-
             if (conf.abcAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat)){
                 if (!clippedGCD && ShowABCAlert()) {
                     ui.StartAlert(false, 0);
@@ -201,14 +213,23 @@ namespace GCDTracker {
                 if (DataStore.ClientState.LocalPlayer.TargetObjectId == targetBuffer)
                     // Flag for alert
                     if (!isHardCast && idleTimer == conf.abcDelayMul) {
+                        
+                        #if DEBUG
+                            debugtext2 = "NC" + idleTimer.ToString() + " " + string.Format("{000:0.000}", (float)(DateTime.Now - isRunEnd).TotalSeconds);
+                        #endif
+                        
                         return true;
                     }
-                    if (isHardCast && idleTimer == conf.abcDelayMul + 10) {
+                    if (isHardCast && idleTimer == conf.abcDelayMul + 11) {
+                        
+                        #if DEBUG
+                        debugtext2 = "HC" + idleTimer.ToString()+ " " + string.Format("{000:0.000}", (float)(DateTime.Now - isRunEnd).TotalSeconds);
+                        #endif
+                        
                         return true;
                     }
                 return false;
             }
-            
         }
 
         private void InvokeAlerts(float relx, float rely, PluginUI ui, Configuration conf){
@@ -230,7 +251,6 @@ namespace GCDTracker {
         public void DrawGCDWheel(PluginUI ui, Configuration conf) {
             float gcdTotal = TotalGCD;
             float gcdTime = lastElapsedGCD;
-
             if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
@@ -261,9 +281,9 @@ namespace GCDTracker {
             Vector2 start = new(ui.w_cent.X - barWidth / 2, ui.w_cent.Y - barHeight / 2);
             Vector2 end = new(ui.w_cent.X + barWidth / 2, ui.w_cent.Y + barHeight / 2);
 
-            /*/
-            ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -1f, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, " ");
-            /*/
+            #if DEBUG
+            ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -1f, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, debugtext + " " + debugtext2);
+            #endif
 
             if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
                 gcdTime = gcdTotal;
