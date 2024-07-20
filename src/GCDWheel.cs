@@ -279,7 +279,7 @@ namespace GCDTracker {
                 float ogcdStart = (conf.BarRollGCDs && gcdTotal - ogcd < 0.2f) ? 0 + barGCDClipTime : ogcd;
                 float ogcdEnd = ogcdStart + anlock;
                 // Ends next GCD
-                if (!iscast && conf.BarRollGCDs && ogcdEnd > gcdTotal) {
+                if (conf.BarRollGCDs && ogcdEnd > gcdTotal) {
                     ogcdEnd = gcdTotal;
                     barGCDClipTime += ogcdStart + anlock - gcdTotal;
                     //prevent red bar when we "clip" a hard-cast ability
