@@ -297,7 +297,7 @@ namespace GCDTracker
                 if (ImGui.BeginTabItem("GCDDisplay")) {
                     ImGui.Checkbox("Enable GCDWheel", ref WheelEnabled);
                     if (WheelEnabled) {
-                        ImGui.Checkbox("Move/resize window", ref WindowMoveableGW);
+                        ImGui.Checkbox("Move/resize GCDWheel", ref WindowMoveableGW);
                         if (WindowMoveableGW)
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                     }
@@ -306,7 +306,7 @@ namespace GCDTracker
 
                     ImGui.Checkbox("Enable GCDBar", ref BarEnabled);
                     if (BarEnabled) {
-                        ImGui.Checkbox("Move/resize window", ref BarWindowMoveable);
+                        ImGui.Checkbox("Move/resize GCDBar", ref BarWindowMoveable);
                         if (BarWindowMoveable)
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         ImGui.Checkbox("Roll GCDs", ref BarRollGCDs);
