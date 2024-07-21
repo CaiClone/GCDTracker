@@ -18,6 +18,7 @@ namespace GCDTracker {
         public Dictionary<float, AbilityTiming> ogcds = [];
         public float TotalGCD;
         public int idleTimer;
+        public bool lastActionTP;
         private DateTime lastGCDEnd;
         private float lastElapsedGCD;
         private float lastClipDelta;
@@ -32,8 +33,10 @@ namespace GCDTracker {
         
         #if debug
         private DateTime isRunEnd;
+        private int maxIdleTimer;
         private string debugtext;
         private string debugtext2;
+        private string debugtext3;
         #endif
 
         public GCDWheel() {
@@ -120,8 +123,11 @@ namespace GCDTracker {
             #if debug
                 if (isRunning)
                     isRunEnd = System.DateTime.Now;
+                if (!isRunning)
+                    maxIdleTimer = idleTimer;
                 if (isHardCast)
-                    debugtext = "IHC_TRANSITION" + string.Format("{000:0}", idleTimer);
+                    debugtext = "IHC_TRANSITION" + string.Format("{0:D2}", idleTimer) ;
+                debugtext3 = " MAXIDLE" + string.Format("{0:D3}", maxIdleTimer);
             #endif
         
         }
@@ -156,6 +162,7 @@ namespace GCDTracker {
                 checkClip = false;
                 abcOnLastGCD = false;
                 abcOnThisGCD = false;
+                lastActionTP = false;
             }
             //reset idleTimer when we aren't casting.
             if (isRunning)
@@ -214,7 +221,7 @@ namespace GCDTracker {
                     if (!isHardCast && idleTimer == conf.abcDelayMul) {
                         
                         #if debug
-                            debugtext2 = "NC" + idleTimer.ToString() + " " + string.Format("{000:0.000}", (float)(DateTime.Now - isRunEnd).TotalSeconds);
+                            debugtext2 = "NC" + idleTimer.ToString(format:"{0:D2}") + " " + string.Format("{0:0.000}", (float)(DateTime.Now - isRunEnd).TotalSeconds);
                         #endif
                         
                         return true;
@@ -222,7 +229,7 @@ namespace GCDTracker {
                     if (isHardCast && idleTimer == conf.abcDelayMul + 11) {
                         
                         #if debug
-                        debugtext2 = "HC" + idleTimer.ToString()+ " " + string.Format("{000:0.000}", (float)(DateTime.Now - isRunEnd).TotalSeconds);
+                        debugtext2 = "HC" + idleTimer.ToString(format:"{0:D2}")+ " " + string.Format("{0:0.000}", (float)(DateTime.Now - isRunEnd).TotalSeconds);
                         #endif
                         
                         return true;
@@ -250,6 +257,10 @@ namespace GCDTracker {
         public void DrawGCDWheel(PluginUI ui, Configuration conf) {
             float gcdTotal = TotalGCD;
             float gcdTime = lastElapsedGCD;
+            if (conf.HideIfTP && HelperMethods.IsTeleport(DataStore.Action->CastId)) {
+                lastActionTP = true;
+                return;
+            }
             if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
@@ -281,9 +292,13 @@ namespace GCDTracker {
             Vector2 end = new(ui.w_cent.X + barWidth / 2, ui.w_cent.Y + barHeight / 2);
 
             #if debug
-            ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -1f, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, debugtext + " " + debugtext2);
+            ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -1f, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, debugtext + " " + debugtext2 + " " + debugtext3);
             #endif
 
+            if (conf.HideIfTP && HelperMethods.IsTeleport(DataStore.Action->CastId)) {
+                lastActionTP = true;
+                return;
+            }
             if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
