@@ -26,6 +26,7 @@ namespace GCDTracker
         public bool WindowMoveableGW = false;
         public bool ShowOutOfCombat = false;
         public bool HideAlertsOutOfCombat = false;
+        public bool HideIfTP = false;
         public bool ShowOnlyGCDRunning = false;
         public bool QueueLockEnabled = true;
         public bool ColorClipEnabled = true;
@@ -224,6 +225,12 @@ namespace GCDTracker
                     ImGui.Checkbox("Show out of combat", ref ShowOutOfCombat);
                     ImGui.Checkbox("Hide alerts out of combat", ref HideAlertsOutOfCombat);
                     ImGui.Checkbox("Show only when GCD running", ref ShowOnlyGCDRunning);
+                    ImGui.Checkbox("Hide while teleporting", ref HideIfTP);
+                        if (ImGui.IsItemHovered()){
+                        ImGui.BeginTooltip();
+                        ImGui.Text("Hides the GCDTracker while teleporting, if show only when GCD running is also selected.");
+                        ImGui.EndTooltip();
+                    }
                     ImGui.SliderInt("GCD Timeout Multiplier", ref GCDTimeout, 1, 20);
                     if (ImGui.IsItemHovered()){
                         ImGui.BeginTooltip();
