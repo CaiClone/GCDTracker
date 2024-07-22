@@ -37,6 +37,7 @@ namespace GCDTracker {
         private string debugtext;
         private string debugtext2;
         private string debugtext3;
+        private string debugtext4;
         #endif
 
         public GCDWheel() {
@@ -65,7 +66,6 @@ namespace GCDTracker {
             //button after the mob dies it won't update the targetBuffer and trigger an ABC
             if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
                 targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
-
             if (addingToQueue) {
                 AddToQueue(act, isWeaponSkill);
             } else {
@@ -126,8 +126,8 @@ namespace GCDTracker {
                 if (!isRunning)
                     maxIdleTimer = idleTimer;
                 if (isHardCast)
-                    debugtext = "IHC_TRANSITION" + string.Format("{0:D2}", idleTimer) ;
-                debugtext3 = " MAXIDLE" + string.Format("{0:D3}", maxIdleTimer);
+                    debugtext = "IHC_TRANSITION:" + string.Format("{0:D2}", idleTimer) ;
+                debugtext3 = " MAXIDLE:" + string.Format("{0:D3}", maxIdleTimer);
             #endif
         
         }
@@ -146,7 +146,7 @@ namespace GCDTracker {
             if (!isRunning && idleTimer < 25 * conf.GCDTimeout) idleTimer++;
 
             //FFXIV seems to apply a 0.1s animation lock at the end of every spell.  For instant cast spells,
-            //or spells where the GCD is greater than the cast time, this "caster tax" is applied durring the
+            //or spells where the GCD is greater than the cast time, this "caster tax" is applied during the
             //GCD and doesn't matter for our purposes.  However, when the cast time is longer than the GCD,
             //there is a 0.1s delay before the next action begins.  A 2.8s ability effectively takes 2.9s.
             //This logic allows us to delay the ABC alert by 11 iterations so hard-casted abilites don't 
@@ -215,13 +215,18 @@ namespace GCDTracker {
                 }
             }
             bool ShowABCAlert() {
+
+                #if debug
+                    debugtext4 = "cachedID:" + targetBuffer.ToString() + " realtimeID:" + DataStore.ClientState.LocalPlayer.TargetObjectId.ToString();
+                #endif
+
                 // compare cached target object ID at the time of action use to the current target object ID
                 if (DataStore.ClientState.LocalPlayer.TargetObjectId == targetBuffer)
                     // Flag for alert
                     if (!isHardCast && idleTimer == conf.abcDelayMul) {
                         
                         #if debug
-                            debugtext2 = "NC" + idleTimer.ToString(format:"{0:D2}") + " " + string.Format("{0:0.000}", (float)(DateTime.Now - isRunEnd).TotalSeconds);
+                            debugtext2 = "NC" + idleTimer.ToString("D2") + " " + string.Format("{0:0.000}", (float)(DateTime.Now - isRunEnd).TotalSeconds);
                         #endif
                         
                         return true;
@@ -229,7 +234,7 @@ namespace GCDTracker {
                     if (isHardCast && idleTimer == conf.abcDelayMul + 11) {
                         
                         #if debug
-                        debugtext2 = "HC" + idleTimer.ToString(format:"{0:D2}")+ " " + string.Format("{0:0.000}", (float)(DateTime.Now - isRunEnd).TotalSeconds);
+                        debugtext2 = "HC" + idleTimer.ToString("D2")+ " " + string.Format("{0:0.000}", (float)(DateTime.Now - isRunEnd).TotalSeconds);
                         #endif
                         
                         return true;
@@ -292,7 +297,7 @@ namespace GCDTracker {
             Vector2 end = new(ui.w_cent.X + barWidth / 2, ui.w_cent.Y + barHeight / 2);
 
             #if debug
-            ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -1f, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, debugtext + " " + debugtext2 + " " + debugtext3);
+            ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -1f, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, debugtext + " " + debugtext2 + " " + debugtext3 + " " + debugtext4);
             #endif
 
             if (conf.HideIfTP && HelperMethods.IsTeleport(DataStore.Action->CastId)) {
