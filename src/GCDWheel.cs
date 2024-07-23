@@ -195,6 +195,7 @@ namespace GCDTracker {
         }
 
         private bool ShouldStartABC() {
+            abcBlocker = true;
             // compare cached target object ID at the time of action use to the current target object ID
             return DataStore.ClientState.LocalPlayer.TargetObjectId == targetBuffer;
         }
