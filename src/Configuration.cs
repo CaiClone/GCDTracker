@@ -35,7 +35,7 @@ namespace GCDTracker
         public bool abcAlertEnabled = true;
         public int ClipAlertPrecision = 0;
         public float GCDTimeout = 2f;
-        public int abcDelay = 1;
+        public int abcDelay = 10;
         public float ClipTextSize = 0.86f;
         public float abcTextSize = 0.8f;
         public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
