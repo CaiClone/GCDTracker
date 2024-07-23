@@ -26,7 +26,7 @@ namespace GCDTracker
         public bool WindowMoveableGW = false;
         public bool ShowOutOfCombat = false;
         public bool HideAlertsOutOfCombat = false;
-        public bool HideIfTP = false;
+        public bool HideIfTP = true;
         public bool ShowOnlyGCDRunning = false;
         public bool QueueLockEnabled = true;
         public bool ColorClipEnabled = true;
@@ -34,8 +34,8 @@ namespace GCDTracker
         public bool clipAlertEnabled = true;
         public bool abcAlertEnabled = true;
         public int ClipAlertPrecision = 0;
-        public int GCDTimeout = 10;
-        public int abcDelayMul = 8;
+        public float GCDTimeout = 2f;
+        public int abcDelay = 1;
         public float ClipTextSize = 0.86f;
         public float abcTextSize = 0.8f;
         public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
@@ -225,16 +225,10 @@ namespace GCDTracker
                     ImGui.Checkbox("Show out of combat", ref ShowOutOfCombat);
                     ImGui.Checkbox("Hide alerts out of combat", ref HideAlertsOutOfCombat);
                     ImGui.Checkbox("Show only when GCD running", ref ShowOnlyGCDRunning);
-                    ImGui.Checkbox("Hide while teleporting", ref HideIfTP);
-                        if (ImGui.IsItemHovered()){
-                        ImGui.BeginTooltip();
-                        ImGui.Text("Hides the GCDTracker while teleporting, if show only when GCD running is also selected.");
-                        ImGui.EndTooltip();
-                    }
-                    ImGui.SliderInt("GCD Timeout Multiplier", ref GCDTimeout, 1, 20);
+                    ImGui.SliderFloat("GCD Timeout (in seconds)", ref GCDTimeout, .2f, 4f);
                     if (ImGui.IsItemHovered()){
                         ImGui.BeginTooltip();
-                        ImGui.Text("Controls the length of the GCD Timeout.  The lower the number, the faster the timeout.");
+                        ImGui.Text("Controls the length of the GCD Timeout.");
                         ImGui.EndTooltip();
                     }
                     ImGui.Checkbox("Show queue lock", ref QueueLockEnabled);
@@ -254,10 +248,10 @@ namespace GCDTracker
                         ImGui.ColorEdit4("ABC background color", ref abcBackColor, ImGuiColorEditFlags.NoInputs);
                     }
                     ImGui.SliderFloat("A-B-C text size", ref abcTextSize, 0.2f, 2f);
-                    ImGui.SliderInt("A-B-C alert delay", ref abcDelayMul, 1, 20);
+                    ImGui.SliderInt("A-B-C alert delay (in milliseconds)", ref abcDelay, 1, 100);
                     if (ImGui.IsItemHovered()){
                         ImGui.BeginTooltip();
-                        ImGui.Text("Controls how much delay is allowed between abilities. Higher = more delay.");
+                        ImGui.Text("Controls how much delay is allowed between abilities.");
                         ImGui.EndTooltip();
                     }
 

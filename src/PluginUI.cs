@@ -67,7 +67,7 @@ namespace GCDTracker
             if (conf.WheelEnabled && !noUI && (conf.WindowMoveableGW || 
                 (enabledJobGW
                     && (conf.ShowOutOfCombat || inCombat)
-                    && (!conf.ShowOnlyGCDRunning || (gcd.idleTimer < 20 * conf.GCDTimeout && !gcd.lastActionTP))
+                    && (!conf.ShowOnlyGCDRunning || (gcd.idleTimerAccum < gcd.GCDTimeoutBuffer && !gcd.lastActionTP))
                     ))) {
                 SetupWindow("GCDTracker_GCDWheel", conf.WindowMoveableGW);
                 gcd.DrawGCDWheel(this, conf);
@@ -77,7 +77,7 @@ namespace GCDTracker
             if (conf.BarEnabled && !noUI && (conf.BarWindowMoveable || 
                 (enabledJobGB 
                     && (conf.ShowOutOfCombat || inCombat)
-                    && (!conf.ShowOnlyGCDRunning || (gcd.idleTimer < 20 * conf.GCDTimeout && !gcd.lastActionTP))
+                    && (!conf.ShowOnlyGCDRunning || (gcd.idleTimerAccum < gcd.GCDTimeoutBuffer && !gcd.lastActionTP))
                     ))) {
                 SetupWindow("GCDTracker_Bar", conf.BarWindowMoveable);
                 gcd.DrawGCDBar(this, conf);
