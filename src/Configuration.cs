@@ -223,7 +223,6 @@ namespace GCDTracker
             if (ImGui.BeginTabBar("GCDConfig")){
                 if(ImGui.BeginTabItem("GCDTracker")){
                     ImGui.Checkbox("Show out of combat", ref ShowOutOfCombat);
-                    ImGui.Checkbox("Hide alerts out of combat", ref HideAlertsOutOfCombat);
                     ImGui.Checkbox("Show only when GCD running", ref ShowOnlyGCDRunning);
                     ImGui.SliderFloat("GCD Timeout (in seconds)", ref GCDTimeout, .2f, 4f);
                     if (ImGui.IsItemHovered()){
@@ -237,7 +236,12 @@ namespace GCDTracker
                         ImGui.Text("If enabled, the wheel background will expand on the timing where you can queue the next GCD.");
                         ImGui.EndTooltip();
                     }
-
+                    ImGui.Checkbox("Hide alerts out of combat", ref HideAlertsOutOfCombat);
+                    if (ImGui.IsItemHovered()){
+                        ImGui.BeginTooltip();
+                        ImGui.Text("If enabled, clip and A-B-C pop up alerts will be hidden outside of combat");
+                        ImGui.EndTooltip();
+                    }
                     ImGui.Separator();
 
                     ImGui.Checkbox("Color wheel on ABC failure", ref ColorABCEnabled);
