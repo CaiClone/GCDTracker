@@ -24,17 +24,26 @@ namespace GCDTracker
         public bool WheelEnabled = true;
         [JsonIgnore]
         public bool WindowMoveableGW = false;
-        public bool ShowOutOfCombatGW = false;
-        public bool ShowOnlyGCDRunningGW = false;
-        public bool WheelQueueLockEnabled = true;
+        public bool ShowOutOfCombat = false;
+        public bool HideAlertsOutOfCombat = false;
+        public bool HideIfTP = true;
+        public bool ShowOnlyGCDRunning = false;
+        public bool QueueLockEnabled = true;
         public bool ColorClipEnabled = true;
-        public bool ClipAlertEnabled = true;
+        public bool ColorABCEnabled = true;
+        public bool clipAlertEnabled = true;
+        public bool abcAlertEnabled = true;
         public int ClipAlertPrecision = 0;
+        public float GCDTimeout = 2f;
+        public int abcDelay = 10;
         public float ClipTextSize = 0.86f;
+        public float abcTextSize = 0.8f;
         public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
+        public Vector4 abcCol = new(1f, .7f, 0f, 0.667f);
         public Vector4 ClipTextColor = new(0.9f, 0.9f, 0.9f, 1f);
         public Vector4 ClipBackColor = new(1f, 0f, 0f, 1f);
-
+        public Vector4 abcTextColor = new(0f, 0f, 0f, 1f);
+        public Vector4 abcBackColor = new(1f, .7f, 0f, 1f);
         public Vector4 backCol = new(0.376f, 0.376f, 0.376f, 1);
         public Vector4 backColBorder = new(0f, 0f, 0f, 1f);
         public Vector4 frontCol = new(0.9f, 0.9f, 0.9f, 1f);
@@ -45,25 +54,11 @@ namespace GCDTracker
         public bool BarEnabled = false;
         [JsonIgnore]
         public bool BarWindowMoveable = false;
-        public bool BarShowOutOfCombat = false;
-        public bool BarShowOnlyGCDRunning = false;
-        public bool BarQueueLockEnabled = true;
-        public bool BarColorClipEnabled = true;
-        public bool BarClipAlertEnabled = true;
-        public int BarClipAlertPrecision = 0;
         public bool BarRollGCDs = true;
-        public float BarClipTextSize = 0.8f;
-        public Vector4 BarclipCol = new(1f, 0f, 0f, 0.667f);
-        public Vector4 BarClipTextColor = new(0.9f, 0.9f, 0.9f, 1f);
-        public Vector4 BarClipBackColor = new(1f, 0f, 0f, 1f);
         public float BarBorderSize = 2f;
         public float BarWidthRatio = 0.9f;
         public float BarHeightRatio = 0.5f;
-        public Vector4 BarBackCol = new(0.376f, 0.376f, 0.376f, 0.667f);
         public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
-        public Vector4 BarFrontCol = new(0.9f, 0.9f, 0.9f, 1f);
-        public Vector4 BarOgcdCol = new(1f, 1f, 1f, 1f);
-        public Vector4 BarAnLockCol = new(0.334f, 0.334f, 0.334f, 0.667f);
 
         //Combo
         public bool ComboEnabled = false;
@@ -211,8 +206,6 @@ namespace GCDTracker
                         ClipTextColor = frontCol.WithAlpha(1f);
                         ClipBackColor = clipCol.WithAlpha(1f);
 
-                        BarClipTextColor = BarFrontCol.WithAlpha(1f);
-                        BarClipBackColor = BarclipCol.WithAlpha(1f);
                         break;
                 }
                 Version++;
@@ -228,114 +221,111 @@ namespace GCDTracker
             ImGui.Begin("GCDTracker Settings",ref configEnabled,ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize);
 
             if (ImGui.BeginTabBar("GCDConfig")){
-                if (ImGui.BeginTabItem("GCDWheel")) {
+                if(ImGui.BeginTabItem("GCDTracker")){
+                    ImGui.Checkbox("Show out of combat", ref ShowOutOfCombat);
+                    ImGui.Checkbox("Show only when GCD running", ref ShowOnlyGCDRunning);
+                    ImGui.SliderFloat("GCD Timeout (in seconds)", ref GCDTimeout, .2f, 4f);
+                    if (ImGui.IsItemHovered()){
+                        ImGui.BeginTooltip();
+                        ImGui.Text("Controls the length of the GCD Timeout.");
+                        ImGui.EndTooltip();
+                    }
+                    ImGui.Checkbox("Show queue lock", ref QueueLockEnabled);
+                    if (ImGui.IsItemHovered()){
+                        ImGui.BeginTooltip();
+                        ImGui.Text("If enabled, the wheel background will expand on the timing where you can queue the next GCD.");
+                        ImGui.EndTooltip();
+                    }
+                    ImGui.Checkbox("Hide alerts out of combat", ref HideAlertsOutOfCombat);
+                    if (ImGui.IsItemHovered()){
+                        ImGui.BeginTooltip();
+                        ImGui.Text("If enabled, clip and A-B-C pop up alerts will be hidden outside of combat");
+                        ImGui.EndTooltip();
+                    }
+                    ImGui.Separator();
+
+                    ImGui.Checkbox("Color wheel on ABC failure", ref ColorABCEnabled);
+                    ImGui.Checkbox("Show ABC failure alert", ref abcAlertEnabled);
+                    if (abcAlertEnabled) {
+                        ImGui.ColorEdit4("ABC text color", ref abcTextColor, ImGuiColorEditFlags.NoInputs);
+                        ImGui.SameLine();
+                        ImGui.ColorEdit4("ABC background color", ref abcBackColor, ImGuiColorEditFlags.NoInputs);
+                    }
+                    ImGui.SliderFloat("A-B-C text size", ref abcTextSize, 0.2f, 2f);
+                    ImGui.SliderInt("A-B-C alert delay (in milliseconds)", ref abcDelay, 1, 100);
+                    if (ImGui.IsItemHovered()){
+                        ImGui.BeginTooltip();
+                        ImGui.Text("Controls how much delay is allowed between abilities.");
+                        ImGui.EndTooltip();
+                    }
+
+                    ImGui.Separator();
+
+                    ImGui.Checkbox("Color wheel on clipped GCD", ref ColorClipEnabled);
+                    ImGui.Checkbox("Show clip alert", ref clipAlertEnabled);
+                    if (clipAlertEnabled) {
+                        ImGui.SameLine();
+                        ImGui.RadioButton("CLIP", ref ClipAlertPrecision, 0);
+                        ImGui.SameLine();
+                        ImGui.RadioButton("0.X", ref ClipAlertPrecision, 1);
+                        ImGui.SameLine();
+                        ImGui.RadioButton("0.XX", ref ClipAlertPrecision, 2);
+
+                        ImGui.ColorEdit4("Clip text color", ref ClipTextColor, ImGuiColorEditFlags.NoInputs);
+                        ImGui.SameLine();
+                        ImGui.ColorEdit4("Clip background color", ref ClipBackColor, ImGuiColorEditFlags.NoInputs);
+                    }
+                    ImGui.SliderFloat("Clip text size", ref ClipTextSize, 0.2f, 2f);
+
+                    ImGui.Separator();
+
+                    ImGui.Columns(2);
+                    ImGui.ColorEdit4("Background bar color", ref backCol, ImGuiColorEditFlags.NoInputs);
+                    ImGui.ColorEdit4("Background border color", ref backColBorder, ImGuiColorEditFlags.NoInputs);
+                    ImGui.ColorEdit4("GCD bar color", ref frontCol, ImGuiColorEditFlags.NoInputs);
+                    ImGui.NextColumn();
+                    ImGui.ColorEdit4("GCD start indicator color", ref ogcdCol, ImGuiColorEditFlags.NoInputs);
+                    ImGui.ColorEdit4("Animation lock bar color", ref anLockCol, ImGuiColorEditFlags.NoInputs);
+                    ImGui.ColorEdit4("Clipping color", ref clipCol, ImGuiColorEditFlags.NoInputs);
+                    ImGui.ColorEdit4("ABC failure color", ref abcCol, ImGuiColorEditFlags.NoInputs);
+                    ImGui.Columns(1);
+                    ImGui.EndTabItem();
+                        
+                }
+                if (ImGui.BeginTabItem("GCDDisplay")) {
                     ImGui.Checkbox("Enable GCDWheel", ref WheelEnabled);
                     if (WheelEnabled) {
-                        ImGui.Checkbox("Move/resize window", ref WindowMoveableGW);
+                        ImGui.Checkbox("Move/resize GCDWheel", ref WindowMoveableGW);
                         if (WindowMoveableGW)
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
-                        ImGui.Checkbox("Show out of combat", ref ShowOutOfCombatGW);
-                        ImGui.Checkbox("Show only when GCD running", ref ShowOnlyGCDRunningGW);
-                        ImGui.Checkbox("Show queue lock", ref WheelQueueLockEnabled);
-                        if (ImGui.IsItemHovered()){
-                            ImGui.BeginTooltip();
-                            ImGui.Text("If enabled, the wheel background will expand on the timing where you can queue the next GCD.");
-                            ImGui.EndTooltip();
-                        }
-                        ImGui.Separator();
-
-                        ImGui.Checkbox("Color wheel on clipped GCD", ref ColorClipEnabled);
-                        ImGui.Checkbox("Show clip alert", ref ClipAlertEnabled);
-                        if (ClipAlertEnabled) {
-                            ImGui.SameLine();
-                            ImGui.RadioButton("CLIP", ref ClipAlertPrecision, 0);
-                            ImGui.SameLine();
-                            ImGui.RadioButton("0.X", ref ClipAlertPrecision, 1);
-                            ImGui.SameLine();
-                            ImGui.RadioButton("0.XX", ref ClipAlertPrecision, 2);
-
-                            ImGui.ColorEdit4("Clip text color", ref ClipTextColor, ImGuiColorEditFlags.NoInputs);
-                            ImGui.SameLine();
-                            ImGui.ColorEdit4("Clip background color", ref ClipBackColor, ImGuiColorEditFlags.NoInputs);
-                        }
-                        ImGui.SliderFloat("Clip text size", ref ClipTextSize, 0.2f, 2f);
-
-                        ImGui.Separator();
-                        ImGui.Columns(2);
-                        ImGui.ColorEdit4("Background bar color", ref backCol, ImGuiColorEditFlags.NoInputs);
-                        ImGui.ColorEdit4("Background border color", ref backColBorder, ImGuiColorEditFlags.NoInputs);
-                        ImGui.ColorEdit4("GCD bar color", ref frontCol, ImGuiColorEditFlags.NoInputs);
-                        ImGui.NextColumn();
-                        ImGui.ColorEdit4("GCD start indicator color", ref ogcdCol, ImGuiColorEditFlags.NoInputs);
-                        ImGui.ColorEdit4("Animation lock bar color", ref anLockCol, ImGuiColorEditFlags.NoInputs);
-                        ImGui.ColorEdit4("Clipping color", ref clipCol, ImGuiColorEditFlags.NoInputs);
-                        ImGui.Columns(1);
-                        ImGui.Separator();
-
-                        DrawJobGrid(ref EnabledGWJobs, true);
                     }
-                    ImGui.EndTabItem();
-                }
-                if (ImGui.BeginTabItem("GCDBar")) {
+
+                        ImGui.Separator();
+
                     ImGui.Checkbox("Enable GCDBar", ref BarEnabled);
                     if (BarEnabled) {
-                        ImGui.Checkbox("Move/resize window", ref BarWindowMoveable);
+                        ImGui.Checkbox("Move/resize GCDBar", ref BarWindowMoveable);
                         if (BarWindowMoveable)
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
-                        ImGui.Checkbox("Show out of combat", ref BarShowOutOfCombat);
-                        ImGui.Checkbox("Show only when GCD running", ref BarShowOnlyGCDRunning);
-                        ImGui.Checkbox("Show queue lock", ref BarQueueLockEnabled);
-                        if (ImGui.IsItemHovered()){
-                            ImGui.BeginTooltip();
-                            ImGui.Text("Displays a background bar on the timing where you can queue the next GCD.");
-                            ImGui.EndTooltip();
-                        }
                         ImGui.Checkbox("Roll GCDs", ref BarRollGCDs);
                         if (ImGui.IsItemHovered()){
                             ImGui.BeginTooltip();
                             ImGui.Text("If enabled abilities that start on the next GCD will always be shown inside the bar, even if it overlaps the current GCD.");
                             ImGui.EndTooltip();
                         }
-
-                        ImGui.Separator();
-                        ImGui.Checkbox("Color bar on clipped GCD", ref BarColorClipEnabled);
-                        ImGui.Checkbox("Show clip alert", ref BarClipAlertEnabled);
-                        if (BarClipAlertEnabled) {
-                            ImGui.SameLine();
-                            ImGui.RadioButton("CLIP", ref BarClipAlertPrecision, 0);
-                            ImGui.SameLine();
-                            ImGui.RadioButton("0.X", ref BarClipAlertPrecision, 1);
-                            ImGui.SameLine();
-                            ImGui.RadioButton("0.XX", ref BarClipAlertPrecision, 2);
-
-                            ImGui.ColorEdit4("Clip text color", ref BarClipTextColor, ImGuiColorEditFlags.NoInputs);
-                            ImGui.SameLine();
-                            ImGui.ColorEdit4("Clip background color", ref BarClipBackColor, ImGuiColorEditFlags.NoInputs);
-                        }
-                        ImGui.SliderFloat("Clip text size", ref BarClipTextSize, 0.2f, 2f);
-                        ImGui.Separator();
-                        ImGui.Columns(2);
-                        ImGui.ColorEdit4("Background bar color", ref BarBackCol, ImGuiColorEditFlags.NoInputs);
-                        ImGui.ColorEdit4("Background border color", ref BarBackColBorder, ImGuiColorEditFlags.NoInputs);
-                        ImGui.ColorEdit4("GCD bar color", ref BarFrontCol, ImGuiColorEditFlags.NoInputs);
-                        ImGui.NextColumn();
-                        ImGui.ColorEdit4("GCD start indicator color", ref BarOgcdCol, ImGuiColorEditFlags.NoInputs);
-                        ImGui.ColorEdit4("Animation lock bar color", ref BarAnLockCol, ImGuiColorEditFlags.NoInputs);
-                        ImGui.ColorEdit4("Clipping color", ref BarclipCol, ImGuiColorEditFlags.NoInputs);
-                        ImGui.Columns(1);
-                        ImGui.Separator();
                         ImGui.SliderFloat("Border size", ref BarBorderSize, 0f, 10f);
                         Vector2 size = new(BarWidthRatio, BarHeightRatio);
                         ImGui.SliderFloat2("Width and height ratio", ref size, 0.1f, 1f);
                         BarWidthRatio = size.X;
                         BarHeightRatio = size.Y;
+                    }
+
                         ImGui.Separator();
 
-                        DrawJobGrid(ref EnabledGBJobs, true);
-                    }
+                        DrawJobGrid(ref EnabledGWJobs, true);
                     ImGui.EndTabItem();
                 }
-                if (ImGui.BeginTabItem("ComboTrack")) {
+                if (ImGui.BeginTabItem("Combo Tracker")) {
                     ImGui.Checkbox("Enable ComboTrack", ref ComboEnabled);
                     if (ComboEnabled) {
                         ImGui.Checkbox("Move/resize window", ref WindowMoveableCT);

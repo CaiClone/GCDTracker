@@ -50,6 +50,7 @@ namespace GCDTracker
 
         private readonly GCDWheel gcd;
         private readonly ComboTracker ct;
+        private IFramework.OnUpdateDelegate gcdUpdateDelegate;
 
         public GCDTracker() {
             config = (Configuration)PluginInterface.GetPluginConfig() ?? new Configuration();
@@ -70,7 +71,8 @@ namespace GCDTracker
             PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
             PluginInterface.UiBuilder.OpenMainUi += OpenConfig;
             Framework.Update += ct.Update;
-            Framework.Update += gcd.Update;
+            gcdUpdateDelegate = new IFramework.OnUpdateDelegate((framework) => gcd.Update(framework, config));
+            Framework.Update += gcdUpdateDelegate;
 
             commandManager = new PluginCommandManager<GCDTracker>(this, Commands);
 
@@ -116,7 +118,7 @@ namespace GCDTracker
             PluginInterface.UiBuilder.Draw -= ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi -= OpenConfig;
             Framework.Update -= ct.Update;
-            Framework.Update -= gcd.Update;
+            Framework.Update -= gcdUpdateDelegate;
         }
 
         public void Dispose() {

@@ -1,5 +1,4 @@
-﻿
-using Dalamud.Game;
+﻿﻿using Dalamud.Game;
 using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
@@ -17,16 +16,25 @@ namespace GCDTracker {
     public unsafe class GCDWheel {
         public Dictionary<float, AbilityTiming> ogcds = [];
         public float TotalGCD;
-
+        public int idleTimerAccum;
+        public int GCDTimeoutBuffer;
+        public bool abcBlocker;
+        public bool lastActionTP;
         private DateTime lastGCDEnd;
         private float lastElapsedGCD;
-        private bool lastActionCast;
         private float lastClipDelta;
+        private ulong targetBuffer;
+        private bool idleTimerReset;
+        private bool idleTimerDone;
+        private bool lastActionCast;
         private bool clippedGCD;
         private bool checkClip;
+        private bool checkABC;
+        private bool abcOnThisGCD;
+        private bool abcOnLastGCD;
+        private bool isRunning;
+        private bool isHardCast;
 
-        public float SecondsSinceGCDEnd =>
-            lastElapsedGCD > 0 ? 0 : (float)(DateTime.Now - lastGCDEnd).TotalSeconds;
         public GCDWheel() {
             TotalGCD = 3.5f;
             lastGCDEnd = DateTime.Now;
@@ -34,20 +42,29 @@ namespace GCDTracker {
             lastClipDelta = 0f;
             clippedGCD = false;
             checkClip = false;
+            checkABC = false;
+            abcOnThisGCD = false;
+            abcOnLastGCD = false;
+            isHardCast = false;
+            targetBuffer = 1;
+            idleTimerAccum = 0;
+            idleTimerReset = true;
         }
 
         public void OnActionUse(byte ret, ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp) {
             var act = DataStore.Action;
-
             var isWeaponSkill = HelperMethods.IsWeaponSkill(actionType, actionID);
             var addingToQueue = HelperMethods.IsAddingToQueue(isWeaponSkill, act) && useType != 1;
             var executingQueued = act->InQueue && !addingToQueue;
-
             if (ret != 1) {
                 if (executingQueued && Math.Abs(act->ElapsedCastTime-act->TotalCastTime)<0.0001f && isWeaponSkill)
                     ogcds.Clear();
                 return;
             }
+            //check to make sure that the player is targeting something, so that if they are spamming an action
+            //button after the mob dies it won't update the targetBuffer and trigger an ABC
+            if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
+                targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
             if (addingToQueue) {
                 AddToQueue(act, isWeaponSkill);
             } else {
@@ -89,18 +106,18 @@ namespace GCDTracker {
             }
         }
 
-        public void Update(IFramework framework) {
+        public void Update(IFramework framework, Configuration conf) {
             if (DataStore.ClientState.LocalPlayer == null)
                 return;
-
             CleanFailedOGCDs();
+            GCDTimeoutHelper(framework, conf);
             if (lastActionCast && !HelperMethods.IsCasting())
                 HandleCancelCast();
             else if (DataStore.Action->ElapsedGCD < lastElapsedGCD)
                 EndCurrentGCD(lastElapsedGCD);
             else if (DataStore.Action->ElapsedGCD < 0.0001f)
                 SlideGCDs((float)(framework.UpdateDelta.TotalMilliseconds * 0.001), false);
-            lastElapsedGCD = DataStore.Action->ElapsedGCD;
+            lastElapsedGCD = DataStore.Action->ElapsedGCD;      
         }
 
         private void CleanFailedOGCDs() {
@@ -108,6 +125,40 @@ namespace GCDTracker {
                 ogcds = ogcds
                     .Where(x => x.Key > DataStore.Action->ElapsedGCD || x.Key + x.Value.AnimationLock < DataStore.Action->ElapsedGCD)
                     .ToDictionary(x => x.Key, x => x.Value);
+            }
+        }
+
+        private void GCDTimeoutHelper(IFramework framework, Configuration conf) {
+            // Determine if we are running
+            isRunning = (DataStore.Action->ElapsedGCD != DataStore.Action->TotalGCD) || HelperMethods.IsCasting();
+            // Reset idleTimer when we start casting
+            if (isRunning && idleTimerReset) {
+                idleTimerAccum = 0;
+                isHardCast = false;
+                idleTimerReset = false;
+                idleTimerDone = false;
+                abcBlocker = false;
+                GCDTimeoutBuffer = (int)(1000 * conf.GCDTimeout);
+            }
+            if (!isRunning && !idleTimerDone) {
+                idleTimerAccum += framework.UpdateDelta.Milliseconds;
+                if (!idleTimerReset) {
+                    idleTimerReset = true;
+                }
+            }
+            // Handle caster tax
+            if (!isHardCast && HelperMethods.IsCasting() && DataStore.Action->TotalCastTime - 0.1f >= DataStore.Action->TotalGCD)
+                isHardCast = true;
+            checkABC = !abcBlocker && (idleTimerAccum >= (isHardCast ? (conf.abcDelay + 100) : conf.abcDelay));
+            // Reset state after the GCDTimeout
+            if (idleTimerAccum >= GCDTimeoutBuffer) {
+                checkABC = false;
+                clippedGCD = false;
+                checkClip = false;
+                abcOnLastGCD = false;
+                abcOnThisGCD = false;
+                lastActionTP = false;
+                idleTimerDone = true;
             }
         }
 
@@ -143,32 +194,64 @@ namespace GCDTracker {
             return clippedGCD;
         }
 
+        private bool ShouldStartABC() {
+            abcBlocker = true;
+            // compare cached target object ID at the time of action use to the current target object ID
+            return DataStore.ClientState.LocalPlayer.TargetObjectId == targetBuffer;
+        }
+
+        private void FlagAlerts(PluginUI ui, Configuration conf){
+            bool inCombat = DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
+            if(conf.clipAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat)){
+                if (checkClip && ShouldStartClip()) {
+                    ui.StartAlert(true, lastClipDelta);
+                    lastClipDelta = 0;
+                }
+            }
+            if (conf.abcAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat)){
+                if (!clippedGCD && checkABC && !abcBlocker && ShouldStartABC()) {
+                    ui.StartAlert(false, 0);
+                    abcOnThisGCD = true;
+                }
+            }
+        }
+
+        private void InvokeAlerts(float relx, float rely, PluginUI ui, Configuration conf){
+            if (conf.clipAlertEnabled && clippedGCD)
+                ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
+            if (conf.abcAlertEnabled && (abcOnThisGCD || abcOnLastGCD))
+                ui.DrawAlert(relx, rely, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, 3);
+           }
+
+        public Vector4 BackgroundColor(Configuration conf){
+            var bg = conf.backCol;  
+            if (conf.ColorClipEnabled && clippedGCD)  
+                bg = conf.clipCol;  
+            if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))  
+                bg = conf.abcCol;
+            return bg;
+        }
+
         public void DrawGCDWheel(PluginUI ui, Configuration conf) {
             float gcdTotal = TotalGCD;
             float gcdTime = lastElapsedGCD;
+            if (conf.ShowOnlyGCDRunning && HelperMethods.IsTeleport(DataStore.Action->CastId)) {
+                lastActionTP = true;
+                return;
+            }
             if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
-            if (checkClip && ShouldStartClip()) {
-                ui.StartClip(lastClipDelta);
-                lastClipDelta = 0;
-            }
-            if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
-                clippedGCD = false;
-
-            var backgroundCol = clippedGCD && conf.ColorClipEnabled ? conf.clipCol : conf.backCol;
+            FlagAlerts(ui, conf);
+            InvokeAlerts(0.5f, 0, ui, conf);
             // Background
             ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder); 
-            ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, backgroundCol);
-            if (conf.WheelQueueLockEnabled) {
+            ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, BackgroundColor(conf));
+            if (conf.QueueLockEnabled) {
                 ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder); 
-                ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, backgroundCol);
+                ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, BackgroundColor(conf));
             }
-            if (conf.ClipAlertEnabled)
-                ui.DrawClip(0.5f, 0, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
-
             ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
-
             foreach (var (ogcd, (anlock, iscast)) in ogcds) {
                 var isClipping = CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
                 ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * ui.Scale, isClipping ? conf.clipCol : conf.anLockCol);
@@ -179,36 +262,26 @@ namespace GCDTracker {
         public void DrawGCDBar(PluginUI ui, Configuration conf) {
             float gcdTotal = TotalGCD;
             float gcdTime = lastElapsedGCD;
-            if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
-                gcdTime = gcdTotal;
-            if (gcdTotal < 0.1f) return;
-            if (checkClip && ShouldStartClip()) {
-                ui.StartClip(lastClipDelta);
-                lastClipDelta = 0;
-            }
-            if (clippedGCD && lastGCDEnd + TimeSpan.FromSeconds(4) < DateTime.Now)
-                clippedGCD = false;
-                
-            var backgroundCol = clippedGCD && conf.BarColorClipEnabled ? conf.BarclipCol : conf.BarBackCol;
             float barHeight = ui.w_size.Y * conf.BarHeightRatio;
             float barWidth = ui.w_size.X * conf.BarWidthRatio;
             float borderSize = conf.BarBorderSize;
-
+            float barGCDClipTime = 0;
             Vector2 start = new(ui.w_cent.X - barWidth / 2, ui.w_cent.Y - barHeight / 2);
             Vector2 end = new(ui.w_cent.X + barWidth / 2, ui.w_cent.Y + barHeight / 2);
-            // Background
-            ui.DrawBar(0f, 1f, barWidth, barHeight, backgroundCol);
-            if (conf.BarClipAlertEnabled)
-                ui.DrawClip((conf.BarWidthRatio + 1) / 2, -0.3f, conf.BarClipTextSize, conf.BarClipTextColor, conf.BarClipBackColor, conf.BarClipAlertPrecision);
 
-            ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.BarFrontCol);
-            if (borderSize > 0) {
-                ui.DrawRect(
-                    start - new Vector2(borderSize, borderSize)/2,
-                    end + new Vector2(borderSize, borderSize)/2,
-                    conf.BarBackColBorder, borderSize);
+            if (conf.ShowOnlyGCDRunning && HelperMethods.IsTeleport(DataStore.Action->CastId)) {
+                lastActionTP = true;
+                return;
             }
-            float barGCDClipTime = 0;
+            if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
+                gcdTime = gcdTotal;
+            if (gcdTotal < 0.1f) return;
+            FlagAlerts(ui, conf);
+            InvokeAlerts((conf.BarWidthRatio + 1) / 2.1f, -0.3f, ui, conf);
+            // Background
+            ui.DrawBar(0f, 1f, barWidth, barHeight, BackgroundColor(conf));
+            ui.DrawBar(0f, Math.Min(gcdTime / gcdTotal, 1f), barWidth, barHeight, conf.frontCol);
+
             foreach (var (ogcd, (anlock, iscast)) in ogcds) {
                 var isClipping = CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
                 float ogcdStart = (conf.BarRollGCDs && gcdTotal - ogcd < 0.2f) ? 0 + barGCDClipTime : ogcd;
@@ -217,12 +290,13 @@ namespace GCDTracker {
                 if (conf.BarRollGCDs && ogcdEnd > gcdTotal) {
                     ogcdEnd = gcdTotal;
                     barGCDClipTime += ogcdStart + anlock - gcdTotal;
-                    
-                    // Draw the clipped part at the beggining
-                    ui.DrawBar(0, barGCDClipTime/gcdTotal, barWidth, barHeight, conf.BarclipCol);
+                    //prevent red bar when we "clip" a hard-cast ability
+                    if (!isHardCast){
+                        // Draw the clipped part at the beggining
+                        ui.DrawBar(0, barGCDClipTime/gcdTotal, barWidth, barHeight, conf.clipCol);
+                    }
                 }
-                
-                ui.DrawBar(ogcdStart / gcdTotal, ogcdEnd / gcdTotal, barWidth, barHeight, isClipping ? conf.BarclipCol : conf.BarAnLockCol);
+                ui.DrawBar(ogcdStart / gcdTotal, ogcdEnd / gcdTotal, barWidth, barHeight, isClipping ? conf.clipCol : conf.anLockCol);
                 if (!iscast && (!isClipping || ogcdStart > 0.01f)) {
                     Vector2 clipPos = new(
                         ui.w_cent.X + (ogcdStart / gcdTotal * barWidth) - (barWidth / 2),
@@ -230,10 +304,11 @@ namespace GCDTracker {
                     );
                     ui.DrawRectFilled(clipPos,
                         clipPos + new Vector2(2f*ui.Scale, barHeight-2f),
-                        conf.BarOgcdCol);
+                        conf.ogcdCol);
                 }
             }
-            if (conf.BarQueueLockEnabled) {
+            //borders last so they're on top of all elements
+            if (conf.QueueLockEnabled) {
                 Vector2 queueLock = new(
                     ui.w_cent.X + (0.8f * barWidth) - (barWidth / 2),
                     ui.w_cent.Y - (barHeight / 2) - (borderSize / 2)
@@ -242,21 +317,29 @@ namespace GCDTracker {
                     queueLock + new Vector2(borderSize, barHeight + (borderSize / 2)),
                     conf.BarBackColBorder);
             }
+            if (borderSize > 0) {
+                ui.DrawRect(
+                    start - new Vector2(borderSize, borderSize)/2,
+                    end + new Vector2(borderSize, borderSize)/2,
+                    conf.BarBackColBorder, borderSize);
+            }
         }
 
         private bool CheckClip(bool iscast, float ogcd, float anlock, float gcdTotal, float gcdTime) =>
-            !iscast && DateTime.Now > lastGCDEnd + TimeSpan.FromMilliseconds(50)  &&
+            !iscast && !isHardCast && DateTime.Now > lastGCDEnd + TimeSpan.FromMilliseconds(50)  &&
             (
                 (ogcd < (gcdTotal - 0.05f) && ogcd + anlock > gcdTotal) // You will clip next GCD
                 || (gcdTime < 0.001f && ogcd < 0.001f && (anlock > (lastActionCast? 0.125:0.025))) // anlock when no gcdRolling nor CastEndAnimation
             );
         
-
         private void EndCurrentGCD(float GCDtime) {
             SlideGCDs(GCDtime, true);
-            if (lastElapsedGCD > 0) checkClip = true;
+            if (lastElapsedGCD > 0 && !isHardCast) checkClip = true;
             lastElapsedGCD = DataStore.Action->ElapsedGCD;
             lastGCDEnd = DateTime.Now;
+            //I'm sure there's a better way to accomplish this
+            abcOnLastGCD = abcOnThisGCD;
+            abcOnThisGCD = false;
         }
 
         public void UpdateAnlock(float oldLock, float newLock) {
