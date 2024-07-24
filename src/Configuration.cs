@@ -26,7 +26,7 @@ namespace GCDTracker
         public bool WindowMoveableGW = false;
         public bool ShowOutOfCombat = false;
         public bool HideAlertsOutOfCombat = false;
-        public bool HideIfTP = true;
+        public bool HideIfTP = true; //Not exposed in the UI
         public bool ShowOnlyGCDRunning = false;
         public bool QueueLockEnabled = true;
         public bool ColorClipEnabled = true;

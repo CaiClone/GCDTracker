@@ -97,7 +97,7 @@ namespace Tests
         }
         [TestMethod]
         public void Test_exact_slidegcd_end() {
-            GCDWheel wheel = new() {
+            GCDWheel wheel = new(null) {
                 ogcds = new()
                 {
                     { 0, new AbilityTiming(0.35f, false) },

@@ -1,12 +1,9 @@
 ﻿using Dalamud.Interface;
 using Dalamud.Interface.Animation;
 using Dalamud.Interface.Animation.EasingFunctions;
-using Dalamud.Logging;
-using Dalamud.Utility.Numerics;
 using GCDTracker.Data;
 using ImGuiNET;
 using System;
-using System.Diagnostics;
 using System.Numerics;
 
 namespace GCDTracker
@@ -26,7 +23,7 @@ namespace GCDTracker
         public Vector2 w_size;
         public float Scale;
         private ImDrawListPtr draw;
-        private string[] alertText;
+        private readonly string[] alertText;
 
         public PluginUI(Configuration conf) {
             this.conf = conf;
@@ -70,7 +67,7 @@ namespace GCDTracker
                     && (!conf.ShowOnlyGCDRunning || (gcd.idleTimerAccum < gcd.GCDTimeoutBuffer && !gcd.lastActionTP))
                     ))) {
                 SetupWindow("GCDTracker_GCDWheel", conf.WindowMoveableGW);
-                gcd.DrawGCDWheel(this, conf);
+                gcd.DrawGCDWheel(this);
                 ImGui.End();
             }
 
@@ -80,7 +77,7 @@ namespace GCDTracker
                     && (!conf.ShowOnlyGCDRunning || (gcd.idleTimerAccum < gcd.GCDTimeoutBuffer && !gcd.lastActionTP))
                     ))) {
                 SetupWindow("GCDTracker_Bar", conf.BarWindowMoveable);
-                gcd.DrawGCDBar(this, conf);
+                gcd.DrawGCDBar(this);
                 ImGui.End();
             }
 
