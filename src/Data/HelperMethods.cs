@@ -32,12 +32,15 @@ namespace GCDTracker.Data
                 act->InQueue,
                 act->ElapsedGCD,
                 act->TotalGCD,
-                act->AnimationLock);
+                act->AnimationLock,
+                act->ElapsedCastTime,
+                act->TotalCastTime);
 
-        internal static bool _isAddingToQueue(bool isWeaponSkill, bool InQueue, float ElapsedGCD, float TotalGCD, float AnimationLock) {
+        internal static bool _isAddingToQueue(bool isWeaponSkill, bool InQueue, float ElapsedGCD, float TotalGCD, float AnimationLock, float ElapsedCastTime, float TotalCastTime) {
             return InQueue && (
                     (isWeaponSkill && (
                         (ElapsedGCD < TotalGCD && ElapsedGCD > 0.001f) ||
+                        (ElapsedCastTime < TotalCastTime && ElapsedCastTime > 0.001f) ||
                         (AnimationLock != 0f && AnimationLock != 0.5f && AnimationLock != 0.64000005f
                             && AnimationLock != 0.35f //Mudra
                             && AnimationLock != 0.74000007f //Gnashing Fang

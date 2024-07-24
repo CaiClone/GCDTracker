@@ -252,7 +252,7 @@ namespace GCDTracker
                         ImGui.ColorEdit4("ABC background color", ref abcBackColor, ImGuiColorEditFlags.NoInputs);
                     }
                     ImGui.SliderFloat("A-B-C text size", ref abcTextSize, 0.2f, 2f);
-                    ImGui.SliderInt("A-B-C alert delay (in milliseconds)", ref abcDelay, 1, 100);
+                    ImGui.SliderInt("A-B-C alert delay (in milliseconds)", ref abcDelay, 1, 200);
                     if (ImGui.IsItemHovered()){
                         ImGui.BeginTooltip();
                         ImGui.Text("Controls how much delay is allowed between abilities.");
@@ -290,7 +290,6 @@ namespace GCDTracker
                     ImGui.ColorEdit4("ABC failure color", ref abcCol, ImGuiColorEditFlags.NoInputs);
                     ImGui.Columns(1);
                     ImGui.EndTabItem();
-                        
                 }
                 if (ImGui.BeginTabItem("GCDDisplay")) {
                     ImGui.Checkbox("Enable GCDWheel", ref WheelEnabled);

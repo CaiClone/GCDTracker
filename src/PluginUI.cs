@@ -60,8 +60,8 @@ namespace GCDTracker
             conf.EnabledGWJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGW);
             conf.EnabledGBJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGB);
             conf.EnabledCTJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobCT);
-            
-            if (conf.WheelEnabled && !noUI && (conf.WindowMoveableGW || 
+
+            if (conf.WheelEnabled && !noUI && (conf.WindowMoveableGW ||
                 (enabledJobGW
                     && (conf.ShowOutOfCombat || inCombat)
                     && (!conf.ShowOnlyGCDRunning || (gcd.idleTimerAccum < gcd.GCDTimeoutBuffer && !gcd.lastActionTP))
@@ -71,8 +71,8 @@ namespace GCDTracker
                 ImGui.End();
             }
 
-            if (conf.BarEnabled && !noUI && (conf.BarWindowMoveable || 
-                (enabledJobGB 
+            if (conf.BarEnabled && !noUI && (conf.BarWindowMoveable ||
+                (enabledJobGB
                     && (conf.ShowOutOfCombat || inCombat)
                     && (!conf.ShowOnlyGCDRunning || (gcd.idleTimerAccum < gcd.GCDTimeoutBuffer && !gcd.lastActionTP))
                     ))) {
@@ -81,9 +81,8 @@ namespace GCDTracker
                 ImGui.End();
             }
 
-
-            if (conf.ComboEnabled && !noUI && (conf.WindowMoveableCT || 
-                (enabledJobCT 
+            if (conf.ComboEnabled && !noUI && (conf.WindowMoveableCT ||
+                (enabledJobCT
                     && (conf.ShowOutOfCombatCT || inCombat)
                     ))) {
                 SetupWindow("GCDTracker_ComboTracker", conf.WindowMoveableCT);
@@ -202,8 +201,8 @@ namespace GCDTracker
 
             ImGui.SetWindowFontScale(1f);
             ImGui.PopFont();
-        } 
-        
+        }
+
         public void DrawDebugText(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol, string debugText) {
             ImGui.PushFont(UiBuilder.MonoFont);
             ImGui.SetWindowFontScale(textSize);
@@ -230,6 +229,6 @@ namespace GCDTracker
 
             ImGui.SetWindowFontScale(1f);
             ImGui.PopFont();
-        } 
+        }
     }
 }

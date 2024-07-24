@@ -5,6 +5,7 @@ using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -135,9 +136,7 @@ namespace GCDTracker {
             }
             if (!isRunning && !idleTimerDone) {
                 idleTimerAccum += framework.UpdateDelta.Milliseconds;
-                if (!idleTimerReset) {
-                    idleTimerReset = true;
-                }
+                idleTimerReset = true;
             }
             // Handle caster tax
             if (!isHardCast && HelperMethods.IsCasting() && DataStore.Action->TotalCastTime - 0.1f >= DataStore.Action->TotalGCD)
@@ -261,7 +260,6 @@ namespace GCDTracker {
             float barGCDClipTime = 0;
             Vector2 start = new(ui.w_cent.X - (barWidth / 2), ui.w_cent.Y - (barHeight / 2));
             Vector2 end = new(ui.w_cent.X + (barWidth / 2), ui.w_cent.Y + (barHeight / 2));
-
             if (conf.ShowOnlyGCDRunning && HelperMethods.IsTeleport(DataStore.Action->CastId)) {
                 lastActionTP = true;
                 return;
