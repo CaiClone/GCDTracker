@@ -194,7 +194,7 @@ namespace GCDTracker {
 
         private void FlagAlerts(PluginUI ui){
             bool inCombat = DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
-            if(conf.clipAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat)){
+            if(conf.ClipAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat)){
                 if (checkClip && ShouldStartClip()) {
                     ui.StartAlert(true, lastClipDelta);
                     lastClipDelta = 0;
@@ -209,7 +209,7 @@ namespace GCDTracker {
         }
 
         private void InvokeAlerts(float relx, float rely, PluginUI ui){
-            if (conf.clipAlertEnabled && clippedGCD)
+            if (conf.ClipAlertEnabled && clippedGCD)
                 ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
             if (conf.abcAlertEnabled && (abcOnThisGCD || abcOnLastGCD))
                 ui.DrawAlert(relx, rely, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, 3);

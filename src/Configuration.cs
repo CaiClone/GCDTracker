@@ -15,24 +15,22 @@ namespace GCDTracker
     public class Configuration : IPluginConfiguration
     {
         [JsonIgnore]
-        public int LastVersion = 4;
-        public int Version { get; set; } = 4;
+        public int LastVersion = 5;
+        public int Version { get; set; } = 5;
 
         [JsonIgnore]
         public bool configEnabled;
-        //GCDWheel
-        public bool WheelEnabled = true;
-        [JsonIgnore]
-        public bool WindowMoveableGW = false;
+
+        //Common
         public bool ShowOutOfCombat = false;
         public bool HideAlertsOutOfCombat = false;
         public bool HideIfTP = true; //Not exposed in the UI
         public bool ShowOnlyGCDRunning = false;
         public bool QueueLockEnabled = true;
+        public bool ClipAlertEnabled = true;
         public bool ColorClipEnabled = true;
-        public bool ColorABCEnabled = true;
-        public bool clipAlertEnabled = true;
-        public bool abcAlertEnabled = true;
+        public bool abcAlertEnabled = false;
+        public bool ColorABCEnabled = false;
         public int ClipAlertPrecision = 0;
         public float GCDTimeout = 2f;
         public int abcDelay = 10;
@@ -49,6 +47,11 @@ namespace GCDTracker
         public Vector4 frontCol = new(0.9f, 0.9f, 0.9f, 1f);
         public Vector4 ogcdCol = new(1f, 1f, 1f, 1f);
         public Vector4 anLockCol = new(0.334f, 0.334f, 0.334f, 0.667f);
+
+        //GCDWheel
+        public bool WheelEnabled = true;
+        [JsonIgnore]
+        public bool WindowMoveableGW = false;
 
         //GCDBar
         public bool BarEnabled = false;
@@ -68,6 +71,22 @@ namespace GCDTracker
         public Vector4 ctComboUsed = new(0.431f, 0.431f, 0.431f, 1f);
         public Vector4 ctComboActive = new(1f, 1f, 1f, 1f);
         public Vector2 ctsep = new(23, 23);
+
+        //Deprecated
+        public bool ShowOutOfCombatGW = false;
+        public bool BarShowOutOfCombat = false;
+        public bool BarColorClipEnabled = true;
+        public bool BarClipAlertEnabled = true;
+        public int BarClipAlertPrecision = 0;
+        public float BarClipTextSize = 0.8f;
+        public Vector4 BarBackCol = new(0.376f, 0.376f, 0.376f, 0.667f);
+        public Vector4 BarFrontCol = new(0.9f, 0.9f, 0.9f, 1f);
+        public Vector4 BarOgcdCol = new(1f, 1f, 1f, 1f);
+        public Vector4 BarAnLockCol = new(0.334f, 0.334f, 0.334f, 0.667f);
+        public Vector4 BarclipCol = new(1f, 0f, 0f, 0.667f);
+
+        //MigrationSettings
+        public bool Migration4to5 = false;
 
         // ID Main Class, Name, Supported in GW, Supported in CT
         [JsonIgnore]
@@ -205,7 +224,9 @@ namespace GCDTracker
                     case 3:
                         ClipTextColor = frontCol.WithAlpha(1f);
                         ClipBackColor = clipCol.WithAlpha(1f);
-
+                        break;
+                    case 4:
+                        Migration4to5 = true;
                         break;
                 }
                 Version++;
@@ -214,11 +235,43 @@ namespace GCDTracker
         }
         public void Save() => pluginInterface.SavePluginConfig(this);
 
+        public void DrawMigration4to5() {
+            ImGui.SetNextWindowSizeConstraints(new Vector2(700, 100), new Vector2(700, 1000));
+            ImGui.Begin("GCDTracker Migration", ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize);
+            ImGui.TextWrapped("Hello! As you might have noticed we have recently added a bar visualization and an \"Always Be Casting\" alert to GCDTracker. We are merging the setting for both Wheel and Bar visualizations and need you to choose which settings you would like to keep.");
+            ImGui.TextWrapped(" - If you were using the GCD Wheel, click \"Keep GCD Wheel Settings\"");
+            ImGui.TextWrapped(" - If you already configured the GCD Bar and would prefer to keep it, click \"Keep GCD Bar Settings\"");
+            ImGui.Spacing();
+
+            if (ImGui.Button("Keep GCD Wheel Settings")) {
+                ShowOutOfCombat = ShowOutOfCombatGW;
+                Migration4to5 = false;
+                Save();
+            }
+
+            ImGui.SameLine();
+
+            if (ImGui.Button("Keep GCD Bar Settings")) {
+                ShowOutOfCombat = BarShowOutOfCombat;
+                ClipAlertEnabled = BarClipAlertEnabled;
+                ClipAlertPrecision = BarClipAlertPrecision;
+                ClipTextSize = BarClipTextSize;
+                backCol = BarBackCol;
+                frontCol = BarFrontCol;
+                ogcdCol = BarOgcdCol;
+                anLockCol = BarAnLockCol;
+                clipCol = BarclipCol;
+                Migration4to5 = false;
+                Save();
+            }
+            ImGui.End();
+        }
         public void DrawConfig() {
+            if (Migration4to5) DrawMigration4to5();
             if (!configEnabled) return;
             var scale = ImGui.GetIO().FontGlobalScale;
             ImGui.SetNextWindowSizeConstraints(new Vector2(500 * scale, 100 * scale),new Vector2(500 * scale,1000 * scale));
-            ImGui.Begin("GCDTracker Settings",ref configEnabled,ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize);
+            ImGui.Begin("GCDTracker Settings",ref configEnabled, ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.AlwaysAutoResize);
 
             if (ImGui.BeginTabBar("GCDConfig")){
                 if(ImGui.BeginTabItem("GCDTracker")){
@@ -245,6 +298,11 @@ namespace GCDTracker
                     ImGui.Separator();
 
                     ImGui.Checkbox("Color wheel on ABC failure", ref ColorABCEnabled);
+                    if (ImGui.IsItemHovered()){
+                        ImGui.BeginTooltip();
+                        ImGui.Text("Always Be Casting, highlights when you idle between casts.");
+                        ImGui.EndTooltip();
+                    }
                     ImGui.Checkbox("Show ABC failure alert", ref abcAlertEnabled);
                     if (abcAlertEnabled) {
                         ImGui.ColorEdit4("ABC text color", ref abcTextColor, ImGuiColorEditFlags.NoInputs);
@@ -262,8 +320,8 @@ namespace GCDTracker
                     ImGui.Separator();
 
                     ImGui.Checkbox("Color wheel on clipped GCD", ref ColorClipEnabled);
-                    ImGui.Checkbox("Show clip alert", ref clipAlertEnabled);
-                    if (clipAlertEnabled) {
+                    ImGui.Checkbox("Show clip alert", ref ClipAlertEnabled);
+                    if (ClipAlertEnabled) {
                         ImGui.SameLine();
                         ImGui.RadioButton("CLIP", ref ClipAlertPrecision, 0);
                         ImGui.SameLine();
