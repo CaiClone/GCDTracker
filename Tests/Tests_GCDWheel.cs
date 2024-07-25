@@ -134,7 +134,7 @@ namespace Tests
         public static (bool, bool, bool) GetActionPressStatus(MockAction act)
         {
             var isWeaponSkill = HelperMethods._isWeaponSkill(act.recast_group, act.additional_recast ?? act.recast_group);
-            var AddingToQueue = HelperMethods._isAddingToQueue(isWeaponSkill, act.InQueue, act.ElapsedGCD, act.TotalGCD, act.AnimationLock);
+            var AddingToQueue = HelperMethods._isAddingToQueue(isWeaponSkill, act.InQueue, act.ElapsedGCD, act.TotalGCD, act.AnimationLock, act.ElapsedCastTime, act.TotalCastTime);
             var ExecutingQueued = act.InQueue && !AddingToQueue;
             return (isWeaponSkill, AddingToQueue, ExecutingQueued);
         }
@@ -143,6 +143,8 @@ namespace Tests
     {
         public bool InQueue = false;
         public float ElapsedGCD = 0;
+        public float ElapsedCastTime = 0; //value?
+        public float TotalCastTime = 0; //value?
         public float TotalGCD = 2.31f;
         public float AnimationLock = 0.5f;
         public int recast_group = 57;
