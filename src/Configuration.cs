@@ -1,4 +1,4 @@
-﻿using Dalamud.Configuration;
+using Dalamud.Configuration;
 using Dalamud.Interface;
 using Dalamud.Plugin;
 using GCDTracker.Data;
@@ -56,12 +56,26 @@ namespace GCDTracker
         //GCDBar
         public bool BarEnabled = false;
         [JsonIgnore]
+        public bool BarQueueLockWhenIdle = true;
         public bool BarWindowMoveable = false;
         public bool BarRollGCDs = true;
         public float BarBorderSize = 2f;
         public float BarWidthRatio = 0.9f;
         public float BarHeightRatio = 0.5f;
         public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
+
+
+        //CastBar
+        public bool CastBarEnabled = true;
+        public bool SlideCastEnabled = true;
+        public bool SlideCastFullBar = true;
+        public bool OverrideDefaltFont = false;
+        public bool ShowQueuelockTriangles = false;
+        public bool ShowSlidecastTriangles = true;
+        public bool ShowTrianglesOnHardCasts = false;
+        public Vector4 slideCol = new(0f, 0f, 0f, 0.7f);
+        public int triangleSize = 6;
+        public float CastBarTextSize = 0.8f;
 
         //Combo
         public bool ComboEnabled = false;
@@ -266,7 +280,7 @@ namespace GCDTracker
             }
             ImGui.End();
         }
-        public void DrawConfig() {
+        public void DrawConfig(float x_size, float y_size) {
             if (Migration4to5) DrawMigration4to5();
             if (!configEnabled) return;
             var scale = ImGui.GetIO().FontGlobalScale;
@@ -370,9 +384,12 @@ namespace GCDTracker
                             ImGui.Text("If enabled abilities that start on the next GCD will always be shown inside the bar, even if it overlaps the current GCD.");
                             ImGui.EndTooltip();
                         }
+                        if (QueueLockEnabled)
+                        ImGui.Checkbox("Show Queue Lock When Bar Idle", ref BarQueueLockWhenIdle);
                         ImGui.SliderFloat("Border size", ref BarBorderSize, 0f, 10f);
                         Vector2 size = new(BarWidthRatio, BarHeightRatio);
                         ImGui.SliderFloat2("Width and height ratio", ref size, 0.1f, 1f);
+                        ImGui.Text("                                   " + ((int)(x_size * BarWidthRatio)).ToString()+ "x" +((int)(y_size * BarHeightRatio)).ToString());
                         BarWidthRatio = size.X;
                         BarHeightRatio = size.Y;
                     }
@@ -381,6 +398,24 @@ namespace GCDTracker
 
                         DrawJobGrid(ref EnabledGWJobs, true);
                     ImGui.EndTabItem();
+                }
+                if (BarEnabled){
+                    if (ImGui.BeginTabItem("Castbar")) {
+                        ImGui.Checkbox("Enable Castbar Mode", ref CastBarEnabled);
+                        ImGui.Checkbox("Enable Slidecast Functionality", ref SlideCastEnabled);
+                        ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
+                        ImGui.Checkbox("Show Slidecast Triangles", ref ShowSlidecastTriangles);
+                        if (ShowSlidecastTriangles) {
+                            ImGui.Checkbox("Also Show Triangles on Hard Casts", ref ShowTrianglesOnHardCasts);
+                        }
+                        ImGui.Checkbox("Show Queuelock Triangles", ref ShowQueuelockTriangles);
+                        ImGui.SliderInt("Queuelock and Slidecast Triangle Size", ref triangleSize, 0, 12);
+                        ImGui.SliderFloat("Spell Name/Time Text Size", ref CastBarTextSize, 0.2f, 2f);
+                        if (SlideCastEnabled)
+                            ImGui.Checkbox("Slidecast Covers End of Bar", ref SlideCastFullBar);
+                            ImGui.ColorEdit4("Slidecast Bar Color", ref slideCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.EndTabItem();
+                    }
                 }
                 if (ImGui.BeginTabItem("Combo Tracker")) {
                     ImGui.Checkbox("Enable ComboTrack", ref ComboEnabled);
