@@ -303,6 +303,8 @@ namespace GCDTracker
                         ImGui.Text("If enabled, the wheel background will expand on the timing where you can queue the next GCD.");
                         ImGui.EndTooltip();
                     }
+                    if (QueueLockEnabled)
+                        ImGui.Checkbox("Show Queue Lock When Bar Idle", ref BarQueueLockWhenIdle);
                     ImGui.Checkbox("Hide alerts out of combat", ref HideAlertsOutOfCombat);
                     if (ImGui.IsItemHovered()){
                         ImGui.BeginTooltip();
@@ -384,8 +386,6 @@ namespace GCDTracker
                             ImGui.Text("If enabled abilities that start on the next GCD will always be shown inside the bar, even if it overlaps the current GCD.");
                             ImGui.EndTooltip();
                         }
-                        if (QueueLockEnabled)
-                        ImGui.Checkbox("Show Queue Lock When Bar Idle", ref BarQueueLockWhenIdle);
                         ImGui.SliderFloat("Border size", ref BarBorderSize, 0f, 10f);
                         Vector2 size = new(BarWidthRatio, BarHeightRatio);
                         ImGui.SliderFloat2("Width and height ratio", ref size, 0.1f, 1f);

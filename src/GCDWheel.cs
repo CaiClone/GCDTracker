@@ -10,6 +10,7 @@ using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using System.Text;
 
 [assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker {
@@ -88,8 +89,6 @@ namespace GCDTracker {
         private string GetAbilityName(uint actionID, byte actionType) {
             var lumina = dataManager;
 
-
-
             switch (actionType) {
                     //seem to need case 0 here for follow up casts for short spells (gcdTime>castTime).
                     case 0:
@@ -126,6 +125,23 @@ namespace GCDTracker {
 
             TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
             return textInfo.ToTitleCase(input.ToLower());
+        }
+
+        private string GetCastbarContents() {
+            var AtkStage = FFXIVClientStructs.FFXIV.Component.GUI.AtkStage.Instance();
+            byte** stringData = AtkStage->GetStringArrayData()[20][0].StringArray;
+
+            int length = 0;
+            byte* currentByte = stringData[0];
+            while (currentByte[length] != 0) length++;
+
+            byte[] data = new byte[length];
+            for (int i = 0; i < length; i++) data[i] = currentByte[i];
+
+            string result = Encoding.UTF8.GetString(data);
+            GCDTracker.Log.Warning($"Cast: {result}");
+
+            return result;
         }
 
         private void AddToQueue(Data.Action* act, bool isWeaponSkill) {
@@ -356,18 +372,18 @@ namespace GCDTracker {
             // Text
             var abilityID = DataStore.ClientState.LocalPlayer.CastActionId;
             var actionType = DataStore.ClientState.LocalPlayer.CastActionType;
-            if (!string.IsNullOrEmpty(GetAbilityName(abilityID, actionType))) {
+            if (!string.IsNullOrEmpty(GetCastbarContents())) {
                 //reset the queued name when we start to cast.
                 if (castbarProgress <= 0.25f) {
                     queuedAbilityName = " ";
                 }
                 if (castbarEnd - castbarProgress <= 0.01f && gcdTotal > castTotal) {
                     shortCastFinished = true;
-                    shortCastCachedSpellName = GetAbilityName(abilityID, actionType);
+                    shortCastCachedSpellName = GetCastbarContents();
                 }
-                string abilityNameOutput = GetAbilityName(abilityID, actionType);
+                string abilityNameOutput = GetCastbarContents();
                 if (queuedAbilityName != " ")
-                    abilityNameOutput = GetAbilityName(abilityID, actionType) + " -> " + queuedAbilityName;
+                    abilityNameOutput = GetCastbarContents() + " -> " + queuedAbilityName;
                     
                 DrawBarText(ui, abilityNameOutput);
             }
@@ -471,7 +487,7 @@ namespace GCDTracker {
             public Vector2 BR_Y { get; }
 
 
-            public SlideCastStartVertices(BarInfo bar, BarDecisionSwitch go) {
+            public SlideCastStartVertices(BarInfo bar, BarDecisionHelper go) {
                 int rightClamp = (int)(bar.CenterX + ((go.Slide_Bar_Start + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth);
                     rightClamp += bar.TriangleOffset + 1;
                 if (rightClamp >= bar.EndVertex.X)
@@ -524,7 +540,7 @@ namespace GCDTracker {
             public Vector2 BR_Y { get; }
 
 
-            public SlideCastEndVertices(BarInfo bar, BarDecisionSwitch go) {
+            public SlideCastEndVertices(BarInfo bar, BarDecisionHelper go) {
                 int rightClamp = (int)(bar.CenterX + ((go.Slide_Bar_End + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth);
                     rightClamp += bar.TriangleOffset + 1;
                 if (rightClamp >= bar.EndVertex.X)
@@ -653,9 +669,8 @@ namespace GCDTracker {
             }
         }
 
-        public class BarDecisionSwitch {
-            private static BarDecisionSwitch instance;
-
+        public class BarDecisionHelper {
+            private static BarDecisionHelper instance;
             public bool Queue_VerticalBar { get; private set; }
             public bool Queue_TopTriangle { get; private set; }
             public bool Queue_BottomLeftTri { get; private set; }
@@ -669,11 +684,10 @@ namespace GCDTracker {
             public float Slide_Bar_Start { get; private set; }
             public float Slide_Bar_End { get; private set; }
             
-            private BarDecisionSwitch() { }
-
-            public static BarDecisionSwitch Instance {
+            private BarDecisionHelper() { }
+            public static BarDecisionHelper Instance {
                 get {
-                    instance ??= new BarDecisionSwitch();
+                    instance ??= new BarDecisionHelper();
                     return instance;
                 }
             }
@@ -682,18 +696,21 @@ namespace GCDTracker {
                 if (isRunning) {
                     if (bar.CurrentPos < 0.04f) {
                         if (conf.QueueLockEnabled && (!bar.IsCastBar || bar.IsShortCast)) {
-                            Queue_VerticalBar = true;
-                            Queue_TopTriangle = conf.ShowQueuelockTriangles;
-                            Queue_BottomRightTri = bar.IsShortCast && !conf.SlideCastFullBar && ((0.81f - bar.GCDTotal_SlidecastEnd) <= 0.02f);
+                            Queue_VerticalBar = conf.QueueLockEnabled;
+                            Queue_TopTriangle = conf.QueueLockEnabled && conf.ShowQueuelockTriangles;
+                            Queue_BottomRightTri = (bar.IsShortCast && !conf.SlideCastFullBar && 
+                                conf.ShowSlidecastTriangles && conf.SlideCastEnabled && 
+                                ((0.81f - bar.GCDTotal_SlidecastEnd) <= 0.02f)
+                            );
                         }
                         if (conf.SlideCastEnabled && bar.IsCastBar) {
                             Slide_Background = true;
                             SlideStart_VerticalBar = true;
-                            SlideEnd_VerticalBar = !conf.SlideCastFullBar && (0.81f - bar.GCDTotal_SlidecastEnd > 0.02f);
+                            SlideEnd_VerticalBar = !conf.SlideCastFullBar && ((0.81f - bar.GCDTotal_SlidecastEnd > 0.02f) || !conf.QueueLockEnabled);
                             Slide_Bar_Start = bar.GCDTime_SlidecastStart;
                             SlideStart_LeftTri = conf.ShowSlidecastTriangles;
                             SlideStart_RightTri = conf.SlideCastFullBar && conf.ShowSlidecastTriangles;
-                            SlideEnd_RightTri = !conf.SlideCastFullBar && conf.ShowSlidecastTriangles;
+                            SlideEnd_RightTri = SlideEnd_VerticalBar && conf.ShowSlidecastTriangles;
                             Slide_Bar_End = conf.SlideCastFullBar ? 1f : bar.GCDTotal_SlidecastEnd; // - borderwidth?
                         }
                     }
@@ -714,6 +731,7 @@ namespace GCDTracker {
                         SlideStart_VerticalBar = false;
                         Queue_BottomLeftTri = true;
                         Queue_BottomRightTri = true;
+                        Queue_VerticalBar = true;
                     }
                     if (bar.IsCastBar && !bar.IsShortCast) {
                         Queue_VerticalBar = false;
@@ -732,7 +750,7 @@ namespace GCDTracker {
             }
 
                 if (!isRunning || bar.CurrentPos <= 0.02f) {
-                    Queue_VerticalBar = conf.BarQueueLockWhenIdle;
+                    Queue_VerticalBar = conf.BarQueueLockWhenIdle && conf.QueueLockEnabled;
                     Queue_TopTriangle = false;
                     Queue_BottomLeftTri = false;
                     Queue_BottomRightTri = false;
@@ -765,7 +783,7 @@ namespace GCDTracker {
                 isShortCast
             );
 
-            var go = BarDecisionSwitch.Instance;
+            var go = BarDecisionHelper.Instance;
                 go.Update(bar, conf, isRunning);
 
             var sc_sv = new SlideCastStartVertices(bar, go);
@@ -862,7 +880,7 @@ namespace GCDTracker {
             }
         }
 
-        private void DrawSlideCast(PluginUI ui, SlideCastStartVertices sc_sv, SlideCastEndVertices sc_ev, BarDecisionSwitch go){
+        private void DrawSlideCast(PluginUI ui, SlideCastStartVertices sc_sv, SlideCastEndVertices sc_ev, BarDecisionHelper go){
             // draw slidecast bar
             if (go.Slide_Background)
                 ui.DrawRectFilledNoAA(sc_sv.TL_C, sc_ev.BR_C, conf.slideCol);
@@ -888,7 +906,7 @@ namespace GCDTracker {
                 ui.DrawRightTriangle(sc_ev.BR_C, sc_ev.BR_X, sc_ev.BR_Y, conf.BarBackColBorder);
         }
 
-        private void DrawQueueLock(PluginUI ui, QueueLockVertices ql_v, BarDecisionSwitch go) {
+        private void DrawQueueLock(PluginUI ui, QueueLockVertices ql_v, BarDecisionHelper go) {
             //top triangle
             if (go.Queue_TopTriangle) {
                 ui.DrawRightTriangle(ql_v.TL_C, ql_v.TL_X, ql_v.TL_Y, conf.BarBackColBorder);
