@@ -694,7 +694,7 @@ namespace GCDTracker {
                 }
             }
 
-            public void Update(BarInfo bar, Configuration conf, bool isRunning, bool QueueLockEnabled, bool QueueLockSlide) {                
+            public void Update(BarInfo bar, Configuration conf, bool isRunning) {                
                 if (isRunning) {
                     if (bar.CurrentPos < 0.04f) {
                         if (conf.QueueLockEnabled && (!bar.IsCastBar || bar.IsShortCast)) {
@@ -767,8 +767,8 @@ namespace GCDTracker {
                 }
 
                 Queue_Lock_Start = 0.8f;
-                if (QueueLockEnabled && !(!bar.IsShortCast && bar.IsCastBar)) {
-                    if ((bar.CurrentPos >= 0.8f) && QueueLockSlide)
+                if (conf.QueueLockEnabled && !(!bar.IsShortCast && bar.IsCastBar)) {
+                    if ((bar.CurrentPos >= 0.8f) && conf.BarQueueLockSlide)
                         Queue_Lock_Start = bar.CurrentPos;
                         if (bar.CurrentPos >= 1f - bar.BorderWidthPercent) //??
                             Queue_Lock_Start = 1f - bar.BorderWidthPercent; //??
@@ -794,7 +794,7 @@ namespace GCDTracker {
             );
 
             var go = BarDecisionHelper.Instance;
-                go.Update(bar, conf, isRunning, conf.QueueLockEnabled, conf.BarQueueLockSlide);
+                go.Update(bar, conf, isRunning);
 
             var sc_sv = new SlideCastStartVertices(bar, go);
             var sc_ev = new SlideCastEndVertices(bar, go);
