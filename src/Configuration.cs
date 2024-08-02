@@ -28,8 +28,10 @@ namespace GCDTracker
         public bool ShowOnlyGCDRunning = false;
         public bool QueueLockEnabled = true;
         public bool ClipAlertEnabled = true;
+        public bool ClipOutlineEnabled = false;
         public bool ColorClipEnabled = true;
         public bool abcAlertEnabled = false;
+        public bool abcOutlineEnabled = false;
         public bool ColorABCEnabled = false;
         public int ClipAlertPrecision = 0;
         public float GCDTimeout = 2f;
@@ -57,6 +59,7 @@ namespace GCDTracker
         public bool BarEnabled = false;
         [JsonIgnore]
         public bool BarQueueLockWhenIdle = true;
+        public bool BarQueueLockSlide = false;
         public bool BarWindowMoveable = false;
         public bool BarRollGCDs = true;
         public float BarBorderSize = 2f;
@@ -73,9 +76,16 @@ namespace GCDTracker
         public bool ShowQueuelockTriangles = false;
         public bool ShowSlidecastTriangles = true;
         public bool ShowTrianglesOnHardCasts = false;
+        public bool EnableCastText = true;
+        public bool HideAnimationLock = false;
         public Vector4 slideCol = new(0f, 0f, 0f, 0.7f);
         public int triangleSize = 6;
+        public int CastBarTextInt = 10;
         public float CastBarTextSize = 0.8f;
+        public Vector3 CastBarTextColor = new(0f, 0f, 0f);
+        public bool CastBarTextOutlineEnabled = true;
+        public bool CastTimeEnabled = true;
+        public int castTimePosition = 2;
 
         //Combo
         public bool ComboEnabled = false;
@@ -290,12 +300,24 @@ namespace GCDTracker
             if (ImGui.BeginTabBar("GCDConfig")){
                 if(ImGui.BeginTabItem("GCDTracker")){
                     ImGui.Checkbox("Show out of combat", ref ShowOutOfCombat);
-                    ImGui.Checkbox("Show only when GCD running", ref ShowOnlyGCDRunning);
-                    ImGui.SliderFloat("GCD Timeout (in seconds)", ref GCDTimeout, .2f, 4f);
-                    if (ImGui.IsItemHovered()){
-                        ImGui.BeginTooltip();
-                        ImGui.Text("Controls the length of the GCD Timeout.");
-                        ImGui.EndTooltip();
+                    if(ShowOutOfCombat){
+                        ImGui.Indent();
+                        ImGui.Checkbox("Hide alerts out of combat", ref HideAlertsOutOfCombat);
+                        if (ImGui.IsItemHovered()){
+                            ImGui.BeginTooltip();
+                            ImGui.Text("If enabled, clip and A-B-C pop up alerts will be hidden outside of combat");
+                            ImGui.EndTooltip();
+                        }
+                        ImGui.Checkbox("Show only when GCD running", ref ShowOnlyGCDRunning);
+                        if(ShowOnlyGCDRunning) {
+                            ImGui.SliderFloat("GCD Timeout (in seconds)", ref GCDTimeout, .2f, 4f);
+                            if (ImGui.IsItemHovered()){
+                                ImGui.BeginTooltip();
+                                ImGui.Text("Controls the length of the GCD Timeout.");
+                                ImGui.EndTooltip();
+                            }
+                        }
+                        ImGui.Unindent();
                     }
                     ImGui.Checkbox("Show queue lock", ref QueueLockEnabled);
                     if (ImGui.IsItemHovered()){
@@ -303,36 +325,37 @@ namespace GCDTracker
                         ImGui.Text("If enabled, the wheel background will expand on the timing where you can queue the next GCD.");
                         ImGui.EndTooltip();
                     }
-                    if (QueueLockEnabled)
-                        ImGui.Checkbox("Show Queue Lock When Bar Idle", ref BarQueueLockWhenIdle);
-                    ImGui.Checkbox("Hide alerts out of combat", ref HideAlertsOutOfCombat);
-                    if (ImGui.IsItemHovered()){
-                        ImGui.BeginTooltip();
-                        ImGui.Text("If enabled, clip and A-B-C pop up alerts will be hidden outside of combat");
-                        ImGui.EndTooltip();
+                    if (QueueLockEnabled && BarEnabled){
+                        ImGui.Indent();
+                        ImGui.Checkbox("(Bar Only) Progress Bar Pushes Queue Lock", ref BarQueueLockSlide);
+                        ImGui.Checkbox("(Bar Only) Show Queue Lock When Idle", ref BarQueueLockWhenIdle);
+                        ImGui.Checkbox("(Bar Only) Show Queue Lock Triangles", ref ShowQueuelockTriangles);
+                        if (ShowQueuelockTriangles)
+                            ImGui.SliderInt("Queue Lock Triangle Size", ref triangleSize, 0, 12);
+                        ImGui.Unindent();
                     }
                     ImGui.Separator();
 
-                    ImGui.Checkbox("Color wheel on ABC failure", ref ColorABCEnabled);
+                    ImGui.Checkbox("Color wheel on A-B-C failure", ref ColorABCEnabled);
                     if (ImGui.IsItemHovered()){
                         ImGui.BeginTooltip();
-                        ImGui.Text("Always Be Casting, highlights when you idle between casts.");
+                        ImGui.Text("Always-Be-Casting, highlights when you idle between casts.");
                         ImGui.EndTooltip();
                     }
-                    ImGui.Checkbox("Show ABC failure alert", ref abcAlertEnabled);
+                    ImGui.Checkbox("Show A-B-C failure alert", ref abcAlertEnabled);
                     if (abcAlertEnabled) {
-                        ImGui.ColorEdit4("ABC text color", ref abcTextColor, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("A-B-C text color", ref abcTextColor, ImGuiColorEditFlags.NoInputs);
                         ImGui.SameLine();
-                        ImGui.ColorEdit4("ABC background color", ref abcBackColor, ImGuiColorEditFlags.NoInputs);
+                        ImGui.ColorEdit4("A-B-C background color", ref abcBackColor, ImGuiColorEditFlags.NoInputs);
+                        ImGui.Checkbox("A-B-C Text Ouline", ref abcOutlineEnabled);
+                        ImGui.SliderFloat("A-B-C text size", ref abcTextSize, 0.2f, 2f);
+                        ImGui.SliderInt("A-B-C alert delay (in milliseconds)", ref abcDelay, 1, 200);
+                        if (ImGui.IsItemHovered()){
+                            ImGui.BeginTooltip();
+                            ImGui.Text("Controls how much delay is allowed between abilities.");
+                            ImGui.EndTooltip();
+                        }
                     }
-                    ImGui.SliderFloat("A-B-C text size", ref abcTextSize, 0.2f, 2f);
-                    ImGui.SliderInt("A-B-C alert delay (in milliseconds)", ref abcDelay, 1, 200);
-                    if (ImGui.IsItemHovered()){
-                        ImGui.BeginTooltip();
-                        ImGui.Text("Controls how much delay is allowed between abilities.");
-                        ImGui.EndTooltip();
-                    }
-
                     ImGui.Separator();
 
                     ImGui.Checkbox("Color wheel on clipped GCD", ref ColorClipEnabled);
@@ -344,12 +367,12 @@ namespace GCDTracker
                         ImGui.RadioButton("0.X", ref ClipAlertPrecision, 1);
                         ImGui.SameLine();
                         ImGui.RadioButton("0.XX", ref ClipAlertPrecision, 2);
-
+                        ImGui.Checkbox("Clip Text Outline", ref ClipOutlineEnabled);
                         ImGui.ColorEdit4("Clip text color", ref ClipTextColor, ImGuiColorEditFlags.NoInputs);
                         ImGui.SameLine();
                         ImGui.ColorEdit4("Clip background color", ref ClipBackColor, ImGuiColorEditFlags.NoInputs);
+                        ImGui.SliderFloat("Clip text size", ref ClipTextSize, 0.2f, 2f);
                     }
-                    ImGui.SliderFloat("Clip text size", ref ClipTextSize, 0.2f, 2f);
 
                     ImGui.Separator();
 
@@ -378,8 +401,10 @@ namespace GCDTracker
                     ImGui.Checkbox("Enable GCDBar", ref BarEnabled);
                     if (BarEnabled) {
                         ImGui.Checkbox("Move/resize GCDBar", ref BarWindowMoveable);
-                        if (BarWindowMoveable)
+                        if (BarWindowMoveable) {
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
+                            ImGui.TextDisabled("\tCurent Dimensions (in pixels): " + ((int)(x_size * BarWidthRatio + 2 * (int)BarBorderSize)).ToString()+ "x" +((int)(y_size * BarHeightRatio + 2 * (int)BarBorderSize)).ToString());
+                        }
                         ImGui.Checkbox("Roll GCDs", ref BarRollGCDs);
                         if (ImGui.IsItemHovered()){
                             ImGui.BeginTooltip();
@@ -389,7 +414,6 @@ namespace GCDTracker
                         ImGui.SliderFloat("Border size", ref BarBorderSize, 0f, 10f);
                         Vector2 size = new(BarWidthRatio, BarHeightRatio);
                         ImGui.SliderFloat2("Width and height ratio", ref size, 0.1f, 1f);
-                        ImGui.Text("                                   " + ((int)(x_size * BarWidthRatio)).ToString()+ "x" +((int)(y_size * BarHeightRatio)).ToString());
                         BarWidthRatio = size.X;
                         BarHeightRatio = size.Y;
                     }
@@ -399,23 +423,49 @@ namespace GCDTracker
                         DrawJobGrid(ref EnabledGWJobs, true);
                     ImGui.EndTabItem();
                 }
+
                 if (BarEnabled){
                     if (ImGui.BeginTabItem("Castbar")) {
                         ImGui.Checkbox("Enable Castbar Mode", ref CastBarEnabled);
+                        if(CastBarEnabled) {
+                        ImGui.Checkbox("Hide Animation Lock in Castbar Mode", ref HideAnimationLock);
+                        ImGui.Separator();
                         ImGui.Checkbox("Enable Slidecast Functionality", ref SlideCastEnabled);
-                        ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
-                        ImGui.Checkbox("Show Slidecast Triangles", ref ShowSlidecastTriangles);
-                        if (ShowSlidecastTriangles) {
-                            ImGui.Checkbox("Also Show Triangles on Hard Casts", ref ShowTrianglesOnHardCasts);
-                        }
-                        ImGui.Checkbox("Show Queuelock Triangles", ref ShowQueuelockTriangles);
-                        ImGui.SliderInt("Queuelock and Slidecast Triangle Size", ref triangleSize, 0, 12);
-                        ImGui.SliderFloat("Spell Name/Time Text Size", ref CastBarTextSize, 0.2f, 2f);
-                        if (SlideCastEnabled)
+                        if(SlideCastEnabled) {
+                            ImGui.Indent();
                             ImGui.Checkbox("Slidecast Covers End of Bar", ref SlideCastFullBar);
                             ImGui.ColorEdit4("Slidecast Bar Color", ref slideCol, ImGuiColorEditFlags.NoInputs);
-                        ImGui.EndTabItem();
+                            ImGui.Checkbox("Show Slidecast Triangles", ref ShowSlidecastTriangles);
+                            if (ShowSlidecastTriangles) {
+                                ImGui.Indent();
+                                ImGui.Checkbox("Also Show Triangles on Hard Casts", ref ShowTrianglesOnHardCasts);
+                                ImGui.SliderInt("Slidecast Triangle Size", ref triangleSize, 0, 12);
+                                ImGui.Unindent();
+                            }
+                            ImGui.Unindent();
+                        }
+                        ImGui.Separator();
+                        ImGui.Checkbox("Enable Spell Name/Time Text", ref EnableCastText);
+                        if (EnableCastText) {
+                        ImGui.Indent();
+                        ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
+                        ImGui.SliderInt("Spell Name/Time Text Size", ref CastBarTextInt, 6, 18);
+                            CastBarTextSize = CastBarTextInt / 12f;
+                        ImGui.ColorEdit3("Castbar Text Color", ref CastBarTextColor, ImGuiColorEditFlags.NoInputs);
+                        ImGui.Checkbox("Enable Castbar Text Outline", ref CastBarTextOutlineEnabled);
+                        ImGui.Checkbox("Show remaining cast time:", ref CastTimeEnabled);
+                        if (CastTimeEnabled) {
+                            ImGui.SameLine();
+                            ImGui.RadioButton("Left", ref castTimePosition, 0);
+                            ImGui.SameLine();
+                            ImGui.RadioButton("Right", ref castTimePosition, 1);
+                        }
+                        ImGui.Unindent();
+                        }
+                        }
+                    ImGui.EndTabItem();
                     }
+
                 }
                 if (ImGui.BeginTabItem("Combo Tracker")) {
                     ImGui.Checkbox("Enable ComboTrack", ref ComboEnabled);

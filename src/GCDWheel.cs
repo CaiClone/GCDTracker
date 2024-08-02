@@ -43,8 +43,9 @@ namespace GCDTracker {
         private bool abcOnLastGCD;
         private bool isRunning;
         private bool isHardCast;
+        private float remainingCastTime;
+        private string remainingCastTimeString;
         private string queuedAbilityName = " ";
-        private string hardCastAbilityTime;
         private string shortCastCachedSpellName = " ";
         private Vector4 bgCache;
         private bool shortCastFinished = false;
@@ -176,7 +177,8 @@ namespace GCDTracker {
                 return;
             CleanFailedOGCDs();
             GCDTimeoutHelper(framework);
-            hardCastAbilityTime = (DataStore.Action->TotalCastTime - DataStore.Action->ElapsedCastTime).ToString("F1");
+            remainingCastTime = DataStore.Action->TotalCastTime - DataStore.Action->ElapsedCastTime;
+            remainingCastTimeString = remainingCastTime == 0 ? "" : remainingCastTime.ToString("F1");
             if (lastActionCast && !HelperMethods.IsCasting())
                 HandleCancelCast();
             else if (DataStore.Action->ElapsedGCD < lastElapsedGCD)
@@ -370,35 +372,42 @@ namespace GCDTracker {
             DrawBarElements(ui, true, gcdTotal > castTotal, castbarProgress * castbarEnd, slidecastStart, slidecastEnd);
 
             // Text
-            var abilityID = DataStore.ClientState.LocalPlayer.CastActionId;
-            var actionType = DataStore.ClientState.LocalPlayer.CastActionType;
-            if (!string.IsNullOrEmpty(GetCastbarContents())) {
-                //reset the queued name when we start to cast.
-                if (castbarProgress <= 0.25f) {
+            // reset the queued name when we start to cast.
+            if (castbarProgress <= 0.25f) {
                     queuedAbilityName = " ";
                 }
+            if (!string.IsNullOrEmpty(GetCastbarContents())) {
                 if (castbarEnd - castbarProgress <= 0.01f && gcdTotal > castTotal) {
                     shortCastFinished = true;
                     shortCastCachedSpellName = GetCastbarContents();
                 }
                 string abilityNameOutput = GetCastbarContents();
+                if (conf.castTimePosition == 0 && conf.CastTimeEnabled)
+                    abilityNameOutput += " (" + remainingCastTimeString + ")";
                 if (queuedAbilityName != " ")
-                    abilityNameOutput = GetCastbarContents() + " -> " + queuedAbilityName;
+                    abilityNameOutput += " -> " + queuedAbilityName;
                     
                 DrawBarText(ui, abilityNameOutput);
             }
         }
 
-        private void DrawBarText(PluginUI ui, string abilityNameOutput){
+        private void DrawBarText(PluginUI ui, string abilityName){
             int barWidth = (int)(ui.w_size.X * conf.BarWidthRatio);
-            string combinedText = abilityNameOutput + hardCastAbilityTime;
+            string combinedText = abilityName + remainingCastTimeString + "!)/|";
             Vector2 spellNamePos = new(ui.w_cent.X - ((float)barWidth / 2.05f), ui.w_cent.Y);
             Vector2 spellTimePos = new(ui.w_cent.X + ((float)barWidth / 2.05f), ui.w_cent.Y);
 
-            if (!string.IsNullOrEmpty(abilityNameOutput))
-                ui.DrawHardCastAbilityName(abilityNameOutput, combinedText, spellNamePos, conf.CastBarTextSize);
-            if (!string.IsNullOrEmpty(hardCastAbilityTime))
-                ui.DrawHardCastAbilityTime(hardCastAbilityTime, combinedText, spellTimePos, conf.CastBarTextSize);
+            // probably better to move the check for conf.EnableCastText to 
+            // happen before we query the text contents from the game,
+            // but I put it here for now so that we'd be "ready" if someone
+            // was playing with the checkbox while casting (e.g. there'd be stuff
+            // to draw right away)
+            if (conf.EnableCastText) {
+                if (!string.IsNullOrEmpty(abilityName))
+                    ui.DrawCastBarText(abilityName, combinedText, spellNamePos, conf.CastBarTextSize, false);
+                if (!string.IsNullOrEmpty(remainingCastTimeString) && conf.castTimePosition == 1 && conf.CastTimeEnabled)
+                    ui.DrawCastBarText(remainingCastTimeString, combinedText, spellTimePos, conf.CastBarTextSize, true);
+            }
         }
 
         public class BarInfo {
@@ -599,23 +608,15 @@ namespace GCDTracker {
             public Vector2 BR_Y { get; }
 
 
-            public QueueLockVertices(BarInfo bar, bool SlideCastEnabled, bool QueueLockEnabled) {
-                float queuelockStart = 0.8f;
-                if (QueueLockEnabled && !(!bar.IsShortCast && bar.IsCastBar)) {
-                    if (bar.CurrentPos >= 0.8f)
-                        queuelockStart = bar.CurrentPos;
-                        if (bar.CurrentPos >= 1f - bar.BorderWidthPercent) //??
-                            queuelockStart = 1f - bar.BorderWidthPercent; //??
-                }
-                
-                int rightClamp = (int)(bar.CenterX + ((queuelockStart + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth);
+            public QueueLockVertices(BarInfo bar, BarDecisionHelper go) {
+                int rightClamp = (int)(bar.CenterX + ((go.Queue_Lock_Start + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth);
                     rightClamp += bar.TriangleOffset + 1;
                 if (rightClamp >= bar.EndVertex.X)
                     rightClamp = (int)bar.EndVertex.X;
                 
                 
                 TL_C = new(                    
-                    (int)(bar.CenterX + (queuelockStart * bar.Width) - bar.HalfWidth),
+                    (int)(bar.CenterX + (go.Queue_Lock_Start * bar.Width) - bar.HalfWidth),
                     (int)(bar.CenterY - bar.RawHalfHeight)
                 );
                 TL_X = new(
@@ -628,7 +629,7 @@ namespace GCDTracker {
                 );
 
                 TR_C = new(
-                    (int)(bar.CenterX + ((queuelockStart + ((float)bar.BorderSizeAdj/ bar.Width)) * bar.Width) - bar.HalfWidth),
+                    (int)(bar.CenterX + ((go.Queue_Lock_Start + ((float)bar.BorderSizeAdj/ bar.Width)) * bar.Width) - bar.HalfWidth),
                     (int)(bar.CenterY - bar.RawHalfHeight)
                 );
                 TR_X = new(
@@ -641,7 +642,7 @@ namespace GCDTracker {
                 );
                 
                 BL_C = new(
-                    (int)(bar.CenterX + (queuelockStart * bar.Width) - bar.HalfWidth),
+                    (int)(bar.CenterX + (go.Queue_Lock_Start * bar.Width) - bar.HalfWidth),
                     (int)(bar.CenterY + bar.HalfHeight)
                 );
                 BL_X = new(
@@ -655,7 +656,7 @@ namespace GCDTracker {
 
 
                 BR_C = new(
-                    (int)(bar.CenterX + ((queuelockStart + ((float)bar.BorderSizeAdj / bar.Width)) * bar.Width) - bar.HalfWidth),
+                    (int)(bar.CenterX + ((go.Queue_Lock_Start + ((float)bar.BorderSizeAdj / bar.Width)) * bar.Width) - bar.HalfWidth),
                     (int)(bar.CenterY + bar.HalfHeight)
                 );
                 BR_X = new(
@@ -683,6 +684,7 @@ namespace GCDTracker {
             public bool Slide_Background { get; private set; }
             public float Slide_Bar_Start { get; private set; }
             public float Slide_Bar_End { get; private set; }
+            public float Queue_Lock_Start { get; private set;}
             
             private BarDecisionHelper() { }
             public static BarDecisionHelper Instance {
@@ -692,7 +694,7 @@ namespace GCDTracker {
                 }
             }
 
-            public void Update(BarInfo bar, Configuration conf, bool isRunning) {                
+            public void Update(BarInfo bar, Configuration conf, bool isRunning, bool QueueLockEnabled, bool QueueLockSlide) {                
                 if (isRunning) {
                     if (bar.CurrentPos < 0.04f) {
                         if (conf.QueueLockEnabled && (!bar.IsCastBar || bar.IsShortCast)) {
@@ -751,7 +753,7 @@ namespace GCDTracker {
 
                 if (!isRunning || bar.CurrentPos <= 0.02f) {
                     Queue_VerticalBar = conf.BarQueueLockWhenIdle && conf.QueueLockEnabled;
-                    Queue_TopTriangle = false;
+                    Queue_TopTriangle = conf.BarQueueLockWhenIdle && conf.QueueLockEnabled && conf.ShowQueuelockTriangles;
                     Queue_BottomLeftTri = false;
                     Queue_BottomRightTri = false;
                     SlideStart_VerticalBar = false;
@@ -762,6 +764,14 @@ namespace GCDTracker {
                     Slide_Background = false;
                     Slide_Bar_Start = 0f;
                     Slide_Bar_End = 0f;
+                }
+
+                Queue_Lock_Start = 0.8f;
+                if (QueueLockEnabled && !(!bar.IsShortCast && bar.IsCastBar)) {
+                    if ((bar.CurrentPos >= 0.8f) && QueueLockSlide)
+                        Queue_Lock_Start = bar.CurrentPos;
+                        if (bar.CurrentPos >= 1f - bar.BorderWidthPercent) //??
+                            Queue_Lock_Start = 1f - bar.BorderWidthPercent; //??
                 }
             }
         }
@@ -784,12 +794,12 @@ namespace GCDTracker {
             );
 
             var go = BarDecisionHelper.Instance;
-                go.Update(bar, conf, isRunning);
+                go.Update(bar, conf, isRunning, conf.QueueLockEnabled, conf.BarQueueLockSlide);
 
             var sc_sv = new SlideCastStartVertices(bar, go);
             var sc_ev = new SlideCastEndVertices(bar, go);
 
-            var ql_v = new QueueLockVertices(bar, conf.SlideCastEnabled, conf.QueueLockEnabled);
+            var ql_v = new QueueLockVertices(bar, go);
 
             float barGCDClipTime = 0;
             
@@ -814,7 +824,7 @@ namespace GCDTracker {
 
             // in GCDBar mode:
             // draw oGCDs and clips
-            if (!isCastBar) {
+            if (!isCastBar && !(shortCastFinished && conf.HideAnimationLock)) {
                 float gcdTime = gcdTime_slidecastStart;
                 float gcdTotal = gcdTotal_slidecastEnd;
 
