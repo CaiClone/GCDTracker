@@ -746,10 +746,10 @@ namespace GCDTracker {
                         SlideStart_VerticalBar = true;
                     }
                     if (bar.IsCastBar && !bar.IsShortCast && conf.ShowSlidecastTriangles) {
-                        SlideStart_LeftTri = true;
-                        SlideStart_RightTri = true;
+                        SlideStart_LeftTri =  conf.ShowTrianglesOnHardCasts;
+                        SlideStart_RightTri =  conf.ShowTrianglesOnHardCasts;
                     }
-            }
+                }
 
                 if (!isRunning || bar.CurrentPos <= 0.02f) {
                     Queue_VerticalBar = conf.BarQueueLockWhenIdle && conf.QueueLockEnabled;
@@ -775,6 +775,7 @@ namespace GCDTracker {
                 }
             }
         }
+
         private void DrawBarElements(PluginUI ui, bool isCastBar, bool isShortCast, float castBarCurrentPos, float gcdTime_slidecastStart, float gcdTotal_slidecastEnd) {
             
             var bar = new BarInfo(
