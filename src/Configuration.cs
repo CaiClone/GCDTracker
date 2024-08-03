@@ -335,7 +335,7 @@ namespace GCDTracker
                         ImGui.Checkbox("(Bar Only) Show Queue Lock When Idle", ref BarQueueLockWhenIdle);
                         ImGui.Checkbox("(Bar Only) Show Queue Lock Triangles", ref ShowQueuelockTriangles);
                         if (ShowQueuelockTriangles)
-                            ImGui.SliderInt("Queue Lock Triangle Size", ref triangleSize, 0, 12);
+                            ImGui.SliderInt("Triangle Size", ref triangleSize, 0, 12);
                         ImGui.Unindent();
                     }
                     ImGui.Separator();
@@ -450,7 +450,7 @@ namespace GCDTracker
                                     if (ShowSlidecastTriangles) {
                                         ImGui.Indent();
                                         ImGui.Checkbox("Also Show Triangles on Hard Casts", ref ShowTrianglesOnHardCasts);
-                                        ImGui.SliderInt("Slidecast Triangle Size", ref triangleSize, 0, 12);
+                                        ImGui.SliderInt("Triangle Size", ref triangleSize, 0, 12);
                                         ImGui.Unindent();
                                     }
                                 }
