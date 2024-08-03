@@ -78,6 +78,7 @@ namespace GCDTracker
         public bool ShowSlidecastTriangles = true;
         public bool ShowTrianglesOnHardCasts = false;
         public bool EnableCastText = true;
+        public bool CastBarShowQueuedSpell = true;
         public bool HideAnimationLock = true;
         public Vector4 slideCol = new(0f, 0f, 0f, 0.7f);
         public int triangleSize = 6;
@@ -373,10 +374,10 @@ namespace GCDTracker
                         ImGui.SameLine();
                         ImGui.RadioButton("0.XX", ref ClipAlertPrecision, 2);
                         ImGui.ColorEdit4("Clip text color", ref ClipTextColor, ImGuiColorEditFlags.NoInputs);
+                        ImGui.SameLine();
+                        ImGui.ColorEdit4("Clip background color", ref ClipBackColor, ImGuiColorEditFlags.NoInputs);
                         if (ShowAdvanced) {
                             ImGui.Checkbox("Clip Text Outline", ref ClipOutlineEnabled);
-                            ImGui.SameLine();
-                            ImGui.ColorEdit4("Clip background color", ref ClipBackColor, ImGuiColorEditFlags.NoInputs);
                             ImGui.SliderFloat("Clip text size", ref ClipTextSize, 0.2f, 2f);
                         }
                     }
@@ -459,9 +460,10 @@ namespace GCDTracker
                             ImGui.Checkbox("Enable Spell Name/Time Text", ref EnableCastText);
                             if (EnableCastText) {
                             ImGui.Indent();
+                            ImGui.ColorEdit3("Castbar Text Color", ref CastBarTextColor, ImGuiColorEditFlags.NoInputs);
+                            ImGui.Checkbox("Show Next Spell When Queued", ref CastBarShowQueuedSpell);
                             ImGui.SliderInt("Spell Name/Time Text Size", ref CastBarTextInt, 6, 18);
                                 CastBarTextSize = CastBarTextInt / 12f;
-                            ImGui.ColorEdit3("Castbar Text Color", ref CastBarTextColor, ImGuiColorEditFlags.NoInputs);
                             if (ShowAdvanced) {
                                 ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
                                 ImGui.Checkbox("Enable Castbar Text Outline", ref CastBarTextOutlineEnabled);

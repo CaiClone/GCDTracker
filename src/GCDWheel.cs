@@ -116,7 +116,7 @@ namespace GCDTracker {
                     if (DataStore.ClientState.LocalPlayer.TargetObject.ObjectKind.ToString() == "EventNpc") {
                         return "Interacting...";
                     }
-                    return "... " + actionID.ToString() + " " +actionType.ToString() + " " + DataStore.ClientState.LocalPlayer.TargetObject.ObjectKind.ToString();
+                    return "...";
             }
         }
 
@@ -344,8 +344,8 @@ namespace GCDTracker {
             // and dump all the crap here to draw on top. 
             if (shortCastFinished) {
                 string abilityNameOutput = shortCastCachedSpellName;
-                if (queuedAbilityName != " ")
-                    abilityNameOutput = shortCastCachedSpellName + " -> " + queuedAbilityName;
+                if (queuedAbilityName != " " && conf.CastBarShowQueuedSpell)
+                    abilityNameOutput += " -> " + queuedAbilityName;
                 if (!string.IsNullOrEmpty(abilityNameOutput))
                     DrawBarText(ui, abilityNameOutput);
             }
@@ -384,7 +384,7 @@ namespace GCDTracker {
                 string abilityNameOutput = GetCastbarContents();
                 if (conf.castTimePosition == 0 && conf.CastTimeEnabled)
                     abilityNameOutput += " (" + remainingCastTimeString + ")";
-                if (queuedAbilityName != " ")
+                if (queuedAbilityName != " " && conf.CastBarShowQueuedSpell)
                     abilityNameOutput += " -> " + queuedAbilityName;
                     
                 DrawBarText(ui, abilityNameOutput);
