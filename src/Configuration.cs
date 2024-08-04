@@ -465,7 +465,6 @@ namespace GCDTracker
                             ImGui.SliderInt("Spell Name/Time Text Size", ref CastBarTextInt, 6, 18);
                                 CastBarTextSize = CastBarTextInt / 12f;
                             if (ShowAdvanced) {
-                                ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
                                 ImGui.Checkbox("Enable Castbar Text Outline", ref CastBarTextOutlineEnabled);
                                 ImGui.Checkbox("Show remaining cast time:", ref CastTimeEnabled);
                                 if (CastTimeEnabled) {
@@ -502,6 +501,8 @@ namespace GCDTracker
                 }
                 if (ImGui.BeginTabItem("Advanced")) {
                     ImGui.Checkbox("Show Advanced Configuration Options", ref ShowAdvanced);
+                    if (ShowAdvanced)
+                        ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
                     ImGui.EndTabItem();
                 }
             }

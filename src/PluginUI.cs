@@ -13,8 +13,6 @@ namespace GCDTracker
         public bool IsVisible { get; set; }
         private readonly Easing alertAnimEnabled;
         private readonly Easing alertAnimPos;
-        private readonly Easing debugAlertEnabled;
-        private readonly Easing debugAnimPos;
         public GCDWheel gcd;
         public ComboTracker ct;
         public Configuration conf;
@@ -32,14 +30,6 @@ namespace GCDTracker
                 Point2 = new(1f, 0)
             };
             alertAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
-                Point1 = new(0, 0),
-                Point2 = new(0, -20)
-            };
-            debugAlertEnabled = new OutCubic(new(0, 0, 0, 2, 1000)) {
-                Point1 = new(0.25f, 0),
-                Point2 = new(1f, 0)
-            };
-            debugAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
                 Point1 = new(0, 0),
                 Point2 = new(0, -20)
             };
@@ -121,21 +111,8 @@ namespace GCDTracker
             Scale = w_size.X / 200f;
         }
 
-        public void DrawBar(float startRatio, float endRatio, float width, float thickness, Vector4 color) {
-            float start =  w_cent.X + (startRatio * width) - (width / 2);
-            float end = w_cent.X + (endRatio * width) - (width / 2);
-            draw.AddRectFilled(
-                new Vector2(start, w_cent.Y - (thickness / 2)),
-                new Vector2(end, w_cent.Y + (thickness / 2)),
-                ImGui.GetColorU32(color), 0, ImDrawFlags.None);
-        }
-
         public void DrawRect(Vector2 start, Vector2 end, Vector4 color, float thickness) {
             draw.AddRect(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None, thickness);
-        }
-
-        public void DrawRectFilled(Vector2 start, Vector2 end, Vector4 color) {
-            draw.AddRectFilled(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None);
         }
 
         public void DrawCircSegment(float start_rad, float end_rad, float thickness,Vector4 col) {
@@ -181,8 +158,8 @@ namespace GCDTracker
                 GCDTracker.Log.Error("Alert text precision invalid");
                 return;
             }
-
-            ImGui.PushFont(UiBuilder.MonoFont);
+            if (conf.OverrideDefaltFont)
+                ImGui.PushFont(UiBuilder.MonoFont);
             ImGui.SetWindowFontScale(textSize);
 
             var textSz = ImGui.CalcTextSize(alertText[alertTextPrecision]);
@@ -215,9 +192,9 @@ namespace GCDTracker
                 alertText[alertTextPrecision]);
 
             ImGui.SetWindowFontScale(1f);
-            ImGui.PopFont();
+            if (conf.OverrideDefaltFont)
+                ImGui.PopFont();
         }
-
 
         public void DrawTextOutline(Vector2 textPos, Vector4 textColor, string text) {
                 Vector4 calculatedOutlineColor = new Vector4(1f, 1f, 1f, textColor.W);
@@ -281,34 +258,6 @@ namespace GCDTracker
             draw.Flags &= ~ImDrawListFlags.AntiAliasedFill; // Disable anti-aliasing
             draw.AddRect(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None, thickness);
             draw.Flags = originalFlags; // Restore original flags
-        }
-
-        public void DrawDebugText(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol, string debugText) {
-            ImGui.PushFont(UiBuilder.MonoFont);
-            ImGui.SetWindowFontScale(textSize);
-
-            var textSz = ImGui.CalcTextSize(debugText);
-            var textStartPos =
-                w_cent
-                - (w_size / 2)
-                + new Vector2(w_size.X * relx, w_size.Y * rely)
-                - (textSz / 2);
-            var padding = new Vector2(10, 5) * textSize;
-
-            var debugAnimAlpha = debugAlertEnabled.EasedPoint.X;
-            var debugAnimPos2 = debugAnimPos.EasedPoint;
-
-            draw.AddRectFilled(
-                textStartPos - padding + debugAnimPos2,
-                textStartPos + textSz + padding + debugAnimPos2,
-                ImGui.GetColorU32(backCol.WithAlpha(1-debugAnimAlpha)), 10f);
-            draw.AddText(
-                textStartPos + debugAnimPos2,
-                ImGui.GetColorU32(textCol.WithAlpha(1-debugAnimAlpha)),
-                debugText);
-
-            ImGui.SetWindowFontScale(1f);
-            ImGui.PopFont();
         }
     }
 }

@@ -107,15 +107,12 @@ namespace GCDTracker {
                     
                     default:
                     //so, we're not going to talk about this, and I'm going to deny ever doing it.
-                    if (DataStore.ClientState.LocalPlayer.TargetObject.ObjectKind.ToString() == "Aetheryte") {
+                    if (DataStore.ClientState.LocalPlayer.TargetObject.ObjectKind.ToString() == "Aetheryte")
                         return "Attuning...";
-                    }
-                    if (DataStore.ClientState.LocalPlayer.TargetObject.ObjectKind.ToString() == "EventObj") {
+                    if (DataStore.ClientState.LocalPlayer.TargetObject.ObjectKind.ToString() == "EventObj")
                         return "Interacting...";
-                    }
-                    if (DataStore.ClientState.LocalPlayer.TargetObject.ObjectKind.ToString() == "EventNpc") {
+                    if (DataStore.ClientState.LocalPlayer.TargetObject.ObjectKind.ToString() == "EventNpc")
                         return "Interacting...";
-                    }
                     return "...";
             }
         }
@@ -373,9 +370,8 @@ namespace GCDTracker {
 
             // Text
             // reset the queued name when we start to cast.
-            if (castbarProgress <= 0.25f) {
-                    queuedAbilityName = " ";
-                }
+            if (castbarProgress <= 0.25f)
+                queuedAbilityName = " ";
             if (!string.IsNullOrEmpty(GetCastbarContents())) {
                 if (castbarEnd - castbarProgress <= 0.01f && gcdTotal > castTotal) {
                     shortCastFinished = true;
@@ -447,7 +443,6 @@ namespace GCDTracker {
                 int triangleOffset,
                 bool isCastBar, 
                 bool isShortCast) {
-                
 
                 CenterX = centX;
                 CenterY = centY;
@@ -482,8 +477,6 @@ namespace GCDTracker {
             }
         }
 
-
-
         private class SlideCastStartVertices {
             public Vector2 TL_C { get; }
 
@@ -495,13 +488,11 @@ namespace GCDTracker {
             public Vector2 BR_X { get; }
             public Vector2 BR_Y { get; }
 
-
             public SlideCastStartVertices(BarInfo bar, BarDecisionHelper go) {
                 int rightClamp = (int)(bar.CenterX + ((go.Slide_Bar_Start + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth);
                     rightClamp += bar.TriangleOffset + 1;
                 if (rightClamp >= bar.EndVertex.X)
                     rightClamp = (int)bar.EndVertex.X;
-                
                 
                 TL_C = new(                    
                     (int)(bar.CenterX + (go.Slide_Bar_Start * bar.Width) - bar.HalfWidth),
@@ -520,7 +511,6 @@ namespace GCDTracker {
                     BL_C.X,
                     BL_C.Y - bar.TriangleOffset
                 );
-
 
                 BR_C = new(
                     (int)(bar.CenterX + ((go.Slide_Bar_Start + ((float)bar.BorderSizeAdj / bar.Width)) * bar.Width) - bar.HalfWidth),
@@ -548,13 +538,11 @@ namespace GCDTracker {
             public Vector2 BR_X { get; }
             public Vector2 BR_Y { get; }
 
-
             public SlideCastEndVertices(BarInfo bar, BarDecisionHelper go) {
                 int rightClamp = (int)(bar.CenterX + ((go.Slide_Bar_End + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth);
                     rightClamp += bar.TriangleOffset + 1;
                 if (rightClamp >= bar.EndVertex.X)
                     rightClamp = (int)bar.EndVertex.X;
-                
                 
                 TL_C = new(                    
                     (int)(bar.CenterX + (go.Slide_Bar_End * bar.Width) - bar.HalfWidth),
@@ -573,7 +561,6 @@ namespace GCDTracker {
                     BL_C.X,
                     BL_C.Y - bar.TriangleOffset
                 );
-
 
                 BR_C = new(
                     (int)(bar.CenterX + ((go.Slide_Bar_End + ((float)bar.BorderSizeAdj / bar.Width)) * bar.Width) - bar.HalfWidth),
@@ -607,13 +594,11 @@ namespace GCDTracker {
             public Vector2 BR_X { get; }
             public Vector2 BR_Y { get; }
 
-
             public QueueLockVertices(BarInfo bar, BarDecisionHelper go) {
                 int rightClamp = (int)(bar.CenterX + ((go.Queue_Lock_Start + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth);
                     rightClamp += bar.TriangleOffset + 1;
                 if (rightClamp >= bar.EndVertex.X)
                     rightClamp = (int)bar.EndVertex.X;
-                
                 
                 TL_C = new(                    
                     (int)(bar.CenterX + (go.Queue_Lock_Start * bar.Width) - bar.HalfWidth),
@@ -653,7 +638,6 @@ namespace GCDTracker {
                     BL_C.X,
                     BL_C.Y - bar.TriangleOffset
                 );
-
 
                 BR_C = new(
                     (int)(bar.CenterX + ((go.Queue_Lock_Start + ((float)bar.BorderSizeAdj / bar.Width)) * bar.Width) - bar.HalfWidth),
@@ -865,18 +849,13 @@ namespace GCDTracker {
                             bar.CenterX + (ogcdStart / gcdTotal * bar.Width) - bar.RawHalfWidth,
                             bar.CenterY - bar.RawHalfHeight + 1f
                         );
-                        ui.DrawRectFilled(clipPos,
+                        ui.DrawRectFilledNoAA(clipPos,
                             clipPos + new Vector2(2f * ui.Scale, bar.Height - 2f),
                             conf.ogcdCol);
                     }
                 }
             }
 
-           // ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -2f, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, 
-           //     bar.CurrentPos.ToString() + " " + go.Slide_Bar_End.ToString()
-           //     + " " + go.Slide_Background.ToString() + " " + (0.81f - bar.GCDTotal_SlidecastEnd).ToString());
-            
-            
             //in both modes:
             //draw the queuelock (if enabled)
             DrawQueueLock(ui, ql_v, go);
@@ -895,23 +874,18 @@ namespace GCDTracker {
             // draw slidecast bar
             if (go.Slide_Background)
                 ui.DrawRectFilledNoAA(sc_sv.TL_C, sc_ev.BR_C, conf.slideCol);
-            
             // draw sidecast (start) vertical line
             if (go.SlideStart_VerticalBar)
                 ui.DrawRectFilledNoAA(sc_sv.TL_C, sc_sv.BR_C, conf.BarBackColBorder);
-
             //draw sidlecast (end) vertical line
             if (go.SlideEnd_VerticalBar)
                 ui.DrawRectFilledNoAA(sc_ev.TL_C, sc_ev.BR_C, conf.BarBackColBorder);
-
             //bottom left
             if (go.SlideStart_LeftTri)
                 ui.DrawRightTriangle(sc_sv.BL_C, sc_sv.BL_X, sc_sv.BL_Y, conf.BarBackColBorder);
-
             //bottom right
             if (go.SlideStart_RightTri)
                 ui.DrawRightTriangle(sc_sv.BR_C, sc_sv.BR_X, sc_sv.BR_Y, conf.BarBackColBorder);
-            
             //end right
             if (go.SlideEnd_RightTri)
                 ui.DrawRightTriangle(sc_ev.BR_C, sc_ev.BR_X, sc_ev.BR_Y, conf.BarBackColBorder);
