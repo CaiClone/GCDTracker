@@ -250,7 +250,7 @@ namespace GCDTracker
             var originalFlags = draw.Flags;
             draw.Flags &= ~ImDrawListFlags.AntiAliasedFill;
             
-            if (gradientMode == 3) {
+            if (!conf.BarHasGradient || gradientMode == 3) {
                 draw.AddRectFilled(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None);
                 draw.Flags = originalFlags;
                 return;
