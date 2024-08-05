@@ -184,7 +184,8 @@ namespace GCDTracker
                 DrawTextOutline(
                     textStartPos + animPos,
                     textCol.WithAlpha((1-animAlpha) / 3),
-                    alertText[alertTextPrecision]);
+                    alertText[alertTextPrecision],
+                    conf.OutlineThickness);
             }
             draw.AddText(
                 textStartPos + animPos,
@@ -196,21 +197,19 @@ namespace GCDTracker
                 ImGui.PopFont();
         }
 
-        public void DrawTextOutline(Vector2 textPos, Vector4 textColor, string text) {
+        public void DrawTextOutline(Vector2 textPos, Vector4 textColor, string text, float outlineThickness) {
                 Vector4 calculatedOutlineColor = new Vector4(1f, 1f, 1f, textColor.W);
             if (((textColor.X * 0.3f) + (textColor.Y * 0.6f) + (textColor.Z * 0.2f)) > 0.7f)
                 calculatedOutlineColor = new Vector4(0f, 0f, 0f, textColor.W);
             uint outlineColor = ImGui.GetColorU32(calculatedOutlineColor);
-            float outlineThickness = 1f;
             
-            draw.AddText(textPos + new Vector2(-outlineThickness, -outlineThickness), outlineColor, text);
-            draw.AddText(textPos + new Vector2(outlineThickness, -outlineThickness), outlineColor, text);
-            draw.AddText(textPos + new Vector2(-outlineThickness, outlineThickness), outlineColor, text);
-            draw.AddText(textPos + new Vector2(outlineThickness, outlineThickness), outlineColor, text);
-            draw.AddText(textPos + new Vector2(-outlineThickness, 0), outlineColor, text);
-            draw.AddText(textPos + new Vector2(outlineThickness, 0), outlineColor, text);
-            draw.AddText(textPos + new Vector2(0, -outlineThickness), outlineColor, text);
-            draw.AddText(textPos + new Vector2(0, outlineThickness), outlineColor, text);
+            float[] angles = [0f, 45f, 90f, 135f, 180f, 225f, 270f, 315f];
+            float radians = (float)Math.PI / 180f;
+            foreach (float angle in angles) {
+                float rad = angle * radians;
+                Vector2 offset = new Vector2((float)Math.Cos(rad), (float)Math.Sin(rad)) * outlineThickness;
+                draw.AddText(textPos + offset, outlineColor, text);
+            }
         }
 
         public void DrawCastBarText(string text, string combinedText, Vector2 textPos, float textSize, bool isTime) {
@@ -229,10 +228,12 @@ namespace GCDTracker
                 uint textColor = ImGui.GetColorU32(textColorVector);
 
                 if (conf.CastBarTextOutlineEnabled)
-                    DrawTextOutline(textPosCentered, textColorVector, text);
-
+                    DrawTextOutline(textPosCentered, textColorVector, text, conf.OutlineThickness);                    
+                if (conf.CastBarTextOutlineEnabled && conf.CastBarBoldText) 
+                    DrawTextOutline(new(textPosCentered.X + 0.5f, textPosCentered.Y), textColorVector, text, conf.OutlineThickness);                
                 draw.AddText(textPosCentered, textColor, text);
-
+                if(conf.CastBarBoldText)
+                    draw.AddText(new(textPosCentered.X + 0.5f, textPosCentered.Y), textColor, text);
                 ImGui.SetWindowFontScale(1f);
                 if (conf.OverrideDefaltFont)
                 ImGui.PopFont();

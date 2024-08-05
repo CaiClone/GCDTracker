@@ -72,6 +72,7 @@ namespace GCDTracker
         public int BarGradMode = 2;
         public int BarBgGradMode = 3;
         public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
+        public bool CastBarBoldText = false;
 
 
         //CastBar
@@ -93,6 +94,8 @@ namespace GCDTracker
         public bool CastBarTextOutlineEnabled = true;
         public bool CastTimeEnabled = true;
         public int castTimePosition = 1;
+        public int OutlineThicknessInt = 10;
+        public float OutlineThickness = 1f;
 
         //Combo
         public bool ComboEnabled = false;
@@ -491,11 +494,21 @@ namespace GCDTracker
                             if (EnableCastText) {
                             ImGui.Indent();
                             ImGui.ColorEdit3("Castbar Text Color", ref CastBarTextColor, ImGuiColorEditFlags.NoInputs);
+                            ImGui.Checkbox("\"Bold\" Castbar Text", ref CastBarBoldText);
                             ImGui.Checkbox("Show Next Spell When Queued", ref CastBarShowQueuedSpell);
                             ImGui.SliderInt("Spell Name/Time Text Size", ref CastBarTextInt, 6, 18);
                                 CastBarTextSize = CastBarTextInt / 12f;
                             if (ShowAdvanced) {
-                                ImGui.Checkbox("Enable Castbar Text Outline", ref CastBarTextOutlineEnabled);
+                                ImGui.Checkbox("Enable Text Outline:", ref CastBarTextOutlineEnabled);
+                                    if (CastBarTextOutlineEnabled) {
+                                        ImGui.SameLine();
+                                        ImGui.RadioButton("Thin", ref OutlineThicknessInt, 8);
+                                        ImGui.SameLine();
+                                        ImGui.RadioButton("Normal", ref OutlineThicknessInt, 10);
+                                        ImGui.SameLine();
+                                        ImGui.RadioButton("Thick", ref OutlineThicknessInt, 12);
+                                        OutlineThickness = OutlineThicknessInt / 10f;
+                                    }
                                 ImGui.Checkbox("Show remaining cast time:", ref CastTimeEnabled);
                                 if (CastTimeEnabled) {
                                     ImGui.SameLine();
