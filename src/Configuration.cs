@@ -502,8 +502,6 @@ namespace GCDTracker
                                 ImGui.Checkbox("Enable Text Outline:", ref CastBarTextOutlineEnabled);
                                     if (CastBarTextOutlineEnabled) {
                                         ImGui.SameLine();
-                                        ImGui.RadioButton("Thin", ref OutlineThicknessInt, 8);
-                                        ImGui.SameLine();
                                         ImGui.RadioButton("Normal", ref OutlineThicknessInt, 10);
                                         ImGui.SameLine();
                                         ImGui.RadioButton("Thick", ref OutlineThicknessInt, 12);

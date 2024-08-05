@@ -207,7 +207,15 @@ namespace GCDTracker
             float radians = (float)Math.PI / 180f;
             foreach (float angle in angles) {
                 float rad = angle * radians;
-                Vector2 offset = new Vector2((float)Math.Cos(rad), (float)Math.Sin(rad)) * outlineThickness;
+                float xOffset = (float)Math.Cos(rad) * outlineThickness;
+                float yOffset = (float)Math.Sin(rad) * outlineThickness;
+                
+                // for unknown reasons, this seems to be necessary to "center"
+                // the outline vertically.  not perfect; there must be a way to exactly
+                // position the outline.  Maybe depends on the font?
+                yOffset += 0.2f; 
+                
+                Vector2 offset = new(xOffset, yOffset);
                 draw.AddText(textPos + offset, outlineColor, text);
             }
         }
@@ -227,13 +235,16 @@ namespace GCDTracker
                 Vector4 textColorVector = new (conf.CastBarTextColor.X, conf.CastBarTextColor.Y, conf.CastBarTextColor.Z, 1f);
                 uint textColor = ImGui.GetColorU32(textColorVector);
 
-                if (conf.CastBarTextOutlineEnabled)
+                if (conf.CastBarTextOutlineEnabled) {
                     DrawTextOutline(textPosCentered, textColorVector, text, conf.OutlineThickness);                    
-                if (conf.CastBarTextOutlineEnabled && conf.CastBarBoldText) 
-                    DrawTextOutline(new(textPosCentered.X + 0.5f, textPosCentered.Y), textColorVector, text, conf.OutlineThickness);                
+                    if (conf.CastBarBoldText) 
+                        DrawTextOutline(new(textPosCentered.X + 1f, textPosCentered.Y), textColorVector, text, conf.OutlineThickness);
+                }
+          
                 draw.AddText(textPosCentered, textColor, text);
                 if(conf.CastBarBoldText)
-                    draw.AddText(new(textPosCentered.X + 0.5f, textPosCentered.Y), textColor, text);
+                    draw.AddText(new(textPosCentered.X + 1f, textPosCentered.Y), textColor, text);
+                
                 ImGui.SetWindowFontScale(1f);
                 if (conf.OverrideDefaltFont)
                 ImGui.PopFont();
