@@ -241,23 +241,90 @@ namespace GCDTracker
 
         public void DrawRightTriangle(Vector2 p1, Vector2 p2, Vector2 p3, Vector4 color) {
             var originalFlags = draw.Flags;
-            draw.Flags &= ~ImDrawListFlags.AntiAliasedFill; // Disable anti-aliasing
+            draw.Flags &= ~ImDrawListFlags.AntiAliasedFill;
             draw.AddTriangleFilled(p1, p2, p3, ImGui.GetColorU32(color));
-            draw.Flags = originalFlags; // Restore original flags
+            draw.Flags = originalFlags;
         }
 
-        public void DrawRectFilledNoAA(Vector2 start, Vector2 end, Vector4 color) {
+        public void DrawRectFilledNoAA(Vector2 start, Vector2 end, Vector4 color, int gradientMode = 0, float gradientIntensity = 0f) {
             var originalFlags = draw.Flags;
-            draw.Flags &= ~ImDrawListFlags.AntiAliasedFill; // Disable anti-aliasing
-            draw.AddRectFilled(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None);
-            draw.Flags = originalFlags; // Restore original flags
+            draw.Flags &= ~ImDrawListFlags.AntiAliasedFill;
+            
+            if (gradientMode == 4) {
+                draw.AddRectFilled(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None);
+                draw.Flags = originalFlags;
+                return;
+            }
+            
+            int height = (int)(end.Y - start.Y);
+            // Unnecessary unless someone edits the config manually...
+            gradientIntensity = Math.Clamp(gradientIntensity, 0f, 1f);
+            for (int y = 0; y < height; y++) {
+                Vector4 lineColor;
+
+                switch (gradientMode)
+                {
+                    case 0: // White Mode
+                        lineColor = new Vector4(
+                            color.X + (gradientIntensity * (1.0f - color.X) * ((float)y / height)),
+                            color.Y + (gradientIntensity * (1.0f - color.Y) * ((float)y / height)),
+                            color.Z + (gradientIntensity * (1.0f - color.Z) * ((float)y / height)),
+                            color.W
+                        );
+                        break;
+
+                    case 1: // Black Mode
+                        lineColor = new Vector4(
+                            color.X * (1 - (gradientIntensity * ((float)y / height))),
+                            color.Y * (1 - (gradientIntensity * ((float)y / height))),
+                            color.Z * (1 - (gradientIntensity * ((float)y / height))),
+                            color.W
+                        );
+                        break;
+
+                    case 2: // Blended Mode: Top half darker, bottom half lighter
+                        if (y < height / 2)
+                        {
+                            lineColor = new Vector4(
+                                color.X * (1 - (gradientIntensity * ((float)(height / 2 - y) / (height / 2)))),
+                                color.Y * (1 - (gradientIntensity * ((float)(height / 2 - y) / (height / 2)))),
+                                color.Z * (1 - (gradientIntensity * ((float)(height / 2 - y) / (height / 2)))),
+                                color.W
+                            );
+                        }
+                        else
+                        {
+                            lineColor = new Vector4(
+                                color.X + (gradientIntensity * (1.0f - color.X) * ((float)(y - height / 2) / (height / 2))),
+                                color.Y + (gradientIntensity * (1.0f - color.Y) * ((float)(y - height / 2) / (height / 2))),
+                                color.Z + (gradientIntensity * (1.0f - color.Z) * ((float)(y - height / 2) / (height / 2))),
+                                color.W
+                            );
+                        }
+                        break;
+
+                    default:
+                        // just in case
+                        lineColor = color;
+                        break;
+                }
+
+                // Draw each line with the gradient color for that line
+                draw.AddLine(
+                    new Vector2(start.X, start.Y + y),
+                    new Vector2(end.X, start.Y + y),
+                    ImGui.GetColorU32(lineColor)
+                );
+            }
+
+            draw.Flags = originalFlags;
         }
 
         public void DrawRectNoAA(Vector2 start, Vector2 end, Vector4 color, int thickness) {
             var originalFlags = draw.Flags;
-            draw.Flags &= ~ImDrawListFlags.AntiAliasedFill; // Disable anti-aliasing
+            draw.Flags &= ~ImDrawListFlags.AntiAliasedFill;
             draw.AddRect(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None, thickness);
-            draw.Flags = originalFlags; // Restore original flags
+            draw.Flags = originalFlags;
         }
     }
 }

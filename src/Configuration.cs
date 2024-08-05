@@ -66,6 +66,11 @@ namespace GCDTracker
         public float BarBorderSize = 2f;
         public float BarWidthRatio = 0.9f;
         public float BarHeightRatio = 0.5f;
+        public float BarGradientMul = 0.175f;
+        public float BarBgGradientMul = 0.175f;
+        public bool BarHasGradient = false;
+        public int BarGradMode = 2;
+        public int BarBgGradMode = 4;
         public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
 
 
@@ -80,7 +85,7 @@ namespace GCDTracker
         public bool EnableCastText = true;
         public bool CastBarShowQueuedSpell = true;
         public bool HideAnimationLock = true;
-        public Vector4 slideCol = new(0f, 0f, 0f, 0.7f);
+        public Vector4 slideCol = new(0f, 0f, 0f, 0.4f);
         public int triangleSize = 6;
         public int CastBarTextInt = 10;
         public float CastBarTextSize = 0.8f;
@@ -424,6 +429,31 @@ namespace GCDTracker
                         ImGui.SliderFloat2("Width and height ratio", ref size, 0.1f, 1f);
                         BarWidthRatio = size.X;
                         BarHeightRatio = size.Y;
+                        if (ShowAdvanced) {
+                            ImGui.Checkbox("Enable GCDBar Gradient", ref BarHasGradient);
+                            if (BarHasGradient) {
+                                ImGui.Indent();
+                                    ImGui.Text("Foreground Gradient Mode: ");
+                                    ImGui.RadioButton("White", ref BarGradMode, 0);
+                                    ImGui.SameLine();
+                                    ImGui.RadioButton("Black", ref BarGradMode, 1);
+                                    ImGui.SameLine();
+                                    ImGui.RadioButton("Blended", ref BarGradMode, 2);
+                                    ImGui.SameLine();
+                                    ImGui.RadioButton("None", ref BarGradMode, 3);
+                                    ImGui.SliderFloat("FG Gradient Intensity", ref BarGradientMul, 0f, 1f);
+                                    ImGui.Text("Background Gradient Mode: ");
+                                    ImGui.RadioButton("White  ", ref BarBgGradMode, 0);
+                                    ImGui.SameLine();
+                                    ImGui.RadioButton("Black ", ref BarBgGradMode, 1);
+                                    ImGui.SameLine();
+                                    ImGui.RadioButton("Blended ", ref BarBgGradMode, 2);
+                                    ImGui.SameLine();
+                                    ImGui.RadioButton("None ", ref BarBgGradMode, 3);
+                                    ImGui.SliderFloat("BG Gradient Intensity", ref BarBgGradientMul, 0f, 1f);
+                                ImGui.Unindent();
+                            }
+                        }
                     }
 
                         ImGui.Separator();

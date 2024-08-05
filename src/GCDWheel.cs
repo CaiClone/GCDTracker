@@ -794,12 +794,12 @@ namespace GCDTracker {
                 bgCache = BackgroundColor();
             if (isCastBar && castBarCurrentPos < 0.25f)
                 bgCache = BackgroundColor();
-            ui.DrawRectFilledNoAA(bar.StartVertex, bar.EndVertex, bgCache);
+            ui.DrawRectFilledNoAA(bar.StartVertex, bar.EndVertex, bgCache, conf.BarBgGradMode, conf.BarBgGradientMul);
 
             // in both modes:
             // draw cast/gcd progress (main) bar
             if(bar.CurrentPos > 0.001f)
-                ui.DrawRectFilledNoAA(bar.StartVertex, bar.ProgressVertex, conf.frontCol);
+                ui.DrawRectFilledNoAA(bar.StartVertex, bar.ProgressVertex, conf.frontCol, conf.BarGradMode, conf.BarGradientMul);
             
             // in Castbar mode:
             // draw the slidecast bar
