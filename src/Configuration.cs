@@ -15,8 +15,8 @@ namespace GCDTracker
     public class Configuration : IPluginConfiguration
     {
         [JsonIgnore]
-        public int LastVersion = 5;
-        public int Version { get; set; } = 5;
+        public int LastVersion = 6;
+        public int Version { get; set; } = 6;
 
         [JsonIgnore]
         public bool configEnabled;
@@ -63,7 +63,7 @@ namespace GCDTracker
         public bool BarQueueLockSlide = false;
         public bool BarWindowMoveable = false;
         public bool BarRollGCDs = true;
-        public float BarBorderSize = 2f;
+        public int BarBorderSizeInt = 2;
         public float BarWidthRatio = 0.9f;
         public float BarHeightRatio = 0.5f;
         public float BarGradientMul = 0.175f;
@@ -118,6 +118,7 @@ namespace GCDTracker
         public Vector4 BarOgcdCol = new(1f, 1f, 1f, 1f);
         public Vector4 BarAnLockCol = new(0.334f, 0.334f, 0.334f, 0.667f);
         public Vector4 BarclipCol = new(1f, 0f, 0f, 0.667f);
+        public float BarBorderSize = 2f;
 
         //MigrationSettings
         public bool Migration4to5 = false;
@@ -262,6 +263,10 @@ namespace GCDTracker
                     case 4:
                         Migration4to5 = true;
                         break;
+                    case 5:
+                        BarBorderSizeInt = (int)BarBorderSize;
+                        break;
+                        
                 }
                 Version++;
             }
@@ -419,7 +424,7 @@ namespace GCDTracker
                         ImGui.Checkbox("Move/resize GCDBar", ref BarWindowMoveable);
                         if (BarWindowMoveable) {
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
-                            ImGui.TextDisabled("\tCurent Dimensions (in pixels): " + ((int)(x_size * BarWidthRatio + 2 * (int)BarBorderSize)).ToString()+ "x" +((int)(y_size * BarHeightRatio + 2 * (int)BarBorderSize)).ToString());
+                            ImGui.TextDisabled("\tCurent Dimensions (in pixels): " + ((int)(x_size * BarWidthRatio + 2 * BarBorderSizeInt)).ToString()+ "x" +((int)(y_size * BarHeightRatio + 2 * BarBorderSizeInt)).ToString());
                         }
                         ImGui.Checkbox("Roll GCDs", ref BarRollGCDs);
                         if (ImGui.IsItemHovered()){
@@ -427,7 +432,7 @@ namespace GCDTracker
                             ImGui.Text("If enabled abilities that start on the next GCD will always be shown inside the bar, even if it overlaps the current GCD.");
                             ImGui.EndTooltip();
                         }
-                        ImGui.SliderFloat("Border size", ref BarBorderSize, 0f, 10f);
+                        ImGui.SliderInt("Border size", ref BarBorderSizeInt, 0, 10);
                         Vector2 size = new(BarWidthRatio, BarHeightRatio);
                         ImGui.SliderFloat2("Width and height ratio", ref size, 0.1f, 1f);
                         BarWidthRatio = size.X;

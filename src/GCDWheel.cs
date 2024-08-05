@@ -436,7 +436,7 @@ namespace GCDTracker {
                 float sizeY, 
                 float centY, 
                 float heightRatio, 
-                float borderFloat,
+                int borderSize,
                 float castBarCurrentPos,
                 float gcdTime_slidecastStart, 
                 float gcdTotal_slidecastEnd,
@@ -452,7 +452,7 @@ namespace GCDTracker {
                 Height = (int)(sizeY * heightRatio);
                 HalfHeight = Height % 2 == 0 ? (Height / 2) : (Height / 2) + 1;
                 RawHalfHeight = Height / 2;
-                BorderSize = (int)borderFloat;
+                BorderSize = borderSize;
                 HalfBorderSize = BorderSize % 2 == 0 ? (BorderSize / 2) : (BorderSize / 2) + 1;
                 BorderSizeAdj = BorderSize >= 1 ? BorderSize : 1;
                 BorderWidthPercent = (float)BorderSizeAdj / (float)Width;
@@ -769,7 +769,7 @@ namespace GCDTracker {
                 ui.w_size.Y,
                 ui.w_cent.Y,
                 conf.BarHeightRatio,
-                conf.BarBorderSize,
+                conf.BarBorderSizeInt,
                 castBarCurrentPos,
                 gcdTime_slidecastStart, 
                 gcdTotal_slidecastEnd,
