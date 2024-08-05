@@ -70,7 +70,7 @@ namespace GCDTracker
         public float BarBgGradientMul = 0.175f;
         public bool BarHasGradient = false;
         public int BarGradMode = 2;
-        public int BarBgGradMode = 4;
+        public int BarBgGradMode = 3;
         public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
 
 
