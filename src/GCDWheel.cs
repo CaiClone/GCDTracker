@@ -866,7 +866,7 @@ namespace GCDTracker {
                 ui.DrawRect(
                     bar.StartVertex - new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
                     bar.EndVertex + new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
-                    conf.BarBackColBorder, bar.BorderSize);
+                    conf.backColBorder, bar.BorderSize);
             }
         }
 
@@ -876,36 +876,36 @@ namespace GCDTracker {
                 ui.DrawRectFilledNoAA(sc_sv.TL_C, sc_ev.BR_C, conf.slideCol);
             // draw sidecast (start) vertical line
             if (go.SlideStart_VerticalBar)
-                ui.DrawRectFilledNoAA(sc_sv.TL_C, sc_sv.BR_C, conf.BarBackColBorder);
+                ui.DrawRectFilledNoAA(sc_sv.TL_C, sc_sv.BR_C, conf.backColBorder);
             //draw sidlecast (end) vertical line
             if (go.SlideEnd_VerticalBar)
-                ui.DrawRectFilledNoAA(sc_ev.TL_C, sc_ev.BR_C, conf.BarBackColBorder);
+                ui.DrawRectFilledNoAA(sc_ev.TL_C, sc_ev.BR_C, conf.backColBorder);
             //bottom left
             if (go.SlideStart_LeftTri)
-                ui.DrawRightTriangle(sc_sv.BL_C, sc_sv.BL_X, sc_sv.BL_Y, conf.BarBackColBorder);
+                ui.DrawRightTriangle(sc_sv.BL_C, sc_sv.BL_X, sc_sv.BL_Y, conf.backColBorder);
             //bottom right
             if (go.SlideStart_RightTri)
-                ui.DrawRightTriangle(sc_sv.BR_C, sc_sv.BR_X, sc_sv.BR_Y, conf.BarBackColBorder);
+                ui.DrawRightTriangle(sc_sv.BR_C, sc_sv.BR_X, sc_sv.BR_Y, conf.backColBorder);
             //end right
             if (go.SlideEnd_RightTri)
-                ui.DrawRightTriangle(sc_ev.BR_C, sc_ev.BR_X, sc_ev.BR_Y, conf.BarBackColBorder);
+                ui.DrawRightTriangle(sc_ev.BR_C, sc_ev.BR_X, sc_ev.BR_Y, conf.backColBorder);
         }
 
         private void DrawQueueLock(PluginUI ui, QueueLockVertices ql_v, BarDecisionHelper go) {
             //top triangle
             if (go.Queue_TopTriangle) {
-                ui.DrawRightTriangle(ql_v.TL_C, ql_v.TL_X, ql_v.TL_Y, conf.BarBackColBorder);
-                ui.DrawRightTriangle(ql_v.TR_C, ql_v.TR_X, ql_v.TR_Y, conf.BarBackColBorder);
+                ui.DrawRightTriangle(ql_v.TL_C, ql_v.TL_X, ql_v.TL_Y, conf.backColBorder);
+                ui.DrawRightTriangle(ql_v.TR_C, ql_v.TR_X, ql_v.TR_Y, conf.backColBorder);
             }
             //bottom left triangle
             if(go.Queue_BottomLeftTri)
-                ui.DrawRightTriangle(ql_v.BL_C, ql_v.BL_X, ql_v.BL_Y, conf.BarBackColBorder);
+                ui.DrawRightTriangle(ql_v.BL_C, ql_v.BL_X, ql_v.BL_Y, conf.backColBorder);
             //bottom right triangle
             if (go.Queue_BottomRightTri)
-                ui.DrawRightTriangle(ql_v.BR_C, ql_v.BR_X, ql_v.BR_Y, conf.BarBackColBorder); 
+                ui.DrawRightTriangle(ql_v.BR_C, ql_v.BR_X, ql_v.BR_Y, conf.backColBorder); 
             //vertical bar
             if (go.Queue_VerticalBar)
-            ui.DrawRectFilledNoAA(ql_v.TL_C, ql_v.BR_C, conf.BarBackColBorder); 
+            ui.DrawRectFilledNoAA(ql_v.TL_C, ql_v.BR_C, conf.backColBorder); 
         }
 
         private bool CheckClip(bool iscast, float ogcd, float anlock, float gcdTotal, float gcdTime) =>
