@@ -23,10 +23,10 @@ namespace GCDTracker
 
         //Common
         public bool ShowAdvanced = false;
-        public bool ShowOutOfCombat = false;
-        public bool HideAlertsOutOfCombat = false;
+        public bool ShowOutOfCombat = true;
+        public bool HideAlertsOutOfCombat = true;
         public bool HideIfTP = true; //Not exposed in the UI
-        public bool ShowOnlyGCDRunning = false;
+        public bool ShowOnlyGCDRunning = true;
         public bool QueueLockEnabled = true;
         public bool ClipAlertEnabled = true;
         public bool ClipOutlineEnabled = false;
@@ -76,24 +76,25 @@ namespace GCDTracker
 
 
         //CastBar
-        public bool CastBarEnabled = true;
+        public bool CastBarEnabled = false;
         public bool SlideCastEnabled = true;
-        public bool SlideCastFullBar = true;
+        public bool SlideCastFullBar = false;
         public bool OverrideDefaltFont = false;
-        public bool ShowQueuelockTriangles = false;
+        public bool ShowQueuelockTriangles = true;
         public bool ShowSlidecastTriangles = true;
-        public bool ShowTrianglesOnHardCasts = false;
+        public bool ShowTrianglesOnHardCasts = true;
+        public bool ShowQuelockOnHardCasts = true;
         public bool EnableCastText = true;
         public bool CastBarShowQueuedSpell = true;
         public bool HideAnimationLock = true;
         public Vector4 slideCol = new(0f, 0f, 0f, 0.4f);
         public int triangleSize = 6;
-        public int CastBarTextInt = 10;
-        public float CastBarTextSize = 0.8f;
-        public Vector3 CastBarTextColor = new(0f, 0f, 0f);
+        public int CastBarTextInt = 11;
+        public float CastBarTextSize = 0.9f;
+        public Vector3 CastBarTextColor = new(1f, 1f, 1f);
         public bool CastBarTextOutlineEnabled = true;
         public bool CastTimeEnabled = true;
-        public int castTimePosition = 1;
+        public int castTimePosition = 0;
         public int OutlineThicknessInt = 10;
         public float OutlineThickness = 1f;
 
@@ -476,6 +477,7 @@ namespace GCDTracker
                         if(CastBarEnabled) {
                             if (ShowAdvanced) {
                                 ImGui.Checkbox("Hide Animation Lock in Castbar Mode", ref HideAnimationLock);
+                                ImGui.Checkbox("Show Queuelock when CastTime >= GCD", ref ShowQuelockOnHardCasts);
                             }
                             ImGui.Separator();
                             ImGui.Checkbox("Enable Slidecast Functionality", ref SlideCastEnabled);

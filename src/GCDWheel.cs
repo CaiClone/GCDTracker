@@ -422,6 +422,8 @@ namespace GCDTracker {
             public float CurrentPos { get; }
             public float GCDTime_SlidecastStart { get; } 
             public float GCDTotal_SlidecastEnd { get; }
+            public float GCDTotal { get; }
+            public float CastTotal { get; }
             public int TriangleOffset { get; }
             public bool IsCastBar { get; } 
             public bool IsShortCast { get; } 
@@ -462,6 +464,8 @@ namespace GCDTracker {
                 TriangleOffset = triangleOffset;
                 IsCastBar = isCastBar;
                 IsShortCast = isShortCast;
+                GCDTotal = DataStore.Action->TotalGCD;
+                CastTotal = DataStore.Action->TotalCastTime;
                 StartVertex = new(
                     (int)(CenterX - RawHalfWidth), 
                     (int)(CenterY - RawHalfHeight)
@@ -471,7 +475,7 @@ namespace GCDTracker {
                     (int)(CenterY + HalfHeight)
                 );
                 ProgressVertex = new(
-                    (int)(CenterX + ((CurrentPos + ((float)BorderSizeAdj / Width)) * Width) - HalfWidth),
+                    (int)(CenterX + ((CurrentPos + BorderWidthPercent) * Width) - HalfWidth),
                     (int)(CenterY + HalfHeight)
                 );
             }
@@ -513,7 +517,7 @@ namespace GCDTracker {
                 );
 
                 BR_C = new(
-                    (int)(bar.CenterX + ((go.Slide_Bar_Start + ((float)bar.BorderSizeAdj / bar.Width)) * bar.Width) - bar.HalfWidth),
+                    (int)(bar.CenterX + ((go.Slide_Bar_Start + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth),
                     (int)(bar.CenterY + bar.HalfHeight)
                 );
                 BR_X = new(
@@ -563,7 +567,7 @@ namespace GCDTracker {
                 );
 
                 BR_C = new(
-                    (int)(bar.CenterX + ((go.Slide_Bar_End + ((float)bar.BorderSizeAdj / bar.Width)) * bar.Width) - bar.HalfWidth),
+                    (int)(bar.CenterX + ((go.Slide_Bar_End + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth),
                     (int)(bar.CenterY + bar.HalfHeight)
                 );
                 BR_X = new(
@@ -614,7 +618,7 @@ namespace GCDTracker {
                 );
 
                 TR_C = new(
-                    (int)(bar.CenterX + ((go.Queue_Lock_Start + ((float)bar.BorderSizeAdj/ bar.Width)) * bar.Width) - bar.HalfWidth),
+                    (int)(bar.CenterX + ((go.Queue_Lock_Start + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth),
                     (int)(bar.CenterY - bar.RawHalfHeight)
                 );
                 TR_X = new(
@@ -640,7 +644,7 @@ namespace GCDTracker {
                 );
 
                 BR_C = new(
-                    (int)(bar.CenterX + ((go.Queue_Lock_Start + ((float)bar.BorderSizeAdj / bar.Width)) * bar.Width) - bar.HalfWidth),
+                    (int)(bar.CenterX + ((go.Queue_Lock_Start + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth),
                     (int)(bar.CenterY + bar.HalfHeight)
                 );
                 BR_X = new(
@@ -680,8 +684,11 @@ namespace GCDTracker {
 
             public void Update(BarInfo bar, Configuration conf, bool isRunning) {                
                 if (isRunning) {
+                    //// Take snapshot of where things are at start of activity
                     if (bar.CurrentPos < 0.04f) {
+                        // Setup queuelock (unless CastTime > GCDTime)
                         if (conf.QueueLockEnabled && (!bar.IsCastBar || bar.IsShortCast)) {
+                            //Queue_Lock_Start = 0.8f;
                             Queue_VerticalBar = conf.QueueLockEnabled;
                             Queue_TopTriangle = conf.QueueLockEnabled && conf.ShowQueuelockTriangles;
                             Queue_BottomRightTri = (bar.IsShortCast && !conf.SlideCastFullBar && 
@@ -689,6 +696,7 @@ namespace GCDTracker {
                                 ((0.81f - bar.GCDTotal_SlidecastEnd) <= 0.02f)
                             );
                         }
+                        // Setup slidelock
                         if (conf.SlideCastEnabled && bar.IsCastBar) {
                             Slide_Background = true;
                             SlideStart_VerticalBar = true;
@@ -699,11 +707,21 @@ namespace GCDTracker {
                             SlideEnd_RightTri = SlideEnd_VerticalBar && conf.ShowSlidecastTriangles;
                             Slide_Bar_End = conf.SlideCastFullBar ? 1f : bar.GCDTotal_SlidecastEnd; // - borderwidth?
                         }
+                        // Set queuelock pos for CastTime > GCDTime
+                        if (conf.QueueLockEnabled && bar.IsCastBar && !bar.IsShortCast) {
+                            Queue_Lock_Start = (0.8f * bar.GCDTotal) / bar.CastTotal;
+                        }
                     }
+                    //// end snapshot
+
+                    //// move and toggle bits as bar progresses
+                    // Slide sidecast when bar passes it
                     if (conf.SlideCastEnabled) {
                         if (Slide_Bar_Start < bar.CurrentPos)
                             Slide_Bar_Start = bar.CurrentPos;
                     }
+                    // Transition from split slidecast (!SlideCastFullBar) to 
+                    // regular slidecast when slidecast start >= slidecast end
                     if (SlideStart_LeftTri && Slide_Bar_Start >= Slide_Bar_End) {
                         SlideEnd_VerticalBar = false;
                         SlideEnd_RightTri = false;
@@ -711,14 +729,22 @@ namespace GCDTracker {
                         SlideStart_LeftTri = true;
                         SlideStart_RightTri = true;
                     }
+                    // Deal with case slide triangles off && slide full bar off
+                    if (!conf.SlideCastFullBar && conf.SlideCastEnabled && !conf.ShowSlidecastTriangles && Slide_Bar_End <= bar.CurrentPos) {
+                            SlideEnd_VerticalBar = false;
+                            SlideStart_VerticalBar = false;                        
+                            Slide_Background = false;                   
+                    }
+                    // Transition from slidecast to queuelock when slidecast >= queuelock
                     if (conf.QueueLockEnabled && (SlideStart_LeftTri || SlideStart_RightTri) && Slide_Bar_Start >= 0.8f) {
                         SlideStart_LeftTri = false;
                         SlideStart_RightTri = false;
                         SlideStart_VerticalBar = false;
                         Queue_BottomLeftTri = true;
                         Queue_BottomRightTri = true;
-                        Queue_VerticalBar = true;
+                        Queue_VerticalBar = true; // should already be true; just in case
                     }
+                    // Setup bar for hardcast
                     if (bar.IsCastBar && !bar.IsShortCast) {
                         Queue_VerticalBar = false;
                         Queue_TopTriangle = false;
@@ -726,16 +752,45 @@ namespace GCDTracker {
                         Queue_BottomRightTri = false;
                         SlideEnd_RightTri = false;
                         SlideEnd_VerticalBar = false;
-                        SlideStart_VerticalBar = true;
-                        SlideStart_VerticalBar = true;
+                        if (conf.SlideCastEnabled) {
+                            SlideStart_VerticalBar = true;
+                            if (conf.ShowSlidecastTriangles) {
+                                SlideStart_LeftTri =  conf.ShowTrianglesOnHardCasts;
+                                SlideStart_RightTri =  conf.ShowTrianglesOnHardCasts;
+                            }
+                        }
+                        // handle moving the queuelock when in hardcast mode
+                        if (conf.QueueLockEnabled && conf.ShowQuelockOnHardCasts) {
+                            Queue_VerticalBar = true;
+                            Queue_TopTriangle = conf.ShowQueuelockTriangles;
+                            // Slide queuelock when bar passes it
+                            if (Queue_Lock_Start < bar.CurrentPos)
+                                Queue_Lock_Start = bar.CurrentPos;
+                            // Transition from slidecast to queuelock 
+                            if ((Queue_Lock_Start >= Slide_Bar_Start) && conf.SlideCastEnabled) {
+                                SlideStart_VerticalBar = false;
+                                SlideStart_LeftTri =  false;
+                                SlideStart_RightTri =  false;
+                                if (conf.ShowSlidecastTriangles) {
+                                    Queue_BottomLeftTri =  conf.ShowTrianglesOnHardCasts;
+                                    Queue_BottomRightTri =  conf.ShowTrianglesOnHardCasts;
+                                }
+                            }
+                        }
                     }
-                    if (bar.IsCastBar && !bar.IsShortCast && conf.ShowSlidecastTriangles) {
-                        SlideStart_LeftTri =  conf.ShowTrianglesOnHardCasts;
-                        SlideStart_RightTri =  conf.ShowTrianglesOnHardCasts;
+                    // setup queuelock for CastTime < GCDTotal
+                    if (conf.QueueLockEnabled && !(!bar.IsShortCast && bar.IsCastBar)) {
+                        Queue_Lock_Start = 0.8f;
+                        // slide the queuelock if enabled
+                        if ((bar.CurrentPos >= 0.8f) && conf.BarQueueLockSlide)
+                            Queue_Lock_Start = bar.CurrentPos;
                     }
                 }
+                //// end move and toggle bits
 
+                // Reset bar when idle
                 if (!isRunning || bar.CurrentPos <= 0.02f) {
+                    Queue_Lock_Start = 0.8f;
                     Queue_VerticalBar = conf.BarQueueLockWhenIdle && conf.QueueLockEnabled;
                     Queue_TopTriangle = conf.BarQueueLockWhenIdle && conf.QueueLockEnabled && conf.ShowQueuelockTriangles;
                     Queue_BottomLeftTri = false;
@@ -748,14 +803,6 @@ namespace GCDTracker {
                     Slide_Background = false;
                     Slide_Bar_Start = 0f;
                     Slide_Bar_End = 0f;
-                }
-
-                Queue_Lock_Start = 0.8f;
-                if (conf.QueueLockEnabled && !(!bar.IsShortCast && bar.IsCastBar)) {
-                    if ((bar.CurrentPos >= 0.8f) && conf.BarQueueLockSlide)
-                        Queue_Lock_Start = bar.CurrentPos;
-                        if (bar.CurrentPos >= 1f - bar.BorderWidthPercent) //??
-                            Queue_Lock_Start = 1f - bar.BorderWidthPercent; //??
                 }
             }
         }
