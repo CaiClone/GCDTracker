@@ -91,32 +91,38 @@ namespace GCDTracker {
             var lumina = dataManager;
 
             switch (actionType) {
-                    //seem to need case 0 here for follow up casts for short spells (gcdTime>castTime).
-                    case 0:
-                    case 1:
-                    var ability = lumina.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID);
-                    return ability?.Name;
+                // Seem to need case 0 here for follow up casts for short spells (gcdTime > castTime).
+                case 0:
+                case 1:
+                    var ability = lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID);
+                    return ability?.Name ?? "Unknown Ability";
 
-                    case 2:
-                    var item = lumina.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()?.GetRow(actionID);
-                    return item?.Name;
+                case 2:
+                    var item = lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()?.GetRow(actionID);
+                    return item?.Name ?? "Unknown Item";
 
-                    case 13:
-                    var mount = lumina.GetExcelSheet<Lumina.Excel.GeneratedSheets.Mount>()?.GetRow(actionID);
-                    return CapitalizeOutput(mount?.Singular);
-                    
-                    default:
+                case 13:
+                    var mount = lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Mount>()?.GetRow(actionID);
+                    return mount != null ? CapitalizeOutput(mount.Singular) : "Unknown Mount";
+
+                default:
                     //so, we're not going to talk about this, and I'm going to deny ever doing it.
-                    if (DataStore.ClientState.LocalPlayer.TargetObject.ObjectKind.ToString() == "Aetheryte")
-                        return "Attuning...";
-                    if (DataStore.ClientState.LocalPlayer.TargetObject.ObjectKind.ToString() == "EventObj")
-                        return "Interacting...";
-                    if (DataStore.ClientState.LocalPlayer.TargetObject.ObjectKind.ToString() == "EventNpc")
-                        return "Interacting...";
-                    return "...";
+                    var clientState = DataStore.ClientState;
+                    if (clientState != null) {
+                        var localPlayer = clientState.LocalPlayer;
+                        if (localPlayer != null) {
+                            var targetObject = localPlayer.TargetObject;
+                            if (targetObject != null) {
+                                var objectKind = targetObject.ObjectKind.ToString();
+                                if (objectKind == "Aetheryte") return "Attuning...";
+                                if (objectKind == "EventObj" || objectKind == "EventNpc") return "Interacting...";
+                            }
+                        }
+                    }
+                return "...";
             }
         }
-
+        
         private string CapitalizeOutput(string input) {
             if (string.IsNullOrEmpty(input))
                 return input;
