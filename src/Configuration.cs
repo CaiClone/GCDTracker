@@ -79,6 +79,7 @@ namespace GCDTracker
         public bool CastBarEnabled = false;
         public bool SlideCastEnabled = true;
         public bool SlideCastFullBar = false;
+        public bool SlideCastBackground = false;
         public bool OverrideDefaltFont = false;
         public bool ShowQueuelockTriangles = true;
         public bool ShowSlidecastTriangles = true;
@@ -483,7 +484,10 @@ namespace GCDTracker
                             ImGui.Checkbox("Enable Slidecast Functionality", ref SlideCastEnabled);
                             if(SlideCastEnabled) {
                                 ImGui.Indent();
-                                ImGui.ColorEdit4("Slidecast Bar Color", ref slideCol, ImGuiColorEditFlags.NoInputs);
+                                ImGui.Checkbox("Show Slidcast Bar Bacground", ref SlideCastBackground);
+                                if (SlideCastBackground) {
+                                    ImGui.ColorEdit4("Slidecast Bar Color", ref slideCol, ImGuiColorEditFlags.NoInputs);
+                                }
                                 if(ShowAdvanced) {
                                     ImGui.Checkbox("Slidecast Covers End of Bar", ref SlideCastFullBar);
                                     ImGui.Checkbox("Show Slidecast Triangles", ref ShowSlidecastTriangles);
