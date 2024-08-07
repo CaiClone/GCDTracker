@@ -685,7 +685,7 @@ namespace GCDTracker {
                         Slide_Bar_End = conf.SlideCastFullBar ? 1f : bar.GCDTotal_SlidecastEnd;
                         if (bar.IsShortCast) {
                             Queue_Lock_Start = 0.8f;
-                            if (Math.Abs(Slide_Bar_End - 0.8f) < epsilon)
+                            if (Math.Abs(Slide_Bar_End - Queue_Lock_Start) < epsilon)
                                 Slide_Bar_End = Queue_Lock_Start;
                             currentState = BarState.ShortCast;
                         }
