@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
+using System.Reflection.Metadata;
 using System.Runtime.CompilerServices;
 using System.Text;
 
@@ -71,14 +72,13 @@ namespace GCDTracker {
                 targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
             if (addingToQueue) {
                 AddToQueue(act, isWeaponSkill);
-                    queuedAbilityName = GetAbilityName(actionID, DataStore.ClientState.LocalPlayer.CastActionType);
+                queuedAbilityName = GetAbilityName(actionID, DataStore.ClientState.LocalPlayer.CastActionType);
             } else {
                 if (isWeaponSkill) {
                     EndCurrentGCD(TotalGCD);
                     //Store GCD in a variable in order to cache it when it goes back to 0
                     TotalGCD = act->TotalGCD;
                     AddWeaponSkill(act);
-                        queuedAbilityName = GetAbilityName(actionID, DataStore.ClientState.LocalPlayer.CastActionType);
                 } else if (!executingQueued) {
                     ogcds[act->ElapsedGCD] = new(act->AnimationLock, false);
                 }
@@ -143,8 +143,6 @@ namespace GCDTracker {
             for (int i = 0; i < length; i++) data[i] = currentByte[i];
 
             string result = Encoding.UTF8.GetString(data);
-            GCDTracker.Log.Warning($"Cast: {result}");
-
             return result;
         }
 
@@ -341,7 +339,7 @@ namespace GCDTracker {
             if (gcdTotal < 0.1f) return;
             FlagAlerts(ui);
             InvokeAlerts((conf.BarWidthRatio + 1) / 2.1f, -0.3f, ui);
-            DrawBarElements(ui, false, shortCastFinished, gcdTime / gcdTotal, gcdTime, gcdTotal);
+            DrawBarElements(ui, false, shortCastFinished, false, gcdTime / gcdTotal, gcdTime, gcdTotal);
 
             // Gonna re-do this, but for now, we flag when we need to carryover from the castbar to the GCDBar
             // and dump all the crap here to draw on top. 
@@ -372,7 +370,7 @@ namespace GCDTracker {
                 slidecastEnd = conf.SlideCastFullBar ? 1f : castbarEnd;
             }
 
-            DrawBarElements(ui, true, gcdTotal > castTotal, castbarProgress * castbarEnd, slidecastStart, slidecastEnd);
+            DrawBarElements(ui, true, gcdTotal > castTotal, gcdTotal < 0.001f, castbarProgress * castbarEnd, slidecastStart, slidecastEnd);
 
             // Text
             // reset the queued name when we start to cast.
@@ -433,6 +431,7 @@ namespace GCDTracker {
             public int TriangleOffset { get; }
             public bool IsCastBar { get; } 
             public bool IsShortCast { get; } 
+            public bool IsNonAbility { get; }
             public Vector2 StartVertex { get; }
             public Vector2 EndVertex { get; }
             public Vector2 ProgressVertex { get; }
@@ -450,7 +449,8 @@ namespace GCDTracker {
                 float gcdTotal_slidecastEnd,
                 int triangleOffset,
                 bool isCastBar, 
-                bool isShortCast) {
+                bool isShortCast,
+                bool isNonAbility) {
 
                 CenterX = centX;
                 CenterY = centY;
@@ -470,6 +470,7 @@ namespace GCDTracker {
                 TriangleOffset = triangleOffset;
                 IsCastBar = isCastBar;
                 IsShortCast = isShortCast;
+                IsNonAbility = isNonAbility;
                 GCDTotal = DataStore.Action->TotalGCD;
                 CastTotal = DataStore.Action->TotalCastTime;
                 StartVertex = new(
@@ -665,11 +666,12 @@ namespace GCDTracker {
                 GCDOnly,
                 ShortCast,
                 LongCast,
+                NonAbilityCast,
                 Idle
             }
             public BarState currentState;
 
-            public void Update(BarInfo bar, Configuration conf, bool isRunning) {                
+            public void Update(BarInfo bar, Configuration conf, bool isRunning, PluginUI ui) {                
                 // I tried using isRunning for this, but it stays true a little too long
                 // when we cancel a cast by moving.  If we are going to use the cast bar
                 // position in addition to isRunning there really isn't a reason to use
@@ -683,7 +685,14 @@ namespace GCDTracker {
                     if(bar.IsCastBar){
                         Slide_Bar_Start = bar.GCDTime_SlidecastStart;
                         Slide_Bar_End = conf.SlideCastFullBar ? 1f : bar.GCDTotal_SlidecastEnd;
-                        if (bar.IsShortCast) {
+                        if (bar.IsNonAbility) {
+                            Queue_Lock_Start = 0f;
+                            Queue_VerticalBar = false;
+                            Queue_TopTriangle = false;
+                            Slide_Bar_End = 1f;
+                            currentState = BarState.NonAbilityCast;
+                        }
+                        else if (bar.IsShortCast) {
                             Queue_Lock_Start = 0.8f;
                             if (Math.Abs(Slide_Bar_End - Queue_Lock_Start) < epsilon)
                                 Slide_Bar_End = Queue_Lock_Start;
@@ -694,7 +703,6 @@ namespace GCDTracker {
                             currentState = BarState.LongCast;
                         }
                     }
-                    
                     // Handle GCDBar
                     else if (!bar.IsCastBar && !bar.IsShortCast) {
                         Queue_Lock_Start = 0.8f;
@@ -705,24 +713,34 @@ namespace GCDTracker {
                 // Idle State
                 else if (!isRunning)
                     currentState = BarState.Idle;
-
+            
+                ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -2f, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, 
+                    currentState.ToString() + " " + DataStore.Action->TotalGCD.ToString("F2") + " " + DataStore.Action->TotalCastTime.ToString());
                 previousPos = Math.Max(previousPos, bar.CurrentPos);
 
                 switch (currentState) {
                     case BarState.GCDOnly:
-                        HandleGCDOnly(bar, conf);
+                        if (conf.QueueLockEnabled)
+                            HandleGCDOnly(bar, conf);
+                        break;
+
+                    case BarState.NonAbilityCast:
+                        if (conf.SlideCastEnabled)
+                            HandleNonAbilityCast(bar, conf);
                         break;
 
                     case BarState.ShortCast:
                         if (conf.SlideCastEnabled)
                             HandleCastBarShort(bar, conf);
-                        else HandleGCDOnly(bar, conf);
+                        else if (conf.QueueLockEnabled)
+                            HandleGCDOnly(bar, conf);
                         break;
 
                     case BarState.LongCast:
                         if (conf.SlideCastEnabled)
                             HandleCastBarLong(bar, conf);
-                        else HandleGCDOnly(bar, conf);
+                        else if (conf.QueueLockEnabled)
+                            HandleGCDOnly(bar, conf);
                         break;
 
                     default:
@@ -732,45 +750,50 @@ namespace GCDTracker {
             }
 
             private void HandleGCDOnly(BarInfo bar, Configuration conf) {
-                if (conf.QueueLockEnabled) {
-                    // draw lines
-                    Queue_VerticalBar = true;                    
-                    
-                    // draw triangles
-                    if (conf.ShowQueuelockTriangles)
-                        Queue_TopTriangle = true;
-                    
-                    // move lines
-                    if (conf.BarQueueLockSlide)
-                        Queue_Lock_Start = Math.Max(Queue_Lock_Start, bar.CurrentPos);
-                }
-
+                // draw lines
+                Queue_VerticalBar = true;                    
+                
+                // draw triangles
+                Queue_TopTriangle = conf.ShowQueuelockTriangles;
+                
+                // move lines
+                if (conf.BarQueueLockSlide)
+                    Queue_Lock_Start = Math.Max(Queue_Lock_Start, bar.CurrentPos);
             }
+
+            private void HandleNonAbilityCast(BarInfo bar, Configuration conf) {
+                // draw lines
+                SlideStart_VerticalBar = true;
+                SlideStart_LeftTri = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
+                SlideStart_RightTri = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
+
+                // move lines
+                Slide_Bar_Start = Math.Max(Slide_Bar_Start, bar.CurrentPos);
+
+                // draw slidecast bar
+                Slide_Background = conf.SlideCastBackground;      
+            }
+
             private void HandleCastBarShort(BarInfo bar, Configuration conf) {
                 // draw lines
                 SlideStart_VerticalBar = true;
-                if (!conf.SlideCastFullBar)
-                    SlideEnd_VerticalBar = true;
+                SlideEnd_VerticalBar = !conf.SlideCastFullBar;
 
                 // draw triangles
-                if (conf.ShowSlidecastTriangles) {
-                        SlideStart_LeftTri = true;
-                    if (conf.SlideCastFullBar) 
-                        SlideStart_RightTri = true;
-                    else 
-                        SlideEnd_RightTri = true;
-                }
+                SlideStart_LeftTri = conf.ShowSlidecastTriangles;
+                SlideStart_RightTri = conf.ShowSlidecastTriangles && conf.SlideCastFullBar;
+                SlideEnd_RightTri = conf.ShowSlidecastTriangles && !conf.SlideCastFullBar;
 
                 // invoke Queuelock
-                HandleGCDOnly(bar, conf);
+                if (conf.QueueLockEnabled)
+                    HandleGCDOnly(bar, conf);
 
                 // move lines
                 Slide_Bar_Start = Math.Max(Slide_Bar_Start, Math.Min(bar.CurrentPos, Queue_Lock_Start));
                 Slide_Bar_End = Math.Max(Slide_Bar_End, Math.Min(bar.CurrentPos, Queue_Lock_Start));
 
                 // draw slidecast bar
-                if (Slide_Bar_Start != Slide_Bar_End && conf.SlideCastBackground)
-                    Slide_Background = true;
+                Slide_Background = conf.SlideCastBackground;
             }
 
             private void HandleCastBarLong(BarInfo bar, Configuration conf) {
@@ -778,26 +801,24 @@ namespace GCDTracker {
                 SlideStart_VerticalBar = true;
                 
                 // draw triangles
-                if (conf.ShowTrianglesOnHardCasts){
-                    SlideStart_LeftTri = true;
-                    SlideStart_RightTri = true;
-                }
+                SlideStart_LeftTri = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
+                SlideStart_RightTri = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
 
                 // invoke Queuelock
-                HandleGCDOnly(bar, conf);
+                if (conf.QueueLockEnabled)
+                    HandleGCDOnly(bar, conf);
 
                 // move lines
                 Slide_Bar_Start = Math.Max(Slide_Bar_Start, bar.CurrentPos);
 
                 // draw slidecast bar
-                if (Slide_Bar_Start != Slide_Bar_End && conf.SlideCastBackground)
-                    Slide_Background = true;                
+                Slide_Background = conf.SlideCastBackground;                
             }
 
             private void ResetBar(Configuration conf) {
-                Queue_Lock_Start = conf.BarQueueLockWhenIdle ? 0.8f : 0f;
-                Queue_VerticalBar = conf.BarQueueLockWhenIdle;
-                Queue_TopTriangle = conf.BarQueueLockWhenIdle && conf.ShowQueuelockTriangles;
+                Queue_Lock_Start = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle ? 0.8f : 0f;
+                Queue_VerticalBar = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle;
+                Queue_TopTriangle = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle && conf.ShowQueuelockTriangles;
 
                 Slide_Bar_Start = 0f;
                 Slide_Bar_End = 0f;
@@ -814,6 +835,7 @@ namespace GCDTracker {
             PluginUI ui, 
             bool isCastBar, 
             bool isShortCast,
+            bool isNonAbility,
             float castBarCurrentPos, 
             float gcdTime_slidecastStart, 
             float gcdTotal_slidecastEnd) {
@@ -831,11 +853,12 @@ namespace GCDTracker {
                 gcdTotal_slidecastEnd,
                 conf.triangleSize,
                 isCastBar, 
-                isShortCast
+                isShortCast,
+                isNonAbility
             );
 
             var go = BarDecisionHelper.Instance;
-                go.Update(bar, conf, isRunning);
+                go.Update(bar, conf, isRunning, ui);
 
             var sc_sv = new SlideCastStartVertices(bar, go);
             var sc_ev = new SlideCastEndVertices(bar, go);
@@ -846,9 +869,7 @@ namespace GCDTracker {
             
             // in both modes:
             // draw the background
-            if (!isCastBar)
-                bgCache = BackgroundColor();
-            if (isCastBar && castBarCurrentPos < 0.25f)
+            if (bar.CurrentPos < 0.2f)
                 bgCache = BackgroundColor();
             ui.DrawRectFilledNoAA(bar.StartVertex, bar.EndVertex, bgCache, conf.BarBgGradMode, conf.BarBgGradientMul);
 
@@ -859,9 +880,8 @@ namespace GCDTracker {
             
             // in Castbar mode:
             // draw the slidecast bar
-            if (conf.SlideCastEnabled){
+            if (conf.SlideCastEnabled)
                 DrawSlideCast(ui, sc_sv, sc_ev, go);
-                }
 
             // in GCDBar mode:
             // draw oGCDs and clips
@@ -914,7 +934,8 @@ namespace GCDTracker {
 
             //in both modes:
             //draw the queuelock (if enabled)
-            DrawQueueLock(ui, ql_v, go);
+            if (conf.QueueLockEnabled)
+                DrawQueueLock(ui, ql_v, go);
 
             // in both modes:
             // draw borders

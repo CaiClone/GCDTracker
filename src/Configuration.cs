@@ -484,7 +484,7 @@ namespace GCDTracker
                             ImGui.Checkbox("Enable Slidecast Functionality", ref SlideCastEnabled);
                             if(SlideCastEnabled) {
                                 ImGui.Indent();
-                                ImGui.Checkbox("Show Slidcast Bar Bacground", ref SlideCastBackground);
+                                ImGui.Checkbox("Show Slidcast Bar Background", ref SlideCastBackground);
                                 if (SlideCastBackground) {
                                     ImGui.ColorEdit4("Slidecast Bar Color", ref slideCol, ImGuiColorEditFlags.NoInputs);
                                 }
