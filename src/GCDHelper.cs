@@ -12,6 +12,8 @@ using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
+using System.Text.RegularExpressions;
+
 
 [assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker {
@@ -282,6 +284,7 @@ namespace GCDTracker {
                 AddToQueue(act, isWeaponSkill);
                 queuedAbilityName = GetAbilityName(actionID, DataStore.ClientState.LocalPlayer.CastActionType);
             } else {
+                queuedAbilityName = " ";
                 if (isWeaponSkill) {
                     EndCurrentGCD(TotalGCD);
                     //Store GCD in a variable in order to cache it when it goes back to 0
@@ -312,20 +315,13 @@ namespace GCDTracker {
                     return mount != null ? CapitalizeOutput(mount.Singular) : "Unknown Mount";
 
                 default:
-                    //so, we're not going to talk about this, and I'm going to deny ever doing it.
-                    var clientState = DataStore.ClientState;
-                    if (clientState != null) {
-                        var localPlayer = clientState.LocalPlayer;
-                        if (localPlayer != null) {
-                            var targetObject = localPlayer.TargetObject;
-                            if (targetObject != null) {
-                                var objectKind = targetObject.ObjectKind.ToString();
-                                if (objectKind == "Aetheryte") return "Attuning...";
-                                if (objectKind == "EventObj" || objectKind == "EventNpc") return "Interacting...";
-                            }
-                        }
-                    }
-                return "...";
+                    var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind.ToString();
+                    return objectKind switch
+                    {
+                        "Aetheryte" => "Attuning...",
+                        "EventObj" or "EventNpc" => "Interacting...",
+                        _ => "..."
+                    };
             }
         }
         
@@ -349,7 +345,11 @@ namespace GCDTracker {
             for (int i = 0; i < length; i++) data[i] = currentByte[i];
 
             string result = Encoding.UTF8.GetString(data);
-            return result;
+            string cleanedResult = Regex.Replace(result, "\x02.*?\x03", string.Empty);           
+            return cleanedResult;
+
+
+
         }
 
         public void AddToQueue(Data.Action* act, bool isWeaponSkill) {

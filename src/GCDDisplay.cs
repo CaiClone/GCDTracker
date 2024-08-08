@@ -98,10 +98,6 @@ namespace GCDTracker {
 
             DrawBarElements(ui, true, gcdTotal > castTotal, gcdTotal < 0.001f, castbarProgress * castbarEnd, slidecastStart, slidecastEnd, castbarEnd);
 
-            // Text
-            // reset the queued name when we start to cast.
-            if (castbarProgress <= 0.25f)
-                helper.queuedAbilityName = " ";
             if (!string.IsNullOrEmpty(helper.GetCastbarContents())) {
                 if (castbarEnd - castbarProgress <= 0.01f && gcdTotal > castTotal) {
                     helper.shortCastFinished = true;
