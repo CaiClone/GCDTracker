@@ -228,7 +228,7 @@ namespace GCDTracker {
         }
     }
 
-    public unsafe class GCDHelper {
+    public unsafe partial class GCDHelper {
         private readonly Configuration conf;
         private readonly IDataManager dataManager;
         private readonly AbilityManager abilityManager;
@@ -345,7 +345,7 @@ namespace GCDTracker {
             for (int i = 0; i < length; i++) data[i] = currentByte[i];
 
             string result = Encoding.UTF8.GetString(data);
-            string cleanedResult = Regex.Replace(result, "\x02.*?\x03", string.Empty);           
+            string cleanedResult = MyRegex().Replace(result, string.Empty);           
             return cleanedResult;
 
 
@@ -546,5 +546,8 @@ namespace GCDTracker {
             foreach (var ogcd in toSlide)
                 abilityManager.ogcds.Remove(ogcd.Key);
         }
+
+        [GeneratedRegex("\x02.*?\x03")]
+        private static partial Regex MyRegex();
     }
 }
