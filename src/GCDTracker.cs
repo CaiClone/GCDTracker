@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using Dalamud.Game;
 using Dalamud.Hooking;
 using Dalamud.IoC;
@@ -7,11 +7,10 @@ using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Attributes;
 using GCDTracker.Data;
+using GCDTracker.UI;
 
-namespace GCDTracker
-{
-    public unsafe class GCDTracker : IDalamudPlugin
-    {
+namespace GCDTracker {
+    public unsafe class GCDTracker : IDalamudPlugin {
         [PluginService]
         private IDalamudPluginInterface PluginInterface { get; init; }
 
@@ -48,7 +47,8 @@ namespace GCDTracker
         private readonly Hook<HelperMethods.UseActionDelegate> UseActionHook;
         private readonly Hook<HelperMethods.ReceiveActionEffectDetour> ReceiveActionEffectHook;
 
-        private readonly GCDWheel gcd;
+        private  GCDHelper helper;
+        private  GCDDisplay gcd;
         private readonly ComboTracker ct;
 
         public GCDTracker() {
@@ -60,17 +60,20 @@ namespace GCDTracker
             ComboStore.Init(config);
 
             ui = new PluginUI(config);
-            gcd = new GCDWheel(config, Data);
+            helper = new GCDHelper(config, Data);
+            gcd = new GCDDisplay(config, Data, helper);
+    
             ct = new ComboTracker();
 
             ui.gcd = gcd;
+            ui.helper = helper;
             ui.ct = ct;
 
             PluginInterface.UiBuilder.Draw += ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi += OpenConfig;
             PluginInterface.UiBuilder.OpenMainUi += OpenConfig;
             Framework.Update += ct.Update;
-            Framework.Update += gcd.Update;
+            Framework.Update += helper.Update;
 
             commandManager = new PluginCommandManager<GCDTracker>(this, Commands);
 
@@ -82,7 +85,7 @@ namespace GCDTracker
 
         private byte UseActionDetour(ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp, nint a7) {
             var ret = UseActionHook.Original(actionManager, actionType, actionID, targetedActorID, param, useType, pvp, a7);
-            gcd.OnActionUse(ret, actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
+            helper.OnActionUse(ret, actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
             ct.OnActionUse(ret,actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
             return ret;
         }
@@ -92,7 +95,7 @@ namespace GCDTracker
             ReceiveActionEffectHook.Original(sourceActorID, sourceActor, vectorPosition, effectHeader, effectArray, effectTrail);
             var newLock = DataStore.Action->AnimationLock;
 
-            gcd.UpdateAnlock(oldLock, newLock);
+            helper.UpdateAnlock(oldLock, newLock);
         }
         private void OpenConfig() { config.configEnabled = true; }
 
@@ -116,7 +119,7 @@ namespace GCDTracker
             PluginInterface.UiBuilder.Draw -= ui.Draw;
             PluginInterface.UiBuilder.OpenConfigUi -= OpenConfig;
             Framework.Update -= ct.Update;
-            Framework.Update -= gcd.Update;
+            Framework.Update -= helper.Update;
         }
 
         public void Dispose() {

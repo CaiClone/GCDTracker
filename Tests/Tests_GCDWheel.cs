@@ -1,6 +1,7 @@
 using GCDTracker;
 using GCDTracker.Data;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Tests
@@ -97,19 +98,18 @@ namespace Tests
         }
         [TestMethod]
         public void Test_exact_slidegcd_end() {
-            GCDWheel wheel = new(null, null) {
-                ogcds = new()
-                {
-                    { 0, new AbilityTiming(0.35f, false) },
-                    { 0.5f, new AbilityTiming(0.64f, false) }
-                },
-                TotalGCD = 0.5f
-            };
-            wheel.SlideGCDs(0.5f, true);
+            var abilityManager = AbilityManager.Instance;
+            abilityManager.UpdateOGCDs(new Dictionary<float, AbilityManager.AbilityTiming>
+            {
+                { 0, new AbilityManager.AbilityTiming(0.35f, false) },
+                { 0.5f, new AbilityManager.AbilityTiming(0.64f, false) }
+            });
+            var helper = new GCDHelper(null, null);
+            helper.SlideGCDs(0.5f, true);
 
-            Assert.AreEqual(1, wheel.ogcds.Count);
-            Assert.AreEqual(0, wheel.ogcds.Keys.First());
-            Assert.AreEqual(new AbilityTiming(0.64f, false), wheel.ogcds.Values.First());
+            Assert.AreEqual(1, abilityManager.ogcds.Count);
+            Assert.AreEqual(0, abilityManager.ogcds.Keys.First());
+            Assert.AreEqual(new AbilityManager.AbilityTiming(0.64f, false), abilityManager.ogcds.Values.First());
         }
         [TestMethod]
         public void Test_additional_weaponskills() {

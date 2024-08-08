@@ -3,6 +3,7 @@ using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
+using GCDTracker.UI;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;

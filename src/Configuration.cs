@@ -328,14 +328,12 @@ namespace GCDTracker
                             }
                         }
                         ImGui.Checkbox("Show only when GCD running", ref ShowOnlyGCDRunning);
-                        if(ShowOnlyGCDRunning) {
-                            ImGui.SliderFloat("GCD Timeout (in seconds)", ref GCDTimeout, .2f, 4f);
+                        ImGui.SliderFloat("GCD Timeout (in seconds)", ref GCDTimeout, .2f, 4f);
                             if (ImGui.IsItemHovered()){
                                 ImGui.BeginTooltip();
                                 ImGui.Text("Controls the length of the GCD Timeout.");
                                 ImGui.EndTooltip();
                             }
-                        }
                         ImGui.Unindent();
                     }
                     ImGui.Checkbox("Show queue lock", ref QueueLockEnabled);
