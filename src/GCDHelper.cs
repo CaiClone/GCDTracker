@@ -348,9 +348,6 @@ namespace GCDTracker {
             string result = Encoding.UTF8.GetString(data);
             string cleanedResult = MyRegex().Replace(result, string.Empty);           
             return cleanedResult;
-
-
-
         }
 
         public void AddToQueue(Data.Action* act, bool isWeaponSkill) {
@@ -425,7 +422,7 @@ namespace GCDTracker {
             // Handle caster tax
             if (!isHardCast && HelperMethods.IsCasting() && DataStore.Action->TotalCastTime - 0.1f >= DataStore.Action->TotalGCD)
                 isHardCast = true;
-            checkABC = !abcBlocker && (idleTimerAccum >= (isHardCast ? (conf.abcDelay + 100) : conf.abcDelay));
+            checkABC = !abcBlocker && (idleTimerAccum >= (isHardCast ? (conf.abcDelay + 120) : conf.abcDelay));
             // Reset state after the GCDTimeout
             if (idleTimerAccum >= GCDTimeoutBuffer) {
                 checkABC = false;
