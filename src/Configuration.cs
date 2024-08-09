@@ -59,9 +59,9 @@ namespace GCDTracker
         //GCDBar
         public bool BarEnabled = false;
         [JsonIgnore]
+        public bool BarWindowMoveable = false;
         public bool BarQueueLockWhenIdle = true;
         public bool BarQueueLockSlide = false;
-        public bool BarWindowMoveable = false;
         public bool BarRollGCDs = true;
         public int BarBorderSizeInt = 2;
         public float BarWidthRatio = 0.9f;
