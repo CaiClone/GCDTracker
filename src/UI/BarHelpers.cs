@@ -181,10 +181,6 @@ namespace GCDTracker.UI {
         private static SlideCastEndVertices instance;
         public Vector2 TL_C { get; private set;}
 
-        public Vector2 BL_C { get; private set;}
-        public Vector2 BL_X { get; private set;}
-        public Vector2 BL_Y { get; private set;}
-
         public Vector2 BR_C { get; private set;}
         public Vector2 BR_X { get; private set;}
         public Vector2 BR_Y { get; private set;}
@@ -207,19 +203,6 @@ namespace GCDTracker.UI {
                 (int)(bar.CenterX + (go.Slide_Bar_End * bar.Width) - bar.HalfWidth),
                 (int)(bar.CenterY - bar.RawHalfHeight)
             );
-            
-            BL_C = new(
-                (int)(bar.CenterX + (go.Slide_Bar_End * bar.Width) - bar.HalfWidth),
-                (int)(bar.CenterY + bar.HalfHeight)
-            );
-            BL_X = new(
-                BL_C.X - bar.TriangleOffset,
-                BL_C.Y
-            );
-            BL_Y = new(
-                BL_C.X,
-                BL_C.Y - bar.TriangleOffset
-            );
 
             BR_C = new(
                 (int)(bar.CenterX + ((go.Slide_Bar_End + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth),
@@ -231,7 +214,7 @@ namespace GCDTracker.UI {
             );
             BR_Y = new(
                 BR_C.X,
-            BR_C.Y - (bar.TriangleOffset + 1)
+                BR_C.Y - (bar.TriangleOffset + 1)
             );
         }
     }
@@ -290,6 +273,42 @@ namespace GCDTracker.UI {
 
             BR_C = new(
                 (int)(bar.CenterX + ((go.Queue_Lock_Start + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth),
+                (int)(bar.CenterY + bar.HalfHeight)
+            );
+        }
+    }
+        public class QueuePingVertices {
+        private static QueuePingVertices instance;
+        public Vector2 TL_C { get; private set;}
+        public Vector2 TL_X { get; private set;}
+        public Vector2 TL_Y { get; private set;}
+
+        public Vector2 BR_C { get; private set;}
+
+        private QueuePingVertices() { }
+        public static QueuePingVertices Instance {
+            get {
+                instance ??= new QueuePingVertices();
+                return instance;
+            }
+        }
+
+        public void Update (BarInfo bar, BarDecisionHelper go) {
+            TL_C = new(                    
+                (int)(bar.CenterX + (go.Queue_Lock_Ping * bar.Width) - bar.HalfWidth),
+                (int)(bar.CenterY - bar.RawHalfHeight)
+            );
+            TL_X = new(
+                TL_C.X - bar.TriangleOffset, 
+                TL_C.Y
+            );
+            TL_Y = new(
+                TL_C.X, 
+                TL_C.Y + bar.TriangleOffset
+            );
+
+            BR_C = new(
+                (int)(bar.CenterX + ((go.Queue_Lock_Ping + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth),
                 (int)(bar.CenterY + bar.HalfHeight)
             );
         }

@@ -43,7 +43,10 @@ namespace GCDTracker {
     public class BarDecisionHelper {
         private static BarDecisionHelper instance;
         public bool Queue_VerticalBar { get; private set; }
-        public bool Queue_TopTriangle { get; private set; }
+        public bool Queue_LeftTriangle { get; private set; }
+        public bool Queue_RightTriangle { get; private set; }
+        public bool Ping_VerticalBar { get; private set; }
+        public bool Ping_Triangle { get; private set; }
         public bool SlideStart_VerticalBar { get; private set; }
         public bool SlideEnd_VerticalBar { get; private set; }
         public bool SlideStart_LeftTri { get; private set; }
@@ -52,7 +55,9 @@ namespace GCDTracker {
         public bool Slide_Background { get; private set; }
         public float Slide_Bar_Start { get; private set; }
         public float Slide_Bar_End { get; private set; }
-        public float Queue_Lock_Start { get; private set;}
+        public float Queue_Lock_Start { get; private set; }
+        public float Queue_Lock_Ping { get; private set; }
+        public bool Ping_Background { get; private set; }
         private float previousPos = 1f;
         static readonly float epsilon = 0.02f;
         
@@ -72,7 +77,7 @@ namespace GCDTracker {
         }
         public BarState currentState;
 
-        public void Update(BarInfo bar, Configuration conf, bool isRunning, PluginUI ui) {                
+        public void Update(BarInfo bar, Configuration conf, bool isRunning) {                
             if (bar.CurrentPos > (epsilon / bar.TotalBarTime) && bar.CurrentPos < previousPos - epsilon) {
                 // Reset
                 previousPos = 0f;
@@ -85,7 +90,8 @@ namespace GCDTracker {
                     if (bar.IsNonAbility) {
                         Queue_Lock_Start = 0f;
                         Queue_VerticalBar = false;
-                        Queue_TopTriangle = false;
+                        Queue_LeftTriangle = false;
+                        Queue_RightTriangle = false;
                         Slide_Bar_End = 1f;
                         currentState = BarState.NonAbilityCast;
                     }
@@ -102,7 +108,8 @@ namespace GCDTracker {
                 }
                 // Handle GCDBar
                 else if (!bar.IsCastBar && !bar.IsShortCast) {
-                    Queue_Lock_Start = 0.8f;
+                    Queue_Lock_Start = conf.PingCompensation ? Math.Max((bar.GCDTotal - 0.5f) / bar.GCDTotal, 0f) : 0.8f;
+                    Queue_Lock_Ping = Math.Max((bar.GCDTotal - 0.5f - conf.QueueLockPingOffset) / bar.GCDTotal, 0f);
                     currentState = BarState.GCDOnly;
                 }
             }
@@ -111,15 +118,12 @@ namespace GCDTracker {
             else if (!isRunning)
                 currentState = BarState.Idle;
 
-            ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -2f, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, 
-                bar.CurrentPos.ToString("F3") + " " + previousPos.ToString("F3") + " " + currentState.ToString());
-
             previousPos = Math.Max(previousPos, bar.CurrentPos);
             
             switch (currentState) {
                 case BarState.GCDOnly:
                     if (conf.QueueLockEnabled)
-                        HandleGCDOnly(bar, conf);
+                        HandleGCDOnly(bar, conf, conf.PingCompensation);
                     break;
 
                 case BarState.NonAbilityCast:
@@ -131,14 +135,14 @@ namespace GCDTracker {
                     if (conf.SlideCastEnabled)
                         HandleCastBarShort(bar, conf);
                     else if (conf.QueueLockEnabled)
-                        HandleGCDOnly(bar, conf);
+                        HandleGCDOnly(bar, conf, false);
                     break;
 
                 case BarState.LongCast:
                     if (conf.SlideCastEnabled)
                         HandleCastBarLong(bar, conf);
                     else if (conf.QueueLockEnabled)
-                        HandleGCDOnly(bar, conf);
+                        HandleGCDOnly(bar, conf, false);
                     break;
 
                 default:
@@ -147,16 +151,23 @@ namespace GCDTracker {
             }
         }
 
-        private void HandleGCDOnly(BarInfo bar, Configuration conf) {
+        private void HandleGCDOnly(BarInfo bar, Configuration conf, bool pingCompensation) {
             // draw lines
-            Queue_VerticalBar = true;                    
+            Queue_VerticalBar = true;
+            Ping_VerticalBar = pingCompensation;          
             
             // draw triangles
-            Queue_TopTriangle = conf.ShowQueuelockTriangles;
+            Queue_LeftTriangle = conf.ShowQueuelockTriangles && !pingCompensation;
+            Queue_RightTriangle = conf.ShowQueuelockTriangles;
+            Ping_Triangle = conf.ShowQueuelockTriangles && pingCompensation;
             
             // move lines
             if (conf.BarQueueLockSlide)
                 Queue_Lock_Start = Math.Max(Queue_Lock_Start, bar.CurrentPos);
+                Queue_Lock_Ping = Math.Max(Queue_Lock_Ping, Math.Min(bar.CurrentPos, Queue_Lock_Start));
+
+            // draw ping bar
+            Ping_Background = conf.QueueLockPingBackground && pingCompensation;
         }
 
         private void HandleNonAbilityCast(BarInfo bar, Configuration conf) {
@@ -184,7 +195,7 @@ namespace GCDTracker {
 
             // invoke Queuelock
             if (conf.QueueLockEnabled)
-                HandleGCDOnly(bar, conf);
+                HandleGCDOnly(bar, conf, false);
 
             // move lines
             Slide_Bar_Start = Math.Max(Slide_Bar_Start, Math.Min(bar.CurrentPos, Queue_Lock_Start));
@@ -204,7 +215,7 @@ namespace GCDTracker {
 
             // invoke Queuelock
             if (conf.QueueLockEnabled)
-                HandleGCDOnly(bar, conf);
+                HandleGCDOnly(bar, conf, false);
 
             // move lines
             Slide_Bar_Start = Math.Max(Slide_Bar_Start, bar.CurrentPos);
@@ -216,7 +227,13 @@ namespace GCDTracker {
         private void ResetBar(Configuration conf) {
             Queue_Lock_Start = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle ? 0.8f : 0f;
             Queue_VerticalBar = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle;
-            Queue_TopTriangle = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle && conf.ShowQueuelockTriangles;
+            Queue_LeftTriangle = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle && conf.ShowQueuelockTriangles;
+            Queue_RightTriangle = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle && conf.ShowQueuelockTriangles;
+
+            Queue_Lock_Ping = 0f;
+            Ping_Triangle = false;
+            Ping_VerticalBar = false;
+            Ping_Background = false;
 
             Slide_Bar_Start = 0f;
             Slide_Bar_End = 0f;

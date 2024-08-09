@@ -64,6 +64,8 @@ namespace GCDTracker
         public bool BarQueueLockSlide = false;
         public bool BarRollGCDs = true;
         public int BarBorderSizeInt = 2;
+        public int QueueLockPingOffsetInt = 0;
+        public float QueueLockPingOffset = 0f;
         public float BarWidthRatio = 0.9f;
         public float BarHeightRatio = 0.5f;
         public float BarGradientMul = 0.175f;
@@ -73,6 +75,9 @@ namespace GCDTracker
         public int BarBgGradMode = 3;
         public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
         public bool CastBarBoldText = false;
+        public bool PingCompensation = false;
+        public bool QueueLockPingBackground = false;
+        public Vector4 pingCol = new(0f, 0f, 0f, 0.4f);
         public bool SmoothProgressBar = false;
 
         //CastBar
@@ -91,6 +96,8 @@ namespace GCDTracker
         public Vector4 slideCol = new(0f, 0f, 0f, 0.4f);
         public int triangleSize = 6;
         public int CastBarTextInt = 11;
+        public int SlidecastDelayInt = 500;
+        public float SlidecastDelay = 0.5f;
         public float CastBarTextSize = 0.9f;
         public Vector3 CastBarTextColor = new(1f, 1f, 1f);
         public bool CastBarTextOutlineEnabled = true;
@@ -489,6 +496,8 @@ namespace GCDTracker
                                 }
                                 if(ShowAdvanced) {
                                     ImGui.Checkbox("Slidecast Covers End of Bar", ref SlideCastFullBar);
+                                    ImGui.SliderInt("Slidecast Time (in milliseconds)", ref SlidecastDelayInt, 400, 600);
+                                    SlidecastDelay = SlidecastDelayInt / 1000f;
                                     ImGui.Checkbox("Show Slidecast Triangles", ref ShowSlidecastTriangles);
                                     if (ShowSlidecastTriangles) {
                                         ImGui.Indent();
@@ -552,8 +561,17 @@ namespace GCDTracker
                 }
                 if (ImGui.BeginTabItem("Advanced")) {
                     ImGui.Checkbox("Show Advanced Configuration Options", ref ShowAdvanced);
-                    if (ShowAdvanced)
+                    if (ShowAdvanced) {
                         ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
+                        ImGui.Checkbox("Enable QL Ping Compensation", ref PingCompensation);
+                        if (PingCompensation) {
+                            ImGui.SliderInt("Ping Time (in milliseconds)", ref QueueLockPingOffsetInt, 0, 400);
+                            ImGui.Checkbox("Color QL Ping Background", ref QueueLockPingBackground);
+                            if (QueueLockPingBackground)
+                                ImGui.ColorEdit4("QL Ping Bar Color", ref pingCol, ImGuiColorEditFlags.NoInputs);
+                            QueueLockPingOffset = QueueLockPingOffsetInt / 1000f;
+                        }
+                    }
                     ImGui.EndTabItem();
                 }
             }

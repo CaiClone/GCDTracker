@@ -85,14 +85,13 @@ namespace GCDTracker {
             float castElapsed = DataStore.Action->ElapsedCastTime;
             float castbarProgress = castElapsed / castTotal;
             float castbarEnd = 1f;
-            float slidecastOffset = 0.5f;
-            float slidecastStart = Math.Max((castTotal - slidecastOffset) / castTotal, 0f);
+            float slidecastStart = Math.Max((castTotal - conf.SlidecastDelay) / castTotal, 0f);
             float slidecastEnd = castbarEnd;
 
             // handle short casts
             if (gcdTotal > castTotal) {
                 castbarEnd = castTotal / gcdTotal;
-                slidecastStart = Math.Max((castTotal - slidecastOffset) / gcdTotal, 0f);
+                slidecastStart = Math.Max((castTotal - conf.SlidecastDelay) / gcdTotal, 0f);
                 slidecastEnd = conf.SlideCastFullBar ? 1f : castbarEnd;
             }
 
@@ -144,13 +143,15 @@ namespace GCDTracker {
             );
 
             var go = BarDecisionHelper.Instance;
-            go.Update(bar, conf, helper.isRunning, ui);
+            go.Update(bar, conf, helper.isRunning);
             var sc_sv = SlideCastStartVertices.Instance;
             sc_sv.Update(bar, go);
             var sc_ev = SlideCastEndVertices.Instance;
             sc_ev.Update(bar, go);
             var ql_v = QueueLockVertices.Instance;
             ql_v.Update (bar, go);
+            var qp_v = QueuePingVertices.Instance;
+            qp_v.Update (bar, go);    
 
             float barGCDClipTime = 0;
             
@@ -222,7 +223,7 @@ namespace GCDTracker {
             //in both modes:
             //draw the queuelock (if enabled)
             if (conf.QueueLockEnabled)
-                DrawQueueLock(ui, ql_v, go);
+                DrawQueueLock(ui, ql_v, qp_v, go);
 
             // in both modes:
             // draw borders
@@ -274,15 +275,25 @@ namespace GCDTracker {
                 ui.DrawRightTriangle(sc_ev.BR_C, sc_ev.BR_X, sc_ev.BR_Y, conf.backColBorder);
         }
 
-        private void DrawQueueLock(PluginUI ui, QueueLockVertices ql_v, BarDecisionHelper go) {
-            //top triangle
-            if (go.Queue_TopTriangle) {
-                ui.DrawRightTriangle(ql_v.TL_C, ql_v.TL_X, ql_v.TL_Y, conf.backColBorder);
-                ui.DrawRightTriangle(ql_v.TR_C, ql_v.TR_X, ql_v.TR_Y, conf.backColBorder);
-            }
-            //vertical bar
+        private void DrawQueueLock(PluginUI ui, QueueLockVertices ql_v, QueuePingVertices qp_v, BarDecisionHelper go) {
+            // draw ping bar
+            if (go.Ping_Background)
+                ui.DrawRectFilledNoAA(qp_v.TL_C, ql_v.BR_C, conf.pingCol);
+            //queue vertical bar
             if (go.Queue_VerticalBar)
-            ui.DrawRectFilledNoAA(ql_v.TL_C, ql_v.BR_C, conf.backColBorder); 
+                ui.DrawRectFilledNoAA(ql_v.TL_C, ql_v.BR_C, conf.backColBorder); 
+            //ping vertical bar
+            if (go.Ping_VerticalBar)
+                ui.DrawRectFilledNoAA(qp_v.TL_C, qp_v.BR_C, conf.backColBorder); 
+            //queue left triangle
+            if (go.Queue_LeftTriangle)
+                ui.DrawRightTriangle(ql_v.TL_C, ql_v.TL_X, ql_v.TL_Y, conf.backColBorder);
+            //queue right triangle
+            if (go.Queue_RightTriangle)
+                ui.DrawRightTriangle(ql_v.TR_C, ql_v.TR_X, ql_v.TR_Y, conf.backColBorder);
+            //ping right triangle
+            if (go.Ping_Triangle)
+                ui.DrawRightTriangle(qp_v.TL_C, qp_v.TL_X, qp_v.TL_Y, conf.backColBorder);
         }
     }
 }
