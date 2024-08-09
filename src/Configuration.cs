@@ -73,7 +73,7 @@ namespace GCDTracker
         public int BarBgGradMode = 3;
         public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
         public bool CastBarBoldText = false;
-
+        public bool SmoothProgressBar = false;
 
         //CastBar
         public bool CastBarEnabled = false;
@@ -438,6 +438,7 @@ namespace GCDTracker
                         BarWidthRatio = size.X;
                         BarHeightRatio = size.Y;
                         if (ShowAdvanced) {
+                            ImGui.Checkbox("Enable Progress Bar Smoothing", ref SmoothProgressBar);
                             ImGui.Checkbox("Enable GCDBar Gradient", ref BarHasGradient);
                             if (BarHasGradient) {
                                 ImGui.Indent();

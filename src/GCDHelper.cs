@@ -72,10 +72,8 @@ namespace GCDTracker {
         }
         public BarState currentState;
 
-        public void Update(BarInfo bar, Configuration conf, bool isRunning) {                
-            // 2.5f == ~default GCD, this equation serves to normalize the time until the bar markers appear,
-            // so that long casts (4.8s) don't take a long time to appear on the bar
-            if (bar.CurrentPos > (2.5f * epsilon / bar.TotalBarTime) && bar.CurrentPos < previousPos - epsilon) {
+        public void Update(BarInfo bar, Configuration conf, bool isRunning, PluginUI ui) {                
+            if (bar.CurrentPos > (epsilon / bar.TotalBarTime) && bar.CurrentPos < previousPos - epsilon) {
                 // Reset
                 previousPos = 0f;
                 ResetBar(conf);
@@ -112,6 +110,9 @@ namespace GCDTracker {
             // Idle State
             else if (!isRunning)
                 currentState = BarState.Idle;
+
+            ui.DrawDebugText((conf.BarWidthRatio + 1) / 2.1f, -2f, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, 
+                bar.CurrentPos.ToString("F3") + " " + previousPos.ToString("F3") + " " + currentState.ToString());
 
             previousPos = Math.Max(previousPos, bar.CurrentPos);
             

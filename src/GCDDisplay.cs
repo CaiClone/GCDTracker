@@ -133,6 +133,7 @@ namespace GCDTracker {
                 conf.BarHeightRatio,
                 conf.BarBorderSizeInt,
                 castBarCurrentPos,
+                conf.SmoothProgressBar,
                 gcdTime_slidecastStart, 
                 gcdTotal_slidecastEnd,
                 totalBarTime,
@@ -143,7 +144,7 @@ namespace GCDTracker {
             );
 
             var go = BarDecisionHelper.Instance;
-            go.Update(bar, conf, helper.isRunning);
+            go.Update(bar, conf, helper.isRunning, ui);
             var sc_sv = SlideCastStartVertices.Instance;
             sc_sv.Update(bar, go);
             var sc_ev = SlideCastEndVertices.Instance;

@@ -4,31 +4,32 @@ using GCDTracker.Data;
 namespace GCDTracker.UI {
     public unsafe class BarInfo {
         private static BarInfo instance;
-        public float CenterX { get; private set;}
-        public float CenterY { get; private set;}
-        public int Width { get; private set;}
-        public int HalfWidth { get; private set;}
-        public int RawHalfWidth { get; private set;}
-        public int Height { get; private set;}
-        public int HalfHeight { get; private set;}
-        public int RawHalfHeight { get; private set;}
-        public int BorderSize { get; private set;}
-        public int HalfBorderSize { get; private set;}
-        public int BorderSizeAdj { get; private set;}
-        public float BorderWidthPercent { get; private set;}
-        public float CurrentPos { get; private set;}
-        public float GCDTime_SlidecastStart { get; private set;} 
-        public float GCDTotal_SlidecastEnd { get; private set;}
+        public float CenterX { get; private set; }
+        public float CenterY { get; private set; }
+        public int Width { get; private set; }
+        public int HalfWidth { get; private set; }
+        public int RawHalfWidth { get; private set; }
+        public int Height { get; private set; }
+        public int HalfHeight { get; private set; }
+        public int RawHalfHeight { get; private set; }
+        public int BorderSize { get; private set; }
+        public int HalfBorderSize { get; private set; }
+        public int BorderSizeAdj { get; private set; }
+        public float BorderWidthPercent { get; private set; }
+        public float CurrentPos { get; private set; }
+        public float SmoothedPos { get; private set; }
+        public float GCDTime_SlidecastStart { get; private set; }
+        public float GCDTotal_SlidecastEnd { get; private set; }
         public float TotalBarTime { get; private set; }
-        public float GCDTotal { get; private set;}
-        public float CastTotal { get; private set;}
-        public int TriangleOffset { get; private set;}
-        public bool IsCastBar { get; private set;} 
-        public bool IsShortCast { get; private set;} 
-        public bool IsNonAbility { get; private set;}
-        public Vector2 StartVertex { get; private set;}
-        public Vector2 EndVertex { get; private set;}
-        public Vector2 ProgressVertex { get; private set;}
+        public float GCDTotal { get; private set; }
+        public float CastTotal { get; private set; }
+        public int TriangleOffset { get; private set; }
+        public bool IsCastBar { get; private set; }
+        public bool IsShortCast { get; private set; }
+        public bool IsNonAbility { get; private set; }
+        public Vector2 StartVertex { get; private set; }
+        public Vector2 EndVertex { get; private set; }
+        public Vector2 ProgressVertex { get; private set; }
 
         private BarInfo() { }
         public static BarInfo Instance {
@@ -38,20 +39,21 @@ namespace GCDTracker.UI {
             }
         }
 
-        public void Update (
-            float sizeX, 
-            float centX, 
-            float widthRatio, 
-            float sizeY, 
-            float centY, 
-            float heightRatio, 
+        public void Update(
+            float sizeX,
+            float centX,
+            float widthRatio,
+            float sizeY,
+            float centY,
+            float heightRatio,
             int borderSize,
             float castBarCurrentPos,
-            float gcdTime_slidecastStart, 
+            bool enableSmoothing,
+            float gcdTime_slidecastStart,
             float gcdTotal_slidecastEnd,
             float totalBarTime,
             int triangleOffset,
-            bool isCastBar, 
+            bool isCastBar,
             bool isShortCast,
             bool isNonAbility) {
 
@@ -67,7 +69,20 @@ namespace GCDTracker.UI {
             HalfBorderSize = BorderSize % 2 == 0 ? (BorderSize / 2) : (BorderSize / 2) + 1;
             BorderSizeAdj = BorderSize >= 1 ? BorderSize : 1;
             BorderWidthPercent = (float)BorderSizeAdj / (float)Width;
-            CurrentPos = castBarCurrentPos;
+
+            if (castBarCurrentPos == 0) {
+                SmoothedPos = 0;
+            }
+            else {
+                float p0 = CurrentPos;
+                float p1 = CurrentPos + 3 / 4 * (castBarCurrentPos - CurrentPos);
+                float p2 = CurrentPos + 9 / 10 * (castBarCurrentPos - CurrentPos);
+                float p3 = castBarCurrentPos;
+
+                SmoothedPos = enableSmoothing ? BezierCurve(0.8f, p0, p1, p2, p3) : castBarCurrentPos;
+            }
+
+            CurrentPos = SmoothedPos;
             GCDTime_SlidecastStart = gcdTime_slidecastStart;
             GCDTotal_SlidecastEnd = gcdTotal_slidecastEnd;
             TotalBarTime = totalBarTime;
@@ -77,18 +92,29 @@ namespace GCDTracker.UI {
             IsNonAbility = isNonAbility;
             GCDTotal = DataStore.Action->TotalGCD;
             CastTotal = DataStore.Action->TotalCastTime;
+
             StartVertex = new(
-                (int)(CenterX - RawHalfWidth), 
+                (int)(CenterX - RawHalfWidth),
                 (int)(CenterY - RawHalfHeight)
             );
             EndVertex = new(
-                (int)(CenterX + HalfWidth), 
+                (int)(CenterX + HalfWidth),
                 (int)(CenterY + HalfHeight)
             );
             ProgressVertex = new(
                 (int)(CenterX + ((CurrentPos + BorderWidthPercent) * Width) - HalfWidth),
                 (int)(CenterY + HalfHeight)
             );
+        }
+
+        private float BezierCurve(float t, float p0, float p1, float p2, float p3) {
+            float u = 1 - t;
+            float tt = t * t;
+            float uu = u * u;
+            float uuu = uu * u;
+            float ttt = tt * t;
+
+            return (uuu * p0) + (3 * uu * t * p1) + (3 * u * tt * p2) + (ttt * p3);
         }
     }
 

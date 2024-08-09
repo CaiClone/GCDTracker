@@ -337,5 +337,29 @@ namespace GCDTracker.UI {
             draw.AddRect(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None, thickness);
             draw.Flags = originalFlags;
         }
+        public void DrawDebugText(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol, string debugText) {
+            ImGui.PushFont(UiBuilder.MonoFont);
+            ImGui.SetWindowFontScale(textSize);
+
+            var textSz = ImGui.CalcTextSize(debugText);
+            var textStartPos =
+                w_cent
+                - (w_size / 2)
+                + new Vector2(w_size.X * relx, w_size.Y * rely)
+                - (textSz / 2);
+            var padding = new Vector2(10, 5) * textSize;
+
+            draw.AddRectFilled(
+                textStartPos - padding,
+                textStartPos + textSz + padding,
+                ImGui.GetColorU32(backCol), 10f);
+            draw.AddText(
+                textStartPos,
+                ImGui.GetColorU32(textCol),
+                debugText);
+
+            ImGui.SetWindowFontScale(1f);
+            ImGui.PopFont();
+        }
     }
 }
