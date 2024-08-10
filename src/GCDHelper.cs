@@ -285,6 +285,13 @@ namespace GCDTracker {
                 queuedAbilityName = GetAbilityName(actionID, DataStore.ClientState.LocalPlayer.CastActionType);
             } else {
                 queuedAbilityName = " ";
+                
+                // this triggers for me whenever I press a button on my bard, reguardless of 
+                // the outcome of the action.  If it was too early to queue a skill at all,
+                // and the action fails, this still triggers and clears all of the animation
+                // locks from my AbilityManager dictionary resulting in an empty bar.
+                // is this intended or a bug?
+                
                 if (isWeaponSkill) {
                     EndCurrentGCD(TotalGCD);
                     //Store GCD in a variable in order to cache it when it goes back to 0

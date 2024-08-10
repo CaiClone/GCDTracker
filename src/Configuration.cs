@@ -74,7 +74,6 @@ namespace GCDTracker
         public int BarGradMode = 2;
         public int BarBgGradMode = 3;
         public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
-        public bool CastBarBoldText = false;
 
         //CastBar
         public bool CastBarEnabled = false;
@@ -101,6 +100,7 @@ namespace GCDTracker
         public int castTimePosition = 0;
         public int OutlineThicknessInt = 10;
         public float OutlineThickness = 1f;
+        public bool CastBarBoldText = false;
 
         //Combo
         public bool ComboEnabled = false;
@@ -511,7 +511,7 @@ namespace GCDTracker
                             ImGui.Checkbox("\"Bold\" Castbar Text", ref CastBarBoldText);
                             ImGui.Checkbox("Show Next Spell When Queued", ref CastBarShowQueuedSpell);
                             ImGui.SliderInt("Spell Name/Time Text Size", ref CastBarTextInt, 6, 18);
-                                CastBarTextSize = CastBarTextInt / 12f;
+                            CastBarTextSize = CastBarTextInt / 12f;
                             if (ShowAdvanced) {
                                 ImGui.Checkbox("Enable Text Outline:", ref CastBarTextOutlineEnabled);
                                     if (CastBarTextOutlineEnabled) {
@@ -559,7 +559,7 @@ namespace GCDTracker
                     if (ShowAdvanced) {
                         ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
                         ImGui.SliderInt("Ping Compensation (in ms)", ref QueueLockPingOffsetInt, 0, 600);
-                            QueueLockPingOffset = QueueLockPingOffsetInt / 1000f;
+                        QueueLockPingOffset = QueueLockPingOffsetInt / 1000f;
                     }
                     ImGui.EndTabItem();
                 }
