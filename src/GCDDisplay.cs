@@ -148,9 +148,7 @@ namespace GCDTracker {
             var sc_ev = SlideCastEndVertices.Instance;
             sc_ev.Update(bar, go);
             var ql_v = QueueLockVertices.Instance;
-            ql_v.Update (bar, go);
-            var qp_v = QueuePingVertices.Instance;
-            qp_v.Update (bar, go);    
+            ql_v.Update (bar, go); 
 
             float barGCDClipTime = 0;
             
@@ -203,7 +201,7 @@ namespace GCDTracker {
                     );
                     Vector2 oGCDEndVector = new(
                         (int)(bar.CenterX + ((ogcdEnd / gcdTotal) * bar.Width) - bar.HalfWidth),
-                        (int)(bar.CenterY + bar.RawHalfHeight)
+                        (int)(bar.CenterY + bar.HalfHeight)
                     );
 
                     ui.DrawRectFilledNoAA(oGCDStartVector, oGCDEndVector, isClipping ? conf.clipCol : conf.anLockCol);
@@ -222,7 +220,7 @@ namespace GCDTracker {
             //in both modes:
             //draw the queuelock (if enabled)
             if (conf.QueueLockEnabled)
-                DrawQueueLock(ui, ql_v, qp_v, go);
+                DrawQueueLock(ui, ql_v, go);
 
             // in both modes:
             // draw borders
@@ -240,11 +238,6 @@ namespace GCDTracker {
             Vector2 spellNamePos = new(ui.w_cent.X - ((float)barWidth / 2.05f), ui.w_cent.Y);
             Vector2 spellTimePos = new(ui.w_cent.X + ((float)barWidth / 2.05f), ui.w_cent.Y);
 
-            // probably better to move the check for conf.EnableCastText to 
-            // happen before we query the text contents from the game,
-            // but I put it here for now so that we'd be "ready" if someone
-            // was playing with the checkbox while casting (e.g. there'd be stuff
-            // to draw right away)
             if (conf.EnableCastText) {
                 if (!string.IsNullOrEmpty(abilityName))
                     ui.DrawCastBarText(abilityName, combinedText, spellNamePos, conf.CastBarTextSize, false);
@@ -274,25 +267,15 @@ namespace GCDTracker {
                 ui.DrawRightTriangle(sc_ev.BR_C, sc_ev.BR_X, sc_ev.BR_Y, conf.backColBorder);
         }
 
-        private void DrawQueueLock(PluginUI ui, QueueLockVertices ql_v, QueuePingVertices qp_v, BarDecisionHelper go) {
-            // draw ping bar
-            if (go.Ping_Background)
-                ui.DrawRectFilledNoAA(qp_v.TL_C, ql_v.BR_C, conf.pingCol);
+        private void DrawQueueLock(PluginUI ui, QueueLockVertices ql_v, BarDecisionHelper go) {
             //queue vertical bar
             if (go.Queue_VerticalBar)
                 ui.DrawRectFilledNoAA(ql_v.TL_C, ql_v.BR_C, conf.backColBorder); 
-            //ping vertical bar
-            if (go.Ping_VerticalBar)
-                ui.DrawRectFilledNoAA(qp_v.TL_C, qp_v.BR_C, conf.backColBorder); 
-            //queue left triangle
-            if (go.Queue_LeftTriangle)
+            //queue triangle
+            if (go.Queue_Triangle) {
                 ui.DrawRightTriangle(ql_v.TL_C, ql_v.TL_X, ql_v.TL_Y, conf.backColBorder);
-            //queue right triangle
-            if (go.Queue_RightTriangle)
                 ui.DrawRightTriangle(ql_v.TR_C, ql_v.TR_X, ql_v.TR_Y, conf.backColBorder);
-            //ping right triangle
-            if (go.Ping_Triangle)
-                ui.DrawRightTriangle(qp_v.TL_C, qp_v.TL_X, qp_v.TL_Y, conf.backColBorder);
+            }
         }
     }
 }

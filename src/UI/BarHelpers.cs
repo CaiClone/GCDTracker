@@ -1,3 +1,4 @@
+using System;
 using System.Numerics;
 using GCDTracker.Data;
 
@@ -116,8 +117,7 @@ namespace GCDTracker.UI {
         public void Update (BarInfo bar, BarDecisionHelper go) {
             int rightClamp = (int)(bar.CenterX + ((go.Slide_Bar_Start + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth);
                 rightClamp += bar.TriangleOffset + 1;
-            if (rightClamp >= bar.EndVertex.X)
-                rightClamp = (int)bar.EndVertex.X;
+                rightClamp = Math.Min(rightClamp, (int)bar.EndVertex.X);
             
             TL_C = new(                    
                 (int)(bar.CenterX + (go.Slide_Bar_Start * bar.Width) - bar.HalfWidth),
@@ -171,8 +171,7 @@ namespace GCDTracker.UI {
         public void Update (BarInfo bar, BarDecisionHelper go) {
             int rightClamp = (int)(bar.CenterX + ((go.Slide_Bar_End + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth);
                 rightClamp += bar.TriangleOffset + 1;
-            if (rightClamp >= bar.EndVertex.X)
-                rightClamp = (int)bar.EndVertex.X;
+                rightClamp = Math.Min(rightClamp, (int)bar.EndVertex.X);
             
             TL_C = new(                    
                 (int)(bar.CenterX + (go.Slide_Bar_End * bar.Width) - bar.HalfWidth),
@@ -217,8 +216,7 @@ namespace GCDTracker.UI {
         public void Update (BarInfo bar, BarDecisionHelper go) {
             int rightClamp = (int)(bar.CenterX + ((go.Queue_Lock_Start + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth);
                 rightClamp += bar.TriangleOffset + 1;
-            if (rightClamp >= bar.EndVertex.X)
-                rightClamp = (int)bar.EndVertex.X;
+                rightClamp = Math.Min(rightClamp, (int)bar.EndVertex.X);
             
             TL_C = new(                    
                 (int)(bar.CenterX + (go.Queue_Lock_Start * bar.Width) - bar.HalfWidth),
@@ -248,43 +246,6 @@ namespace GCDTracker.UI {
 
             BR_C = new(
                 (int)(bar.CenterX + ((go.Queue_Lock_Start + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth),
-                (int)(bar.CenterY + bar.HalfHeight)
-            );
-        }
-    }
-
-        public class QueuePingVertices {
-        private static QueuePingVertices instance;
-        public Vector2 TL_C { get; private set;}
-        public Vector2 TL_X { get; private set;}
-        public Vector2 TL_Y { get; private set;}
-
-        public Vector2 BR_C { get; private set;}
-
-        private QueuePingVertices() { }
-        public static QueuePingVertices Instance {
-            get {
-                instance ??= new QueuePingVertices();
-                return instance;
-            }
-        }
-
-        public void Update (BarInfo bar, BarDecisionHelper go) {
-            TL_C = new(                    
-                (int)(bar.CenterX + (go.Queue_Lock_Ping * bar.Width) - bar.HalfWidth),
-                (int)(bar.CenterY - bar.RawHalfHeight)
-            );
-            TL_X = new(
-                TL_C.X - bar.TriangleOffset, 
-                TL_C.Y
-            );
-            TL_Y = new(
-                TL_C.X, 
-                TL_C.Y + bar.TriangleOffset
-            );
-
-            BR_C = new(
-                (int)(bar.CenterX + ((go.Queue_Lock_Ping + bar.BorderWidthPercent) * bar.Width) - bar.HalfWidth),
                 (int)(bar.CenterY + bar.HalfHeight)
             );
         }

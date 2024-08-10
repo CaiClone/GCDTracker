@@ -1,6 +1,7 @@
 using Dalamud.Game;
 using Dalamud.Logging;
 using Dalamud.Plugin.Services;
+using Dalamud.Game.ClientState.Objects.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
 using GCDTracker.UI;
@@ -18,9 +19,6 @@ using System.Text.RegularExpressions;
 [assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker {
     public class AbilityManager {
-        // Not sure if I like moving this here or not, but it seemed like if we
-        // were going to have an AbilityManager class it made sense to move it
-        // what do you think?
         public record AbilityTiming(float AnimationLock, bool IsCasted);
         private static AbilityManager instance;
         public Dictionary<float, AbilityTiming> ogcds { get; private set; }
@@ -43,21 +41,17 @@ namespace GCDTracker {
     public class BarDecisionHelper {
         private static BarDecisionHelper instance;
         public bool Queue_VerticalBar { get; private set; }
-        public bool Queue_LeftTriangle { get; private set; }
-        public bool Queue_RightTriangle { get; private set; }
-        public bool Ping_VerticalBar { get; private set; }
-        public bool Ping_Triangle { get; private set; }
+        public bool Queue_Triangle { get; private set; }
         public bool SlideStart_VerticalBar { get; private set; }
         public bool SlideEnd_VerticalBar { get; private set; }
         public bool SlideStart_LeftTri { get; private set; }
         public bool SlideStart_RightTri { get; private set; }
         public bool SlideEnd_RightTri { get; private set; }
         public bool Slide_Background { get; private set; }
+        public float Queue_Lock_Start { get; private set; }
         public float Slide_Bar_Start { get; private set; }
         public float Slide_Bar_End { get; private set; }
-        public float Queue_Lock_Start { get; private set; }
-        public float Queue_Lock_Ping { get; private set; }
-        public bool Ping_Background { get; private set; }
+
         private float previousPos = 1f;
         static readonly float epsilon = 0.02f;
         
@@ -90,8 +84,7 @@ namespace GCDTracker {
                     if (bar.IsNonAbility) {
                         Queue_Lock_Start = 0f;
                         Queue_VerticalBar = false;
-                        Queue_LeftTriangle = false;
-                        Queue_RightTriangle = false;
+                        Queue_Triangle = false;
                         Slide_Bar_End = 1f;
                         currentState = BarState.NonAbilityCast;
                     }
@@ -108,8 +101,7 @@ namespace GCDTracker {
                 }
                 // Handle GCDBar
                 else if (!bar.IsCastBar && !bar.IsShortCast) {
-                    Queue_Lock_Start = conf.PingCompensation ? Math.Max((bar.GCDTotal - 0.5f) / bar.GCDTotal, 0f) : 0.8f;
-                    Queue_Lock_Ping = Math.Max((bar.GCDTotal - 0.5f - conf.QueueLockPingOffset) / bar.GCDTotal, 0f);
+                    Queue_Lock_Start = Math.Max((bar.GCDTotal - 0.5f - conf.QueueLockPingOffset) / bar.GCDTotal, 0f);
                     currentState = BarState.GCDOnly;
                 }
             }
@@ -123,7 +115,7 @@ namespace GCDTracker {
             switch (currentState) {
                 case BarState.GCDOnly:
                     if (conf.QueueLockEnabled)
-                        HandleGCDOnly(bar, conf, conf.PingCompensation);
+                        HandleGCDOnly(bar, conf);
                     break;
 
                 case BarState.NonAbilityCast:
@@ -135,14 +127,14 @@ namespace GCDTracker {
                     if (conf.SlideCastEnabled)
                         HandleCastBarShort(bar, conf);
                     else if (conf.QueueLockEnabled)
-                        HandleGCDOnly(bar, conf, false);
+                        HandleGCDOnly(bar, conf);
                     break;
 
                 case BarState.LongCast:
                     if (conf.SlideCastEnabled)
                         HandleCastBarLong(bar, conf);
                     else if (conf.QueueLockEnabled)
-                        HandleGCDOnly(bar, conf, false);
+                        HandleGCDOnly(bar, conf);
                     break;
 
                 default:
@@ -151,23 +143,16 @@ namespace GCDTracker {
             }
         }
 
-        private void HandleGCDOnly(BarInfo bar, Configuration conf, bool pingCompensation) {
-            // draw lines
-            Queue_VerticalBar = true;
-            Ping_VerticalBar = pingCompensation;          
-            
+        private void HandleGCDOnly(BarInfo bar, Configuration conf) {
+            // draw line
+            Queue_VerticalBar = true;      
+
             // draw triangles
-            Queue_LeftTriangle = conf.ShowQueuelockTriangles && !pingCompensation;
-            Queue_RightTriangle = conf.ShowQueuelockTriangles;
-            Ping_Triangle = conf.ShowQueuelockTriangles && pingCompensation;
-            
+            Queue_Triangle = conf.ShowQueuelockTriangles;
+
             // move lines
             if (conf.BarQueueLockSlide)
                 Queue_Lock_Start = Math.Max(Queue_Lock_Start, bar.CurrentPos);
-                Queue_Lock_Ping = Math.Max(Queue_Lock_Ping, Math.Min(bar.CurrentPos, Queue_Lock_Start));
-
-            // draw ping bar
-            Ping_Background = conf.QueueLockPingBackground && pingCompensation;
         }
 
         private void HandleNonAbilityCast(BarInfo bar, Configuration conf) {
@@ -195,7 +180,7 @@ namespace GCDTracker {
 
             // invoke Queuelock
             if (conf.QueueLockEnabled)
-                HandleGCDOnly(bar, conf, false);
+                HandleGCDOnly(bar, conf);
 
             // move lines
             Slide_Bar_Start = Math.Max(Slide_Bar_Start, Math.Min(bar.CurrentPos, Queue_Lock_Start));
@@ -206,7 +191,7 @@ namespace GCDTracker {
         }
 
         private void HandleCastBarLong(BarInfo bar, Configuration conf) {
-            //draw lines
+            //draw line
             SlideStart_VerticalBar = true;
             
             // draw triangles
@@ -215,25 +200,22 @@ namespace GCDTracker {
 
             // invoke Queuelock
             if (conf.QueueLockEnabled)
-                HandleGCDOnly(bar, conf, false);
+                HandleGCDOnly(bar, conf);
 
             // move lines
             Slide_Bar_Start = Math.Max(Slide_Bar_Start, bar.CurrentPos);
+            Queue_Lock_Start = Math.Max(Queue_Lock_Start, Math.Min(bar.CurrentPos, Slide_Bar_Start));
 
             // draw slidecast bar
             Slide_Background = conf.SlideCastBackground;                
         }
 
         private void ResetBar(Configuration conf) {
-            Queue_Lock_Start = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle ? 0.8f : 0f;
+            Queue_Lock_Start = (conf.QueueLockEnabled && conf.BarQueueLockWhenIdle)
+                ? Math.Max((2f - conf.QueueLockPingOffset) / 2.5f, 0f)
+                : 0f;
             Queue_VerticalBar = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle;
-            Queue_LeftTriangle = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle && conf.ShowQueuelockTriangles;
-            Queue_RightTriangle = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle && conf.ShowQueuelockTriangles;
-
-            Queue_Lock_Ping = 0f;
-            Ping_Triangle = false;
-            Ping_VerticalBar = false;
-            Ping_Background = false;
+            Queue_Triangle = Queue_VerticalBar && conf.ShowQueuelockTriangles;
 
             Slide_Bar_Start = 0f;
             Slide_Bar_End = 0f;
@@ -333,11 +315,12 @@ namespace GCDTracker {
                     return mount != null ? CapitalizeOutput(mount.Singular) : "Unknown Mount";
 
                 default:
-                    var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind.ToString();
+                    var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind;
                     return objectKind switch
                     {
-                        "Aetheryte" => "Attuning...",
-                        "EventObj" or "EventNpc" => "Interacting...",
+                        ObjectKind.Aetheryte => "Attuning...",
+                        ObjectKind.EventObj => "Interacting...",
+                        ObjectKind.EventNpc => "Interacting...",
                         _ => "..."
                     };
             }

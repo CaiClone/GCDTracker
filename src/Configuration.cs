@@ -75,9 +75,6 @@ namespace GCDTracker
         public int BarBgGradMode = 3;
         public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
         public bool CastBarBoldText = false;
-        public bool PingCompensation = false;
-        public bool QueueLockPingBackground = false;
-        public Vector4 pingCol = new(0f, 0f, 0f, 0.4f);
 
         //CastBar
         public bool CastBarEnabled = false;
@@ -561,14 +558,8 @@ namespace GCDTracker
                     ImGui.Checkbox("Show Advanced Configuration Options", ref ShowAdvanced);
                     if (ShowAdvanced) {
                         ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
-                        ImGui.Checkbox("Enable QL Ping Compensation", ref PingCompensation);
-                        if (PingCompensation) {
-                            ImGui.SliderInt("Ping Time (in milliseconds)", ref QueueLockPingOffsetInt, 0, 400);
-                            ImGui.Checkbox("Color QL Ping Background", ref QueueLockPingBackground);
-                            if (QueueLockPingBackground)
-                                ImGui.ColorEdit4("QL Ping Bar Color", ref pingCol, ImGuiColorEditFlags.NoInputs);
+                        ImGui.SliderInt("Ping Compensation (in ms)", ref QueueLockPingOffsetInt, 0, 600);
                             QueueLockPingOffset = QueueLockPingOffsetInt / 1000f;
-                        }
                     }
                     ImGui.EndTabItem();
                 }
