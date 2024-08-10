@@ -17,7 +17,6 @@ namespace GCDTracker.UI {
         public int BorderSizeAdj { get; private set; }
         public float BorderWidthPercent { get; private set; }
         public float CurrentPos { get; private set; }
-        public float SmoothedPos { get; private set; }
         public float GCDTime_SlidecastStart { get; private set; }
         public float GCDTotal_SlidecastEnd { get; private set; }
         public float TotalBarTime { get; private set; }
@@ -48,7 +47,6 @@ namespace GCDTracker.UI {
             float heightRatio,
             int borderSize,
             float castBarCurrentPos,
-            bool enableSmoothing,
             float gcdTime_slidecastStart,
             float gcdTotal_slidecastEnd,
             float totalBarTime,
@@ -69,20 +67,7 @@ namespace GCDTracker.UI {
             HalfBorderSize = BorderSize % 2 == 0 ? (BorderSize / 2) : (BorderSize / 2) + 1;
             BorderSizeAdj = BorderSize >= 1 ? BorderSize : 1;
             BorderWidthPercent = (float)BorderSizeAdj / (float)Width;
-
-            if (castBarCurrentPos == 0) {
-                SmoothedPos = 0;
-            }
-            else {
-                float p0 = CurrentPos;
-                float p1 = CurrentPos + 3 / 4 * (castBarCurrentPos - CurrentPos);
-                float p2 = CurrentPos + 9 / 10 * (castBarCurrentPos - CurrentPos);
-                float p3 = castBarCurrentPos;
-
-                SmoothedPos = enableSmoothing ? BezierCurve(0.8f, p0, p1, p2, p3) : castBarCurrentPos;
-            }
-
-            CurrentPos = SmoothedPos;
+            CurrentPos = castBarCurrentPos;
             GCDTime_SlidecastStart = gcdTime_slidecastStart;
             GCDTotal_SlidecastEnd = gcdTotal_slidecastEnd;
             TotalBarTime = totalBarTime;
@@ -105,16 +90,6 @@ namespace GCDTracker.UI {
                 (int)(CenterX + ((CurrentPos + BorderWidthPercent) * Width) - HalfWidth),
                 (int)(CenterY + HalfHeight)
             );
-        }
-
-        private float BezierCurve(float t, float p0, float p1, float p2, float p3) {
-            float u = 1 - t;
-            float tt = t * t;
-            float uu = u * u;
-            float uuu = uu * u;
-            float ttt = tt * t;
-
-            return (uuu * p0) + (3 * uu * t * p1) + (3 * u * tt * p2) + (ttt * p3);
         }
     }
 
@@ -277,6 +252,7 @@ namespace GCDTracker.UI {
             );
         }
     }
+
         public class QueuePingVertices {
         private static QueuePingVertices instance;
         public Vector2 TL_C { get; private set;}

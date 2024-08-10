@@ -78,7 +78,6 @@ namespace GCDTracker
         public bool PingCompensation = false;
         public bool QueueLockPingBackground = false;
         public Vector4 pingCol = new(0f, 0f, 0f, 0.4f);
-        public bool SmoothProgressBar = false;
 
         //CastBar
         public bool CastBarEnabled = false;
@@ -445,7 +444,6 @@ namespace GCDTracker
                         BarWidthRatio = size.X;
                         BarHeightRatio = size.Y;
                         if (ShowAdvanced) {
-                            ImGui.Checkbox("Enable Progress Bar Smoothing", ref SmoothProgressBar);
                             ImGui.Checkbox("Enable GCDBar Gradient", ref BarHasGradient);
                             if (BarHasGradient) {
                                 ImGui.Indent();

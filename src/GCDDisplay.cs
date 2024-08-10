@@ -132,7 +132,6 @@ namespace GCDTracker {
                 conf.BarHeightRatio,
                 conf.BarBorderSizeInt,
                 castBarCurrentPos,
-                conf.SmoothProgressBar,
                 gcdTime_slidecastStart, 
                 gcdTotal_slidecastEnd,
                 totalBarTime,
