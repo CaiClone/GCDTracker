@@ -307,10 +307,10 @@ namespace GCDTracker {
             if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
                 targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
 
+            queuedAbilityActionType = DataStore.ClientState.LocalPlayer.CastActionType;
 
             if (addingToQueue) {
                 AddToQueue(act, isWeaponSkill);
-                queuedAbilityActionType = DataStore.ClientState.LocalPlayer.CastActionType;
                 queuedAbilityName = GetAbilityName(actionID, queuedAbilityActionType);
             } else {
                 queuedAbilityName = " ";
