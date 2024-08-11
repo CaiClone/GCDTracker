@@ -79,7 +79,7 @@ namespace GCDTracker {
                     DrawBarText(ui, abilityNameOutput);
             }
             if (conf.ShowQueuedSpellNameGCD && !helper.shortCastFinished) {
-                if (gcdTime / gcdTotal < 0.2f)
+                if (gcdTime / gcdTotal < 0.8f)
                     helper.queuedAbilityName = " ";
                 if (!string.IsNullOrWhiteSpace(helper.queuedAbilityName))
                     DrawBarText(ui, " -> " + helper.queuedAbilityName);
