@@ -66,25 +66,27 @@ namespace GCDTracker {
             if (gcdTotal < 0.1f) return;
             helper.FlagAlerts(ui);
             helper.InvokeAlerts((conf.BarWidthRatio + 1) / 2.1f, -0.3f, ui);
+
             DrawBarElements(ui, false, helper.shortCastFinished, false, gcdTime / gcdTotal, gcdTime, gcdTotal, gcdTotal);
 
             // Gonna re-do this, but for now, we flag when we need to carryover from the castbar to the GCDBar
             // and dump all the crap here to draw on top. 
             if (helper.shortCastFinished) {
                 string abilityNameOutput = shortCastCachedSpellName;
-                if (helper.queuedAbilityName != " " && conf.CastBarShowQueuedSpell)
+                if (!string.IsNullOrWhiteSpace(helper.queuedAbilityName) && conf.CastBarShowQueuedSpell)
                     abilityNameOutput += " -> " + helper.queuedAbilityName;
                 if (!string.IsNullOrEmpty(abilityNameOutput))
                     DrawBarText(ui, abilityNameOutput);
             }
-
+            if (conf.ShowQueuedSpellNameGCD && !helper.shortCastFinished) {
+                if (gcdTime / gcdTotal < 0.2f)
+                    helper.queuedAbilityName = " ";
+                if (!string.IsNullOrWhiteSpace(helper.queuedAbilityName))
+                    DrawBarText(ui, " -> " + helper.queuedAbilityName);
+            }
         }
 
         public void DrawCastBar (PluginUI ui) {
-            var actionType =(ActionType)DataStore.ClientState.LocalPlayer.CastActionType;
-            var actionID = DataStore.ClientState.LocalPlayer.CastActionId;
-
-            int gcdTotalMilliseconds = ActionManager.GetAdjustedRecastTime(actionType, actionID);
             float gcdTotal = DataStore.Action->TotalGCD;
             float castTotal = DataStore.Action->TotalCastTime;
             float castElapsed = DataStore.Action->ElapsedCastTime;
@@ -95,12 +97,12 @@ namespace GCDTracker {
 
             // handle short casts
             if (gcdTotal > castTotal) {
-                castbarEnd = gcdTotalMilliseconds == 5000 ? 1f : castTotal / gcdTotal;
+                castbarEnd = GCDHelper.IsNonAbility() ? 1f : castTotal / gcdTotal;
                 slidecastStart = Math.Max((castTotal - conf.SlidecastDelay) / gcdTotal, 0f);
                 slidecastEnd = conf.SlideCastFullBar ? 1f : castbarEnd;
             }
-            
-            DrawBarElements(ui, true, gcdTotal > castTotal, gcdTotal < 0.001f || gcdTotalMilliseconds == 5000, castbarProgress * castbarEnd, slidecastStart, slidecastEnd, castbarEnd);
+
+            DrawBarElements(ui, true, gcdTotal > castTotal, GCDHelper.IsNonAbility(), castbarProgress * castbarEnd, slidecastStart, slidecastEnd, castbarEnd);
 
             if (!string.IsNullOrEmpty(helper.GetCastbarContents())) {
                 if (castbarEnd - castbarProgress <= 0.01f && gcdTotal > castTotal) {

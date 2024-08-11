@@ -63,6 +63,7 @@ namespace GCDTracker
         public bool BarQueueLockWhenIdle = true;
         public bool BarQueueLockSlide = false;
         public bool BarRollGCDs = true;
+        public bool ShowQueuedSpellNameGCD = false;
         public int BarBorderSizeInt = 2;
         public int QueueLockPingOffsetInt = 0;
         public float QueueLockPingOffset = 0f;
@@ -441,6 +442,7 @@ namespace GCDTracker
                         BarWidthRatio = size.X;
                         BarHeightRatio = size.Y;
                         if (ShowAdvanced) {
+                            ImGui.Checkbox("Show Queued Spell on GCDBar", ref ShowQueuedSpellNameGCD);
                             ImGui.Checkbox("Enable GCDBar Gradient", ref BarHasGradient);
                             if (BarHasGradient) {
                                 ImGui.Indent();

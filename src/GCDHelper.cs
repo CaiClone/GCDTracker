@@ -87,7 +87,11 @@ namespace GCDTracker {
                         Queue_VerticalBar = false;
                         Queue_Triangle = false;
                         Slide_Bar_End = 1f;
-                        currentState = actionType == 13 ? BarState.Mount : BarState.NonAbilityCast;
+                        currentState = actionType switch
+                        {
+                            13 => BarState.Mount,
+                            _ => BarState.NonAbilityCast,
+                        };
                     }
                     else if (bar.IsShortCast) {
                         Queue_Lock_Start = 0.8f;
@@ -302,10 +306,12 @@ namespace GCDTracker {
             //button after the mob dies it won't update the targetBuffer and trigger an ABC
             if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
                 targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
-                queuedAbilityActionType = DataStore.ClientState.LocalPlayer.CastActionType;
+
+
             if (addingToQueue) {
                 AddToQueue(act, isWeaponSkill);
-                queuedAbilityName = GetAbilityName(actionID, DataStore.ClientState.LocalPlayer.CastActionType);
+                queuedAbilityActionType = DataStore.ClientState.LocalPlayer.CastActionType;
+                queuedAbilityName = GetAbilityName(actionID, queuedAbilityActionType);
             } else {
                 queuedAbilityName = " ";
                 
@@ -379,7 +385,11 @@ namespace GCDTracker {
             string cleanedResult = MyRegex().Replace(result, string.Empty);           
             return cleanedResult;
         }
-
+        public static bool IsNonAbility() {
+            return DataStore.ActionManager->CastActionType
+                is not ActionType.Action
+                and not ActionType.None;
+        }
         public void AddToQueue(Data.Action* act, bool isWeaponSkill) {
             var timings = new List<float>() {
                 isWeaponSkill ? act->TotalGCD : 0, // Weapon skills
