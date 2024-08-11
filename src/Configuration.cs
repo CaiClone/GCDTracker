@@ -64,6 +64,7 @@ namespace GCDTracker
         public bool BarQueueLockSlide = false;
         public bool BarRollGCDs = true;
         public bool ShowQueuedSpellNameGCD = false;
+        public bool ShowQueuedSpellNameGCDRaw = false;
         public int BarBorderSizeInt = 2;
         public int QueueLockPingOffsetInt = 0;
         public float QueueLockPingOffset = 0f;
@@ -87,6 +88,7 @@ namespace GCDTracker
         public bool ShowTrianglesOnHardCasts = true;
         public bool ShowQuelockOnHardCasts = true;
         public bool EnableCastText = true;
+        public bool EnableCastTextRaw = true;
         public bool CastBarShowQueuedSpell = true;
         public bool HideAnimationLock = true;
         public Vector4 slideCol = new(0f, 0f, 0f, 0.4f);
@@ -442,7 +444,11 @@ namespace GCDTracker
                         BarWidthRatio = size.X;
                         BarHeightRatio = size.Y;
                         if (ShowAdvanced) {
-                            ImGui.Checkbox("Show Queued Spell on GCDBar", ref ShowQueuedSpellNameGCD);
+                            if (EnableCastText) {
+                                ImGui.Checkbox("Show Queued Spell on GCDBar", ref ShowQueuedSpellNameGCDRaw);
+                                if (!HelperMethods.IsCasting() && !DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat])
+                                    ShowQueuedSpellNameGCD = ShowQueuedSpellNameGCDRaw;
+                            }
                             ImGui.Checkbox("Enable GCDBar Gradient", ref BarHasGradient);
                             if (BarHasGradient) {
                                 ImGui.Indent();
@@ -506,7 +512,9 @@ namespace GCDTracker
                                 ImGui.Unindent();
                             }
                             ImGui.Separator();
-                            ImGui.Checkbox("Enable Spell Name/Time Text", ref EnableCastText);
+                            ImGui.Checkbox("Enable Spell Name/Time Text", ref EnableCastTextRaw);
+                            if (!HelperMethods.IsCasting() && !DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat])
+                                EnableCastText = EnableCastTextRaw;
                             if (EnableCastText) {
                             ImGui.Indent();
                             ImGui.ColorEdit3("Castbar Text Color", ref CastBarTextColor, ImGuiColorEditFlags.NoInputs);
