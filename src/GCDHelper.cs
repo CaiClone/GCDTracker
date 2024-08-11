@@ -105,7 +105,6 @@ namespace GCDTracker {
                     Queue_Lock_Start = Math.Max((bar.GCDTotal - 0.5f - conf.QueueLockPingOffset) / bar.GCDTotal, 0f);
                     currentState = BarState.GCDOnly;
                 }
-                                         GCDTracker.Log.Warning(actionType.ToString() + " " + currentState.ToString());
             }
 
             // Idle State

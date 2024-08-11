@@ -85,23 +85,22 @@ namespace GCDTracker {
             var actionID = DataStore.ClientState.LocalPlayer.CastActionId;
 
             int gcdTotalMilliseconds = ActionManager.GetAdjustedRecastTime(actionType, actionID);
-            var castTotalS = (float)ActionManager.GetAdjustedCastTime(actionType, actionID) / 1000;
             float gcdTotal = DataStore.Action->TotalGCD;
             float castTotal = DataStore.Action->TotalCastTime;
             float castElapsed = DataStore.Action->ElapsedCastTime;
-            float castbarProgress = castElapsed / castTotalS;
+            float castbarProgress = castElapsed / castTotal;
             float castbarEnd = 1f;
             float slidecastStart = Math.Max((castTotal - conf.SlidecastDelay) / castTotal, 0f);
             float slidecastEnd = castbarEnd;
 
             // handle short casts
             if (gcdTotal > castTotal) {
-                castbarEnd = castTotal / gcdTotal;
+                castbarEnd = gcdTotalMilliseconds == 5000 ? 1f : castTotal / gcdTotal;
                 slidecastStart = Math.Max((castTotal - conf.SlidecastDelay) / gcdTotal, 0f);
                 slidecastEnd = conf.SlideCastFullBar ? 1f : castbarEnd;
             }
-                         GCDTracker.Log.Warning(gcdTotal.ToString() + " " + castTotalS.ToString() + " " + castTotal.ToString());
-            DrawBarElements(ui, true, gcdTotal > castTotal, gcdTotal < 0.0001f || gcdTotalMilliseconds == 5000, castbarProgress * castbarEnd, slidecastStart, slidecastEnd, castbarEnd);
+            
+            DrawBarElements(ui, true, gcdTotal > castTotal, gcdTotal < 0.001f || gcdTotalMilliseconds == 5000, castbarProgress * castbarEnd, slidecastStart, slidecastEnd, castbarEnd);
 
             if (!string.IsNullOrEmpty(helper.GetCastbarContents())) {
                 if (castbarEnd - castbarProgress <= 0.01f && gcdTotal > castTotal) {
