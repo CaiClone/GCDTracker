@@ -67,11 +67,12 @@ namespace GCDTracker {
             ShortCast,
             LongCast,
             NonAbilityCast,
+            Mount,
             Idle
         }
         public BarState currentState;
 
-        public void Update(BarInfo bar, Configuration conf, bool isRunning) {                
+        public void Update(BarInfo bar, Configuration conf, bool isRunning, byte actionType) {                
             if (bar.CurrentPos > (epsilon / bar.TotalBarTime) && bar.CurrentPos < previousPos - epsilon) {
                 // Reset
                 previousPos = 0f;
@@ -86,7 +87,7 @@ namespace GCDTracker {
                         Queue_VerticalBar = false;
                         Queue_Triangle = false;
                         Slide_Bar_End = 1f;
-                        currentState = BarState.NonAbilityCast;
+                        currentState = actionType == 13 ? BarState.Mount : BarState.NonAbilityCast;
                     }
                     else if (bar.IsShortCast) {
                         Queue_Lock_Start = 0.8f;
@@ -104,6 +105,7 @@ namespace GCDTracker {
                     Queue_Lock_Start = Math.Max((bar.GCDTotal - 0.5f - conf.QueueLockPingOffset) / bar.GCDTotal, 0f);
                     currentState = BarState.GCDOnly;
                 }
+                                         GCDTracker.Log.Warning(actionType.ToString() + " " + currentState.ToString());
             }
 
             // Idle State
@@ -121,6 +123,11 @@ namespace GCDTracker {
                 case BarState.NonAbilityCast:
                     if (conf.SlideCastEnabled)
                         HandleNonAbilityCast(bar, conf);
+                    break;
+
+                case BarState.Mount:
+                    if (conf.SlideCastEnabled)
+                        HandleMount();
                     break;
 
                 case BarState.ShortCast:
@@ -166,6 +173,21 @@ namespace GCDTracker {
 
             // draw slidecast bar
             Slide_Background = conf.SlideCastBackground;      
+        }
+
+        private void HandleMount() {
+            Queue_Lock_Start = 0f;
+            Queue_VerticalBar = false;
+            Queue_Triangle = false;
+
+            Slide_Bar_Start = 0f;
+            Slide_Bar_End = 0f;
+            SlideStart_VerticalBar = false;
+            SlideEnd_VerticalBar = false;
+            SlideStart_LeftTri = false;
+            SlideStart_RightTri = false;
+            SlideEnd_RightTri = false;
+            Slide_Background = false;
         }
 
         private void HandleCastBarShort(BarInfo bar, Configuration conf) {
@@ -258,6 +280,7 @@ namespace GCDTracker {
         private float remainingCastTime;
         public string remainingCastTimeString;
         public string queuedAbilityName = " ";
+        public byte queuedAbilityActionType = 255;
         public bool shortCastFinished = false;
 
         public GCDHelper(Configuration conf, IDataManager dataManager) {
@@ -280,6 +303,7 @@ namespace GCDTracker {
             //button after the mob dies it won't update the targetBuffer and trigger an ABC
             if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
                 targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
+                queuedAbilityActionType = DataStore.ClientState.LocalPlayer.CastActionType;
             if (addingToQueue) {
                 AddToQueue(act, isWeaponSkill);
                 queuedAbilityName = GetAbilityName(actionID, DataStore.ClientState.LocalPlayer.CastActionType);

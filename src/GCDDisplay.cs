@@ -1,6 +1,7 @@
 using Dalamud.Game;
 using Dalamud.Logging;
 using Dalamud.Plugin.Services;
+using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
 using GCDTracker.UI;
 using System;
@@ -80,10 +81,15 @@ namespace GCDTracker {
         }
 
         public void DrawCastBar (PluginUI ui) {
+            var actionType =(ActionType)DataStore.ClientState.LocalPlayer.CastActionType;
+            var actionID = DataStore.ClientState.LocalPlayer.CastActionId;
+
+            int gcdTotalMilliseconds = ActionManager.GetAdjustedRecastTime(actionType, actionID);
+            var castTotalS = (float)ActionManager.GetAdjustedCastTime(actionType, actionID) / 1000;
             float gcdTotal = DataStore.Action->TotalGCD;
             float castTotal = DataStore.Action->TotalCastTime;
             float castElapsed = DataStore.Action->ElapsedCastTime;
-            float castbarProgress = castElapsed / castTotal;
+            float castbarProgress = castElapsed / castTotalS;
             float castbarEnd = 1f;
             float slidecastStart = Math.Max((castTotal - conf.SlidecastDelay) / castTotal, 0f);
             float slidecastEnd = castbarEnd;
@@ -94,8 +100,8 @@ namespace GCDTracker {
                 slidecastStart = Math.Max((castTotal - conf.SlidecastDelay) / gcdTotal, 0f);
                 slidecastEnd = conf.SlideCastFullBar ? 1f : castbarEnd;
             }
-
-            DrawBarElements(ui, true, gcdTotal > castTotal, gcdTotal < 0.001f, castbarProgress * castbarEnd, slidecastStart, slidecastEnd, castbarEnd);
+                         GCDTracker.Log.Warning(gcdTotal.ToString() + " " + castTotalS.ToString() + " " + castTotal.ToString());
+            DrawBarElements(ui, true, gcdTotal > castTotal, gcdTotal < 0.0001f || gcdTotalMilliseconds == 5000, castbarProgress * castbarEnd, slidecastStart, slidecastEnd, castbarEnd);
 
             if (!string.IsNullOrEmpty(helper.GetCastbarContents())) {
                 if (castbarEnd - castbarProgress <= 0.01f && gcdTotal > castTotal) {
@@ -142,7 +148,7 @@ namespace GCDTracker {
             );
 
             var go = BarDecisionHelper.Instance;
-            go.Update(bar, conf, helper.isRunning);
+            go.Update(bar, conf, helper.isRunning, helper.queuedAbilityActionType);
             var sc_sv = SlideCastStartVertices.Instance;
             sc_sv.Update(bar, go);
             var sc_ev = SlideCastEndVertices.Instance;
