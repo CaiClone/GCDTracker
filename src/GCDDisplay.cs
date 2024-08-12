@@ -1,7 +1,6 @@
 using Dalamud.Game;
 using Dalamud.Logging;
 using Dalamud.Plugin.Services;
-using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
 using GCDTracker.UI;
 using System;
@@ -103,7 +102,6 @@ namespace GCDTracker {
             float slidecastStart = Math.Max((castTotal - conf.SlidecastDelay) / castTotal, 0f);
             float slidecastEnd = castbarEnd;
             bool isTeleport = HelperMethods.IsTeleport(DataStore.Action->CastId);
-
             // handle short casts
             if (gcdTotal > castTotal) {
                 castbarEnd = GCDHelper.IsNonAbility() ? 1f : castTotal / gcdTotal;
@@ -115,7 +113,8 @@ namespace GCDTracker {
                 ui,
                 true,
                 gcdTotal > castTotal,
-                GCDHelper.IsNonAbility() || isTeleport,
+                // Maybe we don't need the gcdTotal < 0.01f anymore?
+                GCDHelper.IsNonAbility() || isTeleport || gcdTotal < 0.01f,
                 castbarProgress * castbarEnd,
                 slidecastStart,
                 slidecastEnd,

@@ -116,7 +116,6 @@ namespace GCDTracker {
                 currentState = BarState.Idle;
 
             previousPos = Math.Max(previousPos, bar.CurrentPos);
-            GCDTracker.Log.Warning(currentState.ToString() + " " + actionType.ToString());
             
             switch (currentState) {
                 case BarState.GCDOnly:
@@ -335,35 +334,44 @@ namespace GCDTracker {
 
         public string GetAbilityName(uint actionID, byte actionType) {
             var lumina = dataManager;
+            var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind;
 
-            switch (actionType) {
-                // Seem to need case 0 here for follow up casts for short spells (gcdTime > castTime).
-                case 0:
-                case 1:
-                    var ability = lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID);
-                    return ability?.Name ?? "Unknown Ability";
+            if (objectKind == ObjectKind.Aetheryte)
+                return "Attuning...";
+            if (objectKind == ObjectKind.EventObj || objectKind == ObjectKind.EventNpc)
+                return "Interacting...";
+            if (actionID == 1 && actionType != (byte)ActionType.Mount)
+                return "Interacting...";
 
-                case 2:
-                    var item = lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()?.GetRow(actionID);
-                    return item?.Name ?? "Unknown Item";
+            return actionType switch
+            {
+                (byte)ActionType.Ability 
+                or (byte)ActionType.Action 
+                or (byte)ActionType.BgcArmyAction 
+                or (byte)ActionType.CraftAction 
+                or (byte)ActionType.PetAction 
+                or (byte)ActionType.PvPAction => 
+                    lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID)?.Name ?? "Unknown Ability",
 
-                case 13:
-                    var mount = lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Mount>()?.GetRow(actionID);
-                    return mount != null ? CapitalizeOutput(mount.Singular) : "Unknown Mount";
+                (byte)ActionType.Companion => 
+                    lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Companion>()?.GetRow(actionID) is var companion && companion != null 
+                    ? CapitalizeOutput(companion.Singular) 
+                    : "Unknown Companion",
 
-                default:
-                    var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind;
-                    return objectKind switch
-                    {
-                        ObjectKind.Aetheryte => "Attuning...",
-                        ObjectKind.EventObj => "Interacting...",
-                        ObjectKind.EventNpc => "Interacting...",
-                        _ => "..."
-                    };
-            }
+                (byte)ActionType.Item 
+                or (byte)ActionType.KeyItem => 
+                    lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()?.GetRow(actionID)?.Name ?? "Unknown Item",
+
+                (byte)ActionType.Mount => 
+                    lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Mount>()?.GetRow(actionID) is var mount && mount != null 
+                    ? CapitalizeOutput(mount.Singular) 
+                    : "Unknown Mount",
+
+                _ => "Casting..."
+            };
         }
         
-        public string CapitalizeOutput(string input) {
+        public static string CapitalizeOutput(string input) {
             if (string.IsNullOrEmpty(input))
                 return input;
 
@@ -386,11 +394,21 @@ namespace GCDTracker {
             string cleanedResult = MyRegex().Replace(result, string.Empty);           
             return cleanedResult;
         }
+
         public static bool IsNonAbility() {
-            return DataStore.ActionManager->CastActionType
-                is not ActionType.Action
-                and not ActionType.None;
+            var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind;
+
+            return objectKind switch
+            {
+                ObjectKind.Aetheryte => true,
+                ObjectKind.EventObj => true,
+                ObjectKind.EventNpc => true,
+                _ => DataStore.ActionManager->CastActionType 
+                    is not ActionType.Action 
+                    and not ActionType.None
+            };
         }
+
         public void AddToQueue(Data.Action* act, bool isWeaponSkill) {
             var timings = new List<float>() {
                 isWeaponSkill ? act->TotalGCD : 0, // Weapon skills
@@ -511,11 +529,11 @@ namespace GCDTracker {
         public bool ShouldStartABC() {
             abcBlocker = true;
             // compare cached target object ID at the time of action use to the current target object ID
-            return DataStore.ClientState.LocalPlayer.TargetObjectId == targetBuffer;
+            return DataStore.ClientState?.LocalPlayer?.TargetObjectId == targetBuffer;
         }
 
         public void FlagAlerts(PluginUI ui){
-            bool inCombat = DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
+            bool inCombat = DataStore.Condition?[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat] ?? false;
             if(conf.ClipAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat)){
                 if (checkClip && ShouldStartClip()) {
                     ui.StartAlert(true, lastClipDelta);
