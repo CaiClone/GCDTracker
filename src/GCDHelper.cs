@@ -463,6 +463,10 @@ namespace GCDTracker {
         public void GCDTimeoutHelper(IFramework framework) {
             // Determine if we are running
             isRunning = (DataStore.Action->ElapsedGCD != DataStore.Action->TotalGCD) || HelperMethods.IsCasting();
+            // Detect Teleports for when the carbar is off
+            if (conf.ShowOnlyGCDRunning && HelperMethods.IsTeleport(DataStore.Action->CastId)) {
+                lastActionTP = true;
+            }
             // Reset idleTimer when we start casting
             if (isRunning && idleTimerReset) {
                 idleTimerAccum = 0;
@@ -470,6 +474,7 @@ namespace GCDTracker {
                 idleTimerReset = false;
                 idleTimerDone = false;
                 abcBlocker = false;
+                lastActionTP = false;
                 GCDTimeoutBuffer = (int)(1000 * conf.GCDTimeout);
             }
             if (!isRunning && !idleTimerDone) {

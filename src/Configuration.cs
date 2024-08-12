@@ -32,6 +32,7 @@ namespace GCDTracker
         public bool ColorClipEnabled = true;
         public bool abcAlertEnabled = false;
         public bool ColorABCEnabled = false;
+        private bool showResetConfirmation = false;
         public int ClipAlertPrecision = 0;
         public float GCDTimeout = 2f;
         public int abcDelay = 10;
@@ -370,7 +371,7 @@ namespace GCDTracker
                         ImGui.ColorEdit4("A-B-C background color", ref abcBackColor, ImGuiColorEditFlags.NoInputs);
                         if(ShowAdvanced) {
                             ImGui.SliderFloat("A-B-C text size", ref abcTextSize, 0.2f, 2f);
-                            ImGui.SliderInt("A-B-C alert delay (in milliseconds)", ref abcDelay, 1, 200);
+                            ImGui.SliderInt("A-B-C alert delay (in ms)", ref abcDelay, 1, 200);
                             if (ImGui.IsItemHovered()){
                                 ImGui.BeginTooltip();
                                 ImGui.Text("Controls how much delay is allowed between abilities.");
@@ -495,7 +496,7 @@ namespace GCDTracker
                                 }
                                 if(ShowAdvanced) {
                                     ImGui.Checkbox("Slidecast Covers End of Bar", ref SlideCastFullBar);
-                                    ImGui.SliderInt("Slidecast Time (in milliseconds)", ref SlidecastDelayInt, 400, 600);
+                                    ImGui.SliderInt("Slidecast Time (in ms)", ref SlidecastDelayInt, 400, 600);
                                     SlidecastDelay = SlidecastDelayInt / 1000f;
                                     ImGui.Checkbox("Show Slidecast Triangles", ref ShowSlidecastTriangles);
                                     if (ShowSlidecastTriangles) {
@@ -566,11 +567,52 @@ namespace GCDTracker
                         ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
                         ImGui.SliderInt("Ping Compensation (in ms)", ref QueueLockPingOffsetInt, 0, 600);
                         QueueLockPingOffset = QueueLockPingOffsetInt / 1000f;
+                        ImGui.NewLine();
+                        if (ImGui.Button("Reset All Settings to Default"))
+                            showResetConfirmation = true;
+                        if (showResetConfirmation)
+                            ImGui.OpenPopup("Reset Confirmation");
+                        if (ImGui.BeginPopupModal("Reset Confirmation", ref showResetConfirmation, ImGuiWindowFlags.AlwaysAutoResize)) {
+                            ImGui.Text("This will reset your settings.\nPlease choose an option:");
+                            ImGui.Separator();
+                            if (ImGui.Button("Reset (All Settings)")) {
+                                ResetToDefault();
+                                showResetConfirmation = false;
+                                ImGui.CloseCurrentPopup();
+                            }
+                            ImGui.SameLine();
+                            if (ImGui.Button("Reset (Keep Bar Size)")) {
+                                ResetToDefault(keepBarSize: true);
+                                showResetConfirmation = false;
+                                ImGui.CloseCurrentPopup();
+                            }
+                            ImGui.SameLine();
+                            if (ImGui.Button("Take Me Back")) {
+                                showResetConfirmation = false;
+                                ImGui.CloseCurrentPopup();
+                            }
+                            ImGui.EndPopup();
+                        }
                     }
                     ImGui.EndTabItem();
                 }
             }
             ImGui.End();
+        }
+
+        public void ResetToDefault(bool keepBarSize = false) {
+            var defaultConfig = new Configuration();
+
+            foreach (var field in typeof(Configuration).GetFields()) {
+                if (!field.IsStatic) {
+                    // Check if we are keeping the bar size
+                    if (keepBarSize && (field.Name == nameof(BarWidthRatio) || field.Name == nameof(BarHeightRatio)))
+                        continue; // Skip resetting these fields
+                    
+                    field.SetValue(this, field.GetValue(defaultConfig));
+                }
+            }
+            Save();
         }
 
         private void DrawJobGrid(ref Dictionary<uint, bool> enabledDict,bool colorPos) {

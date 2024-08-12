@@ -28,10 +28,6 @@ namespace GCDTracker {
             float gcdTotal = helper.TotalGCD;
             float gcdTime = helper.lastElapsedGCD;
 
-            if (conf.ShowOnlyGCDRunning && HelperMethods.IsTeleport(DataStore.Action->CastId)) {
-                helper.lastActionTP = true;
-                return;
-            }
             if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
@@ -56,10 +52,6 @@ namespace GCDTracker {
             float gcdTotal = helper.TotalGCD;
             float gcdTime = helper.lastElapsedGCD;
 
-            if (conf.ShowOnlyGCDRunning && HelperMethods.IsTeleport(DataStore.Action->CastId)) {
-                helper.lastActionTP = true;
-                return;
-            }
             if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
