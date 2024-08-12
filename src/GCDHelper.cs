@@ -72,7 +72,7 @@ namespace GCDTracker {
         }
         public BarState currentState;
 
-        public void Update(BarInfo bar, Configuration conf, bool isRunning, byte actionType) {                
+        public void Update(BarInfo bar, Configuration conf, bool isRunning, ActionType actionType) {                
             if (bar.CurrentPos > (epsilon / bar.TotalBarTime) && bar.CurrentPos < previousPos - epsilon) {
                 // Reset
                 previousPos = 0f;
@@ -89,7 +89,7 @@ namespace GCDTracker {
                         Slide_Bar_End = 1f;
                         currentState = actionType switch
                         {
-                            13 => BarState.Mount,
+                            ActionType.Mount => BarState.Mount,
                             _ => BarState.NonAbilityCast,
                         };
                     }
@@ -283,7 +283,7 @@ namespace GCDTracker {
         private float remainingCastTime;
         public string remainingCastTimeString;
         public string queuedAbilityName = " ";
-        public byte queuedAbilityActionType = 255;
+        public ActionType queuedAbilityActionType = ActionType.None;
         public bool shortCastFinished = false;
 
         public GCDHelper(Configuration conf, IDataManager dataManager) {
@@ -304,14 +304,12 @@ namespace GCDTracker {
             }
             //check to make sure that the player is targeting something, so that if they are spamming an action
             //button after the mob dies it won't update the targetBuffer and trigger an ABC
-            if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
-                targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
-
-            queuedAbilityActionType = DataStore.ClientState.LocalPlayer.CastActionType;
+            targetBuffer = DataStore.ClientState?.LocalPlayer?.TargetObject?.TargetObjectId ?? targetBuffer;
+            queuedAbilityActionType = actionType;
 
             if (addingToQueue) {
                 AddToQueue(act, isWeaponSkill);
-                queuedAbilityName = GetAbilityName(actionID, queuedAbilityActionType);
+                queuedAbilityName = GetAbilityName(actionID, actionType);
             } else {
                 queuedAbilityName = " ";
                 
@@ -332,7 +330,7 @@ namespace GCDTracker {
             }
         }
 
-        public string GetAbilityName(uint actionID, byte actionType) {
+        public string GetAbilityName(uint actionID, ActionType actionType) {
             var lumina = dataManager;
             var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind;
 
@@ -340,29 +338,29 @@ namespace GCDTracker {
                 return "Attuning...";
             if (objectKind == ObjectKind.EventObj || objectKind == ObjectKind.EventNpc)
                 return "Interacting...";
-            if (actionID == 1 && actionType != (byte)ActionType.Mount)
+            if (actionID == 1 && actionType != ActionType.Mount)
                 return "Interacting...";
 
             return actionType switch
             {
-                (byte)ActionType.Ability 
-                or (byte)ActionType.Action 
-                or (byte)ActionType.BgcArmyAction 
-                or (byte)ActionType.CraftAction 
-                or (byte)ActionType.PetAction 
-                or (byte)ActionType.PvPAction => 
+                ActionType.Ability 
+                or ActionType.Action 
+                or ActionType.BgcArmyAction 
+                or ActionType.CraftAction 
+                or ActionType.PetAction 
+                or ActionType.PvPAction => 
                     lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID)?.Name ?? "Unknown Ability",
 
-                (byte)ActionType.Companion => 
+                ActionType.Companion => 
                     lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Companion>()?.GetRow(actionID) is var companion && companion != null 
                     ? CapitalizeOutput(companion.Singular) 
                     : "Unknown Companion",
 
-                (byte)ActionType.Item 
-                or (byte)ActionType.KeyItem => 
+                ActionType.Item 
+                or ActionType.KeyItem => 
                     lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()?.GetRow(actionID)?.Name ?? "Unknown Item",
 
-                (byte)ActionType.Mount => 
+                ActionType.Mount => 
                     lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Mount>()?.GetRow(actionID) is var mount && mount != null 
                     ? CapitalizeOutput(mount.Singular) 
                     : "Unknown Mount",
