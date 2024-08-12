@@ -179,13 +179,6 @@ namespace GCDTracker.UI {
                 textStartPos - padding + animPos,
                 textStartPos + textSz + padding + animPos,
                 ImGui.GetColorU32(backCol.WithAlpha(1-animAlpha)), 10f);
-            if (conf.abcOutlineEnabled && alertTextPrecision == 3 || conf.ClipOutlineEnabled && alertTextPrecision <= 2) {
-                DrawTextOutline(
-                    textStartPos + animPos,
-                    textCol.WithAlpha((1-animAlpha) / 3),
-                    alertText[alertTextPrecision],
-                    conf.OutlineThickness);
-            }
             draw.AddText(
                 textStartPos + animPos,
                 ImGui.GetColorU32(textCol.WithAlpha(1-animAlpha)),

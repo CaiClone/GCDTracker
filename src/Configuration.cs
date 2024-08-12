@@ -29,10 +29,8 @@ namespace GCDTracker
         public bool ShowOnlyGCDRunning = true;
         public bool QueueLockEnabled = true;
         public bool ClipAlertEnabled = true;
-        public bool ClipOutlineEnabled = false;
         public bool ColorClipEnabled = true;
         public bool abcAlertEnabled = false;
-        public bool abcOutlineEnabled = false;
         public bool ColorABCEnabled = false;
         public int ClipAlertPrecision = 0;
         public float GCDTimeout = 2f;
@@ -371,7 +369,6 @@ namespace GCDTracker
                         ImGui.SameLine();
                         ImGui.ColorEdit4("A-B-C background color", ref abcBackColor, ImGuiColorEditFlags.NoInputs);
                         if(ShowAdvanced) {
-                            ImGui.Checkbox("A-B-C Text Ouline", ref abcOutlineEnabled);
                             ImGui.SliderFloat("A-B-C text size", ref abcTextSize, 0.2f, 2f);
                             ImGui.SliderInt("A-B-C alert delay (in milliseconds)", ref abcDelay, 1, 200);
                             if (ImGui.IsItemHovered()){
@@ -396,7 +393,6 @@ namespace GCDTracker
                         ImGui.SameLine();
                         ImGui.ColorEdit4("Clip background color", ref ClipBackColor, ImGuiColorEditFlags.NoInputs);
                         if (ShowAdvanced) {
-                            ImGui.Checkbox("Clip Text Outline", ref ClipOutlineEnabled);
                             ImGui.SliderFloat("Clip text size", ref ClipTextSize, 0.2f, 2f);
                         }
                     }
