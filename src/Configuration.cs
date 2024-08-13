@@ -37,7 +37,7 @@ namespace GCDTracker
         public float GCDTimeout = 2f;
         public int abcDelay = 10;
         public float ClipTextSize = 0.86f;
-        public float abcTextSize = 0.8f;
+        public float abcTextSize = 0.86f;
         public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
         public Vector4 abcCol = new(1f, .7f, 0f, 0.667f);
         public Vector4 ClipTextColor = new(0.9f, 0.9f, 0.9f, 1f);
