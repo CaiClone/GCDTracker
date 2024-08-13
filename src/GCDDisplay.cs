@@ -158,7 +158,7 @@ namespace GCDTracker {
             );
 
             var go = BarDecisionHelper.Instance;
-            go.Update(bar, conf, helper.isRunning, helper.queuedAbilityActionType);
+            go.Update(bar, conf, helper);
             var sc_sv = SlideCastStartVertices.Instance;
             sc_sv.Update(bar, go);
             var sc_ev = SlideCastEndVertices.Instance;

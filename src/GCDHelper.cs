@@ -72,7 +72,7 @@ namespace GCDTracker {
         }
         public BarState currentState;
 
-        public void Update(BarInfo bar, Configuration conf, bool isRunning, ActionType actionType) {                
+        public void Update(BarInfo bar, Configuration conf, GCDHelper helper) {                
             if (bar.CurrentPos > (epsilon / bar.TotalBarTime) && bar.CurrentPos < previousPos - epsilon) {
                 // Reset
                 previousPos = 0f;
@@ -87,7 +87,7 @@ namespace GCDTracker {
                         Queue_VerticalBar = false;
                         Queue_Triangle = false;
                         Slide_Bar_End = 1f;
-                        currentState = actionType switch
+                        currentState = helper.queuedAbilityActionType switch
                         {
                             ActionType.Mount => BarState.Mount,
                             _ => BarState.NonAbilityCast,
@@ -112,8 +112,9 @@ namespace GCDTracker {
             }
 
             // Idle State
-            else if (!isRunning)
+            else if (!helper.isRunning)
                 currentState = BarState.Idle;
+                helper.queuedAbilityActionType = ActionType.None;
 
             previousPos = Math.Max(previousPos, bar.CurrentPos);
             
