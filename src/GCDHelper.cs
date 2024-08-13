@@ -114,7 +114,6 @@ namespace GCDTracker {
             // Idle State
             else if (!helper.isRunning)
                 currentState = BarState.Idle;
-                helper.queuedAbilityActionType = ActionType.None;
 
             previousPos = Math.Max(previousPos, bar.CurrentPos);
             
@@ -482,6 +481,7 @@ namespace GCDTracker {
             if (!isRunning && !idleTimerDone) {
                 idleTimerAccum += framework.UpdateDelta.Milliseconds;
                 idleTimerReset = true;
+                queuedAbilityActionType = ActionType.None;
             }
             // Handle caster tax
             if (!isHardCast && HelperMethods.IsCasting() && DataStore.Action->TotalCastTime - 0.1f >= DataStore.Action->TotalGCD)
@@ -496,6 +496,7 @@ namespace GCDTracker {
                 abcOnThisGCD = false;
                 lastActionTP = false;
                 idleTimerDone = true;
+                queuedAbilityActionType = ActionType.None;
             }
         }
 
