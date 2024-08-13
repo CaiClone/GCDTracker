@@ -304,7 +304,8 @@ namespace GCDTracker {
             }
             //check to make sure that the player is targeting something, so that if they are spamming an action
             //button after the mob dies it won't update the targetBuffer and trigger an ABC
-            targetBuffer = DataStore.ClientState?.LocalPlayer?.TargetObject?.TargetObjectId ?? targetBuffer;
+            if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
+                targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
             queuedAbilityActionType = actionType;
 
             if (addingToQueue) {
