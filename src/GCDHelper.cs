@@ -72,7 +72,7 @@ namespace GCDTracker {
         }
         public BarState currentState;
 
-        public void Update(BarInfo bar, Configuration conf, GCDHelper helper) {                
+        public void Update(BarInfo bar, Configuration conf, GCDHelper helper, ActionType actionType) {                
             if (bar.CurrentPos > (epsilon / bar.TotalBarTime) && bar.CurrentPos < previousPos - epsilon) {
                 // Reset
                 previousPos = 0f;
@@ -87,7 +87,7 @@ namespace GCDTracker {
                         Queue_VerticalBar = false;
                         Queue_Triangle = false;
                         Slide_Bar_End = 1f;
-                        currentState = helper.queuedAbilityActionType switch
+                        currentState = actionType switch
                         {
                             ActionType.Mount => BarState.Mount,
                             _ => BarState.NonAbilityCast,
@@ -106,7 +106,7 @@ namespace GCDTracker {
                 }
                 // Handle GCDBar
                 else if (!bar.IsCastBar && !bar.IsShortCast) {
-                    Queue_Lock_Start = Math.Max((bar.GCDTotal - 0.5f - conf.QueueLockPingOffset) / bar.GCDTotal, 0f);
+                    Queue_Lock_Start = 0.8f;
                     currentState = BarState.GCDOnly;
                 }
             }
@@ -237,7 +237,7 @@ namespace GCDTracker {
 
         private void ResetBar(Configuration conf) {
             Queue_Lock_Start = (conf.QueueLockEnabled && conf.BarQueueLockWhenIdle)
-                ? Math.Max((2f - conf.QueueLockPingOffset) / 2.5f, 0f)
+                ? 0.8f
                 : 0f;
             Queue_VerticalBar = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle;
             Queue_Triangle = Queue_VerticalBar && conf.ShowQueuelockTriangles;
@@ -283,7 +283,6 @@ namespace GCDTracker {
         private float remainingCastTime;
         public string remainingCastTimeString;
         public string queuedAbilityName = " ";
-        public ActionType queuedAbilityActionType = ActionType.None;
         public bool shortCastFinished = false;
 
         public GCDHelper(Configuration conf, IDataManager dataManager) {
@@ -306,7 +305,6 @@ namespace GCDTracker {
             //button after the mob dies it won't update the targetBuffer and trigger an ABC
             if (DataStore.ClientState.LocalPlayer?.TargetObject != null)
                 targetBuffer = DataStore.ClientState.LocalPlayer.TargetObjectId;
-            queuedAbilityActionType = actionType;
 
             if (addingToQueue) {
                 AddToQueue(act, isWeaponSkill);
@@ -481,7 +479,6 @@ namespace GCDTracker {
             if (!isRunning && !idleTimerDone) {
                 idleTimerAccum += framework.UpdateDelta.Milliseconds;
                 idleTimerReset = true;
-                queuedAbilityActionType = ActionType.None;
             }
             // Handle caster tax
             if (!isHardCast && HelperMethods.IsCasting() && DataStore.Action->TotalCastTime - 0.1f >= DataStore.Action->TotalGCD)
@@ -496,7 +493,6 @@ namespace GCDTracker {
                 abcOnThisGCD = false;
                 lastActionTP = false;
                 idleTimerDone = true;
-                queuedAbilityActionType = ActionType.None;
             }
         }
 

@@ -32,6 +32,7 @@ namespace GCDTracker
         public bool ColorClipEnabled = true;
         public bool abcAlertEnabled = false;
         public bool ColorABCEnabled = false;
+        [JsonIgnore]
         private bool showResetConfirmation = false;
         public int ClipAlertPrecision = 0;
         public float GCDTimeout = 2f;
@@ -63,10 +64,7 @@ namespace GCDTracker
         public bool BarQueueLockSlide = false;
         public bool BarRollGCDs = true;
         public bool ShowQueuedSpellNameGCD = false;
-        public bool ShowQueuedSpellNameGCDRaw = false;
         public int BarBorderSizeInt = 2;
-        public int QueueLockPingOffsetInt = 0;
-        public float QueueLockPingOffset = 0f;
         public float BarWidthRatio = 0.9f;
         public float BarHeightRatio = 0.5f;
         public float BarGradientMul = 0.175f;
@@ -87,20 +85,16 @@ namespace GCDTracker
         public bool ShowTrianglesOnHardCasts = true;
         public bool ShowQuelockOnHardCasts = true;
         public bool EnableCastText = true;
-        public bool EnableCastTextRaw = true;
         public bool CastBarShowQueuedSpell = true;
         public bool HideAnimationLock = true;
         public Vector4 slideCol = new(0f, 0f, 0f, 0.4f);
         public int triangleSize = 6;
-        public int CastBarTextInt = 11;
-        public int SlidecastDelayInt = 500;
         public float SlidecastDelay = 0.5f;
-        public float CastBarTextSize = 0.9f;
+        public float CastBarTextSize = 0.92f;
         public Vector3 CastBarTextColor = new(1f, 1f, 1f);
         public bool CastBarTextOutlineEnabled = true;
         public bool CastTimeEnabled = true;
         public int castTimePosition = 0;
-        public int OutlineThicknessInt = 10;
         public float OutlineThickness = 1f;
         public bool CastBarBoldText = false;
 
@@ -442,9 +436,10 @@ namespace GCDTracker
                         BarHeightRatio = size.Y;
                         if (ShowAdvanced) {
                             if (EnableCastText) {
-                                ImGui.Checkbox("Show Queued Spell on GCDBar", ref ShowQueuedSpellNameGCDRaw);
-                                if (!HelperMethods.IsCasting() && !DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat])
-                                    ShowQueuedSpellNameGCD = ShowQueuedSpellNameGCDRaw;
+                                var inBattle = HelperMethods.IsCasting() || DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
+                                if (inBattle) ImGui.BeginDisabled();
+                                ImGui.Checkbox("Show Queued Spell on GCDBar", ref ShowQueuedSpellNameGCD);
+                                if (inBattle) ImGui.EndDisabled();
                             }
                             ImGui.Checkbox("Enable GCDBar Gradient", ref BarHasGradient);
                             if (BarHasGradient) {
@@ -496,6 +491,7 @@ namespace GCDTracker
                                 }
                                 if(ShowAdvanced) {
                                     ImGui.Checkbox("Slidecast Covers End of Bar", ref SlideCastFullBar);
+                                    var SlidecastDelayInt = (int)(SlidecastDelay * 1000);
                                     ImGui.SliderInt("Slidecast Time (in ms)", ref SlidecastDelayInt, 400, 600);
                                     SlidecastDelay = SlidecastDelayInt / 1000f;
                                     ImGui.Checkbox("Show Slidecast Triangles", ref ShowSlidecastTriangles);
@@ -509,34 +505,37 @@ namespace GCDTracker
                                 ImGui.Unindent();
                             }
                             ImGui.Separator();
-                            ImGui.Checkbox("Enable Spell Name/Time Text", ref EnableCastTextRaw);
-                            if (!HelperMethods.IsCasting() && !DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat])
-                                EnableCastText = EnableCastTextRaw;
+                            var inBattle = HelperMethods.IsCasting() || DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
+                            if (inBattle) ImGui.BeginDisabled();
+                            ImGui.Checkbox("Enable Spell Name/Time Text", ref EnableCastText);
+                            if (inBattle) ImGui.EndDisabled();
                             if (EnableCastText) {
-                            ImGui.Indent();
-                            ImGui.ColorEdit3("Castbar Text Color", ref CastBarTextColor, ImGuiColorEditFlags.NoInputs);
-                            ImGui.Checkbox("\"Bold\" Castbar Text", ref CastBarBoldText);
-                            ImGui.Checkbox("Show Next Spell When Queued", ref CastBarShowQueuedSpell);
-                            ImGui.SliderInt("Spell Name/Time Text Size", ref CastBarTextInt, 6, 18);
-                            CastBarTextSize = CastBarTextInt / 12f;
-                            if (ShowAdvanced) {
-                                ImGui.Checkbox("Enable Text Outline:", ref CastBarTextOutlineEnabled);
+                                ImGui.Indent();
+                                ImGui.ColorEdit3("Castbar Text Color", ref CastBarTextColor, ImGuiColorEditFlags.NoInputs);
+                                ImGui.Checkbox("\"Bold\" Castbar Text", ref CastBarBoldText);
+                                ImGui.Checkbox("Show Next Spell When Queued", ref CastBarShowQueuedSpell);
+                                var CastBarTextInt = (int)(CastBarTextSize * 12f);
+                                ImGui.SliderInt("Spell Name/Time Text Size", ref CastBarTextInt, 6, 18);
+                                CastBarTextSize = CastBarTextInt / 12f;
+                                if (ShowAdvanced) {
+                                    ImGui.Checkbox("Enable Text Outline:", ref CastBarTextOutlineEnabled);
                                     if (CastBarTextOutlineEnabled) {
+                                        var OutlineThicknessInt = (int)(OutlineThickness * 10f);
                                         ImGui.SameLine();
                                         ImGui.RadioButton("Normal", ref OutlineThicknessInt, 10);
                                         ImGui.SameLine();
                                         ImGui.RadioButton("Thick", ref OutlineThicknessInt, 12);
                                         OutlineThickness = OutlineThicknessInt / 10f;
                                     }
-                                ImGui.Checkbox("Show remaining cast time:", ref CastTimeEnabled);
-                                if (CastTimeEnabled) {
-                                    ImGui.SameLine();
-                                    ImGui.RadioButton("Left", ref castTimePosition, 0);
-                                    ImGui.SameLine();
-                                    ImGui.RadioButton("Right", ref castTimePosition, 1);
+                                    ImGui.Checkbox("Show remaining cast time:", ref CastTimeEnabled);
+                                    if (CastTimeEnabled) {
+                                        ImGui.SameLine();
+                                        ImGui.RadioButton("Left", ref castTimePosition, 0);
+                                        ImGui.SameLine();
+                                        ImGui.RadioButton("Right", ref castTimePosition, 1);
+                                    }
                                 }
-                            }
-                            ImGui.Unindent();
+                                ImGui.Unindent();
                             }
                         }
                     ImGui.EndTabItem();
@@ -564,9 +563,10 @@ namespace GCDTracker
                 if (ImGui.BeginTabItem("Advanced")) {
                     ImGui.Checkbox("Show Advanced Configuration Options", ref ShowAdvanced);
                     if (ShowAdvanced) {
+                        ImGui.TextDisabled("\tIn addition to the options below, there are additional options");
+                        ImGui.TextDisabled("\tin GCDTracker, GCDDisplay, and Castbar.");
+                        ImGui.NewLine();
                         ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
-                        ImGui.SliderInt("Ping Compensation (in ms)", ref QueueLockPingOffsetInt, 0, 600);
-                        QueueLockPingOffset = QueueLockPingOffsetInt / 1000f;
                         ImGui.NewLine();
                         if (ImGui.Button("Reset All Settings to Default"))
                             showResetConfirmation = true;

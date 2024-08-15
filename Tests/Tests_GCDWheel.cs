@@ -104,7 +104,10 @@ namespace Tests
                 { 0, new AbilityManager.AbilityTiming(0.35f, false) },
                 { 0.5f, new AbilityManager.AbilityTiming(0.64f, false) }
             });
-            var helper = new GCDHelper(null, null);
+            var helper = new GCDHelper(null, null)
+            {
+                TotalGCD = 0.5f
+            };
             helper.SlideGCDs(0.5f, true);
 
             Assert.AreEqual(1, abilityManager.ogcds.Count);
