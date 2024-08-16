@@ -1,4 +1,5 @@
 using Dalamud.Game;
+using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using GCDTracker.Data;
@@ -158,7 +159,13 @@ namespace GCDTracker {
             );
 
             var go = BarDecisionHelper.Instance;
-            go.Update(bar, conf, helper, DataStore.ActionManager->CastActionType);
+            go.Update(
+                bar, 
+                conf, 
+                helper, 
+                DataStore.ActionManager->CastActionType, 
+                DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None
+            );
             var sc_sv = SlideCastStartVertices.Instance;
             sc_sv.Update(bar, go);
             var sc_ev = SlideCastEndVertices.Instance;

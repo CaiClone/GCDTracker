@@ -14,6 +14,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
+using FFXIVClientStructs.FFXIV.Common.Lua;
 
 
 [assembly: InternalsVisibleTo("Tests")]
@@ -67,12 +68,12 @@ namespace GCDTracker {
             ShortCast,
             LongCast,
             NonAbilityCast,
-            Mount,
+            NoSlideAbility,
             Idle
         }
         public BarState currentState;
 
-        public void Update(BarInfo bar, Configuration conf, GCDHelper helper, ActionType actionType) {                
+        public void Update(BarInfo bar, Configuration conf, GCDHelper helper, ActionType actionType, ObjectKind objectKind) {                
             if (bar.CurrentPos > (epsilon / bar.TotalBarTime) && bar.CurrentPos < previousPos - epsilon) {
                 // Reset
                 previousPos = 0f;
@@ -87,10 +88,16 @@ namespace GCDTracker {
                         Queue_VerticalBar = false;
                         Queue_Triangle = false;
                         Slide_Bar_End = 1f;
-                        currentState = actionType switch
+                        currentState = objectKind switch
                         {
-                            ActionType.Mount => BarState.Mount,
-                            _ => BarState.NonAbilityCast,
+                            ObjectKind.EventObj 
+                            or ObjectKind.EventNpc
+                            or ObjectKind.Aetheryte => BarState.NoSlideAbility,
+                            _ => actionType switch
+                            {
+                                ActionType.Mount => BarState.NoSlideAbility,
+                                _ => BarState.NonAbilityCast,
+                            }
                         };
                     }
                     else if (bar.IsShortCast) {
@@ -128,7 +135,7 @@ namespace GCDTracker {
                         HandleNonAbilityCast(bar, conf);
                     break;
 
-                case BarState.Mount:
+                case BarState.NoSlideAbility:
                     if (conf.SlideCastEnabled)
                         HandleMount();
                     break;
@@ -331,40 +338,39 @@ namespace GCDTracker {
 
         public string GetAbilityName(uint actionID, ActionType actionType) {
             var lumina = dataManager;
-            var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind;
+            var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None;
 
-            if (objectKind == ObjectKind.Aetheryte)
-                return "Attuning...";
-            if (objectKind == ObjectKind.EventObj || objectKind == ObjectKind.EventNpc)
-                return "Interacting...";
-            if (actionID == 1 && actionType != ActionType.Mount)
-                return "Interacting...";
-
-            return actionType switch
+            return objectKind switch
             {
-                ActionType.Ability 
-                or ActionType.Action 
-                or ActionType.BgcArmyAction 
-                or ActionType.CraftAction 
-                or ActionType.PetAction 
-                or ActionType.PvPAction => 
-                    lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID)?.Name ?? "Unknown Ability",
+                ObjectKind.Aetheryte => "Attuning...",
+                ObjectKind.EventObj or ObjectKind.EventNpc => "Interacting...",
+                _ when actionID == 1 && actionType != ActionType.Mount => "Interacting...",
+                _ => actionType switch
+                {
+                    ActionType.Ability
+                    or ActionType.Action
+                    or ActionType.BgcArmyAction
+                    or ActionType.CraftAction
+                    or ActionType.PetAction
+                    or ActionType.PvPAction =>
+                        lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID)?.Name ?? "Unknown Ability",
 
-                ActionType.Companion => 
-                    lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Companion>()?.GetRow(actionID) is var companion && companion != null 
-                    ? CapitalizeOutput(companion.Singular) 
-                    : "Unknown Companion",
+                    ActionType.Companion =>
+                        lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Companion>()?.GetRow(actionID) is var companion && companion != null
+                        ? CapitalizeOutput(companion.Singular)
+                        : "Unknown Companion",
 
-                ActionType.Item 
-                or ActionType.KeyItem => 
-                    lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()?.GetRow(actionID)?.Name ?? "Unknown Item",
+                    ActionType.Item
+                    or ActionType.KeyItem =>
+                        lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()?.GetRow(actionID)?.Name ?? "Unknown Item",
 
-                ActionType.Mount => 
-                    lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Mount>()?.GetRow(actionID) is var mount && mount != null 
-                    ? CapitalizeOutput(mount.Singular) 
-                    : "Unknown Mount",
+                    ActionType.Mount =>
+                        lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Mount>()?.GetRow(actionID) is var mount && mount != null
+                        ? CapitalizeOutput(mount.Singular)
+                        : "Unknown Mount",
 
-                _ => "Casting..."
+                    _ => "Casting..."
+                }
             };
         }
         
