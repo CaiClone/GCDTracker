@@ -346,8 +346,18 @@ namespace GCDTracker
                         ImGui.Checkbox("(Bar Only) Progress Bar Pushes Queue Lock", ref BarQueueLockSlide);
                         ImGui.Checkbox("(Bar Only) Show Queue Lock When Idle", ref BarQueueLockWhenIdle);
                         ImGui.Checkbox("(Bar Only) Show Queue Lock Triangles", ref ShowQueuelockTriangles);
+                        if (ImGui.IsItemHovered()){
+                            ImGui.BeginTooltip();
+                            ImGui.Text("If enabled, show a triangle on the top of the queuelock indicator");
+                            ImGui.EndTooltip();
+                        }
                         if (ShowQueuelockTriangles)
                             ImGui.SliderInt("Triangle Size", ref triangleSize, 0, 12);
+                            if (ImGui.IsItemHovered()){
+                                ImGui.BeginTooltip();
+                                ImGui.Text("Triangle size shared with (Castbar) Slidelock.");
+                                ImGui.EndTooltip();
+                            }
                         ImGui.Unindent();
                     }
                     ImGui.Separator();
@@ -439,6 +449,11 @@ namespace GCDTracker
                                 var inBattle = HelperMethods.IsCasting() || DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
                                 if (inBattle) ImGui.BeginDisabled();
                                 ImGui.Checkbox("Show Queued Spell on GCDBar", ref ShowQueuedSpellNameGCD);
+                                if (ImGui.IsItemHovered()){
+                                    ImGui.BeginTooltip();
+                                    ImGui.Text("If enabled, successfuly queued abilities will be shown after an arrow ( -> )");
+                                    ImGui.EndTooltip();
+                                }
                                 if (inBattle) ImGui.EndDisabled();
                             }
                             ImGui.Checkbox("Enable GCDBar Gradient", ref BarHasGradient);
@@ -479,26 +494,56 @@ namespace GCDTracker
                         if(CastBarEnabled) {
                             if (ShowAdvanced) {
                                 ImGui.Checkbox("Hide Animation Lock in Castbar Mode", ref HideAnimationLock);
-                                ImGui.Checkbox("Show Queuelock when CastTime >= GCD", ref ShowQuelockOnHardCasts);
+                                ImGui.Checkbox("Show Queuelock when cast time >= recast time", ref ShowQuelockOnHardCasts);
+                                if (ImGui.IsItemHovered()){
+                                    ImGui.BeginTooltip();
+                                    ImGui.Text("For long spells, show the queuelock indicator.");
+                                    ImGui.EndTooltip();
+                                }
                             }
                             ImGui.Separator();
                             ImGui.Checkbox("Enable Slidecast Functionality", ref SlideCastEnabled);
                             if(SlideCastEnabled) {
                                 ImGui.Indent();
                                 ImGui.Checkbox("Show Slidcast Bar Background", ref SlideCastBackground);
+                                if (ImGui.IsItemHovered()){
+                                    ImGui.BeginTooltip();
+                                    ImGui.Text("Show a colored bar to indicate when a spell has registred succesfully and you can move freely.");
+                                    ImGui.EndTooltip();
+                                }
                                 if (SlideCastBackground) {
                                     ImGui.ColorEdit4("Slidecast Bar Color", ref slideCol, ImGuiColorEditFlags.NoInputs);
                                 }
                                 if(ShowAdvanced) {
                                     ImGui.Checkbox("Slidecast Covers End of Bar", ref SlideCastFullBar);
+                                    if (ImGui.IsItemHovered()){
+                                        ImGui.BeginTooltip();
+                                        ImGui.Text("If enabled, colored portion of the slidecast bar will extend to the end of the castbar.");
+                                        ImGui.EndTooltip();
+                                    }
                                     var SlidecastDelayInt = (int)(SlidecastDelay * 1000);
                                     ImGui.SliderInt("Slidecast Time (in ms)", ref SlidecastDelayInt, 400, 600);
                                     SlidecastDelay = SlidecastDelayInt / 1000f;
                                     ImGui.Checkbox("Show Slidecast Triangles", ref ShowSlidecastTriangles);
+                                    if (ImGui.IsItemHovered()){
+                                        ImGui.BeginTooltip();
+                                        ImGui.Text("If enabled, show a triangle on the bottom of the slidcast indicator");
+                                        ImGui.EndTooltip();
+                                    }
                                     if (ShowSlidecastTriangles) {
                                         ImGui.Indent();
                                         ImGui.Checkbox("Also Show Triangles on Hard Casts", ref ShowTrianglesOnHardCasts);
+                                        if (ImGui.IsItemHovered()){
+                                            ImGui.BeginTooltip();
+                                            ImGui.Text("If enabled, display Slidecast triangle when cast time > recast time.");
+                                            ImGui.EndTooltip();
+                                        }
                                         ImGui.SliderInt("Triangle Size", ref triangleSize, 0, 12);
+                                        if (ImGui.IsItemHovered()){
+                                            ImGui.BeginTooltip();
+                                            ImGui.Text("Triangle size shared with Queuelock.");
+                                            ImGui.EndTooltip();
+                                        }
                                         ImGui.Unindent();
                                     }
                                 }
@@ -514,6 +559,11 @@ namespace GCDTracker
                                 ImGui.ColorEdit3("Castbar Text Color", ref CastBarTextColor, ImGuiColorEditFlags.NoInputs);
                                 ImGui.Checkbox("\"Bold\" Castbar Text", ref CastBarBoldText);
                                 ImGui.Checkbox("Show Next Spell When Queued", ref CastBarShowQueuedSpell);
+                                if (ImGui.IsItemHovered()){
+                                    ImGui.BeginTooltip();
+                                    ImGui.Text("If enabled, successfuly queued spells will be shown after an arrow ( -> )");
+                                    ImGui.EndTooltip();
+                                }
                                 var CastBarTextInt = (int)(CastBarTextSize * 12f);
                                 ImGui.SliderInt("Spell Name/Time Text Size", ref CastBarTextInt, 6, 18);
                                 CastBarTextSize = CastBarTextInt / 12f;
@@ -567,6 +617,11 @@ namespace GCDTracker
                         ImGui.TextDisabled("\tin GCDTracker, GCDDisplay, and Castbar.");
                         ImGui.NewLine();
                         ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
+                        if (ImGui.IsItemHovered()){
+                            ImGui.BeginTooltip();
+                            ImGui.Text("If enabled, use Monospace font in GCDTracker.");
+                            ImGui.EndTooltip();
+                        }
                         ImGui.NewLine();
                         if (ImGui.Button("Reset All Settings to Default"))
                             showResetConfirmation = true;
