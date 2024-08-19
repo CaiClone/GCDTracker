@@ -489,7 +489,7 @@ namespace GCDTracker
                 }
 
                 if (BarEnabled){
-                    if (ImGui.BeginTabItem("Castbar")) {
+                    if (ImGui.BeginTabItem("Castbar (BETA)")) {
                         ImGui.Checkbox("Enable Castbar Mode", ref CastBarEnabled);
                         if(CastBarEnabled) {
                             if (ShowAdvanced) {
