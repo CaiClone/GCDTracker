@@ -2,6 +2,7 @@
 using FFXIVClientStructs.FFXIV.Client.Game;
 using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 
 [assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker.Data
@@ -52,5 +53,10 @@ namespace GCDTracker.Data
 
         public static uint? GetParentJob(uint jobId) => DataStore.ClassSheet.GetRow(jobId).ClassJobParent.Value?.RowId;
         internal static bool IsTeleport(uint castId) => DataStore.TeleportIds.Contains(castId);
+        
+        public static string ReadStringFromPointer(byte** ptr) { 
+            if (ptr == null || *ptr == null) return "";
+            return Marshal.PtrToStringUTF8(new nint(*ptr));
+        }
     }
 }

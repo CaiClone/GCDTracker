@@ -1,5 +1,3 @@
-using Dalamud.Game;
-using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using Dalamud.Game.ClientState.Objects.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game;
@@ -7,14 +5,13 @@ using GCDTracker.Data;
 using GCDTracker.UI;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text;
 using System.Text.RegularExpressions;
-using FFXIVClientStructs.FFXIV.Common.Lua;
+using FFXIVClientStructs.FFXIV.Component.GUI;
+using Dalamud.Memory;
 
 
 [assembly: InternalsVisibleTo("Tests")]
@@ -260,7 +257,7 @@ namespace GCDTracker {
         }
     }
 
-    public unsafe partial class GCDHelper {
+    public unsafe class GCDHelper {
         private readonly Configuration conf;
         private readonly IDataManager dataManager;
         private readonly AbilityManager abilityManager;
@@ -383,19 +380,13 @@ namespace GCDTracker {
         }
 
         public string GetCastbarContents() {
-            var AtkStage = FFXIVClientStructs.FFXIV.Component.GUI.AtkStage.Instance();
-            byte** stringData = AtkStage->GetStringArrayData()[20][0].StringArray;
-
-            int length = 0;
-            byte* currentByte = stringData[0];
-            while (currentByte[length] != 0) length++;
-
-            byte[] data = new byte[length];
-            for (int i = 0; i < length; i++) data[i] = currentByte[i];
-
-            string result = Encoding.UTF8.GetString(data);
-            string cleanedResult = MyRegex().Replace(result, string.Empty);           
-            return cleanedResult;
+            if (DataStore.AtkStage == null){
+                GCDTracker.Log.Warning("AtkStage was not loaded");
+                return "";
+            }
+            var stringArrayData = DataStore.AtkStage->GetStringArrayData(StringArrayType.CastBar);
+            if (stringArrayData == null) return "";
+            return HelperMethods.ReadStringFromPointer(stringArrayData[0].StringArray);
         }
 
         public static bool IsNonAbility() {
@@ -611,8 +602,5 @@ namespace GCDTracker {
             foreach (var ogcd in toSlide)
                 abilityManager.ogcds.Remove(ogcd.Key);
         }
-
-        [GeneratedRegex("\x02.*?\x03")]
-        private static partial Regex MyRegex();
     }
 }
