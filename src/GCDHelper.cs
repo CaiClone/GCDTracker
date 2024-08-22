@@ -496,7 +496,7 @@ namespace GCDTracker {
 
         public void EndCurrentGCD(float GCDtime) {
             SlideGCDs(GCDtime, true);
-            if (lastElapsedGCD > 0 && !isHardCast) checkClip = true;
+            if (lastElapsedGCD > 0) checkClip = true;
             lastElapsedGCD = DataStore.Action->ElapsedGCD;
             lastGCDEnd = DateTime.Now;
             //I'm sure there's a better way to accomplish this
