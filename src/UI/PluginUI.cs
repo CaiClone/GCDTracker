@@ -89,12 +89,12 @@ namespace GCDTracker.UI {
                 // Hide the GCDBar if the castbar is active.
                 // This seems to work fine, but if it ever becomes a problem,
                 // might try using string.IsNullOrEmpty(GetCastbarContents())
-                // instead of HelperMethods.IsCasting() since that comes
+                // instead of GameState.IsCasting() since that comes
                 // directly from the game's castbar.
-                if (!conf.CastBarEnabled || !HelperMethods.IsCasting()) {
+                if (!conf.CastBarEnabled || !GameState.IsCasting()) {
                     gcd.DrawGCDBar(this);
                 }
-                if (conf.CastBarEnabled && HelperMethods.IsCasting()) {
+                if (conf.CastBarEnabled && GameState.IsCasting()) {
                     gcd.DrawCastBar(this);
                 }
                 ImGui.End();

@@ -60,7 +60,7 @@ namespace GCDTracker {
             ComboStore.Init(config);
 
             ui = new PluginUI(config);
-            helper = new GCDHelper(config, Data);
+            helper = new GCDHelper(config);
             gcd = new GCDDisplay(config, Data, helper);
     
             ct = new ComboTracker();

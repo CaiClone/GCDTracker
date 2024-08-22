@@ -11,6 +11,7 @@ namespace GCDTracker.Data
 {
     static unsafe class DataStore
     {
+        public static IDataManager Lumina;
         public static ComboDetail Combo;
         public static Action* Action;
         public static ActionManager* ActionManager;
@@ -22,8 +23,8 @@ namespace GCDTracker.Data
 
         public static Dictionary<int, bool> ComboPreserving;
 
-
         public static void Init(IDataManager data, IClientState cs, ICondition cond) {
+            Lumina = data;
             ActionSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>();
             ClassSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ClassJob>();
 
@@ -36,7 +37,6 @@ namespace GCDTracker.Data
             ClientState = cs;
             Condition = cond;
         }
-
         /*
         * Dict of manual changes to combo dict with the structure
         * (jobClass, List<condition(level), action>)

@@ -5,13 +5,9 @@ using GCDTracker.Data;
 using GCDTracker.UI;
 using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using System.Text.RegularExpressions;
-using FFXIVClientStructs.FFXIV.Component.GUI;
-using Dalamud.Memory;
 
 
 [assembly: InternalsVisibleTo("Tests")]
@@ -259,7 +255,6 @@ namespace GCDTracker {
 
     public unsafe class GCDHelper {
         private readonly Configuration conf;
-        private readonly IDataManager dataManager;
         private readonly AbilityManager abilityManager;
         public float TotalGCD = 3.5f;
         private DateTime lastGCDEnd = DateTime.Now;
@@ -289,9 +284,8 @@ namespace GCDTracker {
         public string queuedAbilityName = " ";
         public bool shortCastFinished = false;
 
-        public GCDHelper(Configuration conf, IDataManager dataManager) {
+        public GCDHelper(Configuration conf) {
             this.conf = conf;
-            this.dataManager = dataManager;
             abilityManager = AbilityManager.Instance;
         }
 
@@ -312,7 +306,7 @@ namespace GCDTracker {
 
             if (addingToQueue) {
                 AddToQueue(act, isWeaponSkill);
-                queuedAbilityName = GetAbilityName(actionID, actionType);
+                queuedAbilityName = HelperMethods.GetAbilityName(actionID, actionType);
             } else {
                 queuedAbilityName = " ";
                 
@@ -331,76 +325,6 @@ namespace GCDTracker {
                     abilityManager.ogcds[act->ElapsedGCD] = new(act->AnimationLock, false);
                 }
             }
-        }
-
-        public string GetAbilityName(uint actionID, ActionType actionType) {
-            var lumina = dataManager;
-            var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None;
-
-            return objectKind switch
-            {
-                ObjectKind.Aetheryte => "Attuning...",
-                ObjectKind.EventObj or ObjectKind.EventNpc => "Interacting...",
-                _ when actionID == 1 && actionType != ActionType.Mount => "Interacting...",
-                _ => actionType switch
-                {
-                    ActionType.Ability
-                    or ActionType.Action
-                    or ActionType.BgcArmyAction
-                    or ActionType.CraftAction
-                    or ActionType.PetAction
-                    or ActionType.PvPAction =>
-                        lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID)?.Name ?? "Unknown Ability",
-
-                    ActionType.Companion =>
-                        lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Companion>()?.GetRow(actionID) is var companion && companion != null
-                        ? CapitalizeOutput(companion.Singular)
-                        : "Unknown Companion",
-
-                    ActionType.Item
-                    or ActionType.KeyItem =>
-                        lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()?.GetRow(actionID)?.Name ?? "Unknown Item",
-
-                    ActionType.Mount =>
-                        lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Mount>()?.GetRow(actionID) is var mount && mount != null
-                        ? CapitalizeOutput(mount.Singular)
-                        : "Unknown Mount",
-
-                    _ => "Casting..."
-                }
-            };
-        }
-        
-        public static string CapitalizeOutput(string input) {
-            if (string.IsNullOrEmpty(input))
-                return input;
-
-            TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
-            return textInfo.ToTitleCase(input.ToLower());
-        }
-
-        public string GetCastbarContents() {
-            if (DataStore.AtkStage == null){
-                GCDTracker.Log.Warning("AtkStage was not loaded");
-                return "";
-            }
-            var stringArrayData = DataStore.AtkStage->GetStringArrayData(StringArrayType.CastBar);
-            if (stringArrayData == null) return "";
-            return HelperMethods.ReadStringFromPointer(stringArrayData[0].StringArray);
-        }
-
-        public static bool IsNonAbility() {
-            var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind;
-
-            return objectKind switch
-            {
-                ObjectKind.Aetheryte => true,
-                ObjectKind.EventObj => true,
-                ObjectKind.EventNpc => true,
-                _ => DataStore.ActionManager->CastActionType 
-                    is not ActionType.Action 
-                    and not ActionType.None
-            };
         }
 
         public void AddToQueue(Data.Action* act, bool isWeaponSkill) {
@@ -437,7 +361,7 @@ namespace GCDTracker {
             GCDTimeoutHelper(framework);
             remainingCastTime = DataStore.Action->TotalCastTime - DataStore.Action->ElapsedCastTime;
             remainingCastTimeString = remainingCastTime == 0 ? "" : remainingCastTime.ToString("F1");
-            if (lastActionCast && !HelperMethods.IsCasting())
+            if (lastActionCast && !GameState.IsCasting())
                 HandleCancelCast();
             else if (DataStore.Action->ElapsedGCD < lastElapsedGCD)
                 EndCurrentGCD(lastElapsedGCD);
@@ -458,9 +382,9 @@ namespace GCDTracker {
 
         public void GCDTimeoutHelper(IFramework framework) {
             // Determine if we are running
-            isRunning = (DataStore.Action->ElapsedGCD != DataStore.Action->TotalGCD) || HelperMethods.IsCasting();
+            isRunning = (DataStore.Action->ElapsedGCD != DataStore.Action->TotalGCD) || GameState.IsCasting();
             // Detect Teleports for when the carbar is off
-            if (conf.ShowOnlyGCDRunning && HelperMethods.IsTeleport(DataStore.Action->CastId)) {
+            if (conf.ShowOnlyGCDRunning && GameState.IsCastingTeleport()) {
                 lastActionTP = true;
             }
             // Reset idleTimer when we start casting
@@ -478,7 +402,7 @@ namespace GCDTracker {
                 idleTimerReset = true;
             }
             // Handle caster tax
-            if (!isHardCast && HelperMethods.IsCasting() && DataStore.Action->TotalCastTime - 0.1f >= DataStore.Action->TotalGCD)
+            if (!isHardCast && GameState.IsCasting() && DataStore.Action->TotalCastTime - 0.1f >= DataStore.Action->TotalGCD)
                 isHardCast = true;
             checkABC = !abcBlocker && (idleTimerAccum >= (isHardCast ? (conf.abcDelay + 120) : conf.abcDelay));
             // Reset state after the GCDTimeout

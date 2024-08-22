@@ -1,4 +1,4 @@
-using Dalamud.Configuration;
+﻿using Dalamud.Configuration;
 using Dalamud.Interface;
 using Dalamud.Plugin;
 using GCDTracker.Data;
@@ -446,7 +446,7 @@ namespace GCDTracker
                         BarHeightRatio = size.Y;
                         if (ShowAdvanced) {
                             if (EnableCastText) {
-                                var inBattle = HelperMethods.IsCasting() || DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
+                                var inBattle = GameState.IsCasting() || DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
                                 if (inBattle) ImGui.BeginDisabled();
                                 ImGui.Checkbox("Show Queued Spell on GCDBar", ref ShowQueuedSpellNameGCD);
                                 if (ImGui.IsItemHovered()){
@@ -550,7 +550,7 @@ namespace GCDTracker
                                 ImGui.Unindent();
                             }
                             ImGui.Separator();
-                            var inBattle = HelperMethods.IsCasting() || DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
+                            var inBattle = GameState.IsCasting() || DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
                             if (inBattle) ImGui.BeginDisabled();
                             ImGui.Checkbox("Enable Spell Name/Time Text", ref EnableCastText);
                             if (inBattle) ImGui.EndDisabled();

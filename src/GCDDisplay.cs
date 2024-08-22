@@ -1,4 +1,3 @@
-using Dalamud.Game;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Logging;
 using Dalamud.Plugin.Services;
@@ -29,7 +28,7 @@ namespace GCDTracker {
             float gcdTotal = helper.TotalGCD;
             float gcdTime = helper.lastElapsedGCD;
 
-            if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
+            if (GameState.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !GameState.IsCastingTeleport())
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
             helper.FlagAlerts(ui);
@@ -53,7 +52,7 @@ namespace GCDTracker {
             float gcdTotal = helper.TotalGCD;
             float gcdTime = helper.lastElapsedGCD;
 
-            if (HelperMethods.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !HelperMethods.IsTeleport(DataStore.Action->CastId))
+            if (GameState.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !GameState.IsCastingTeleport())
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
             helper.FlagAlerts(ui);
@@ -94,10 +93,10 @@ namespace GCDTracker {
             float castbarEnd = 1f;
             float slidecastStart = Math.Max((castTotal - conf.SlidecastDelay) / castTotal, 0f);
             float slidecastEnd = castbarEnd;
-            bool isTeleport = HelperMethods.IsTeleport(DataStore.Action->CastId);
+            bool isTeleport = GameState.IsCastingTeleport();
             // handle short casts
             if (gcdTotal > castTotal) {
-                castbarEnd = GCDHelper.IsNonAbility() ? 1f : castTotal / gcdTotal;
+                castbarEnd = GameState.CastingNonAbility() ? 1f : castTotal / gcdTotal;
                 slidecastStart = Math.Max((castTotal - conf.SlidecastDelay) / gcdTotal, 0f);
                 slidecastEnd = conf.SlideCastFullBar ? 1f : castbarEnd;
             }
@@ -107,19 +106,20 @@ namespace GCDTracker {
                 true,
                 gcdTotal > castTotal,
                 // Maybe we don't need the gcdTotal < 0.01f anymore?
-                GCDHelper.IsNonAbility() || isTeleport || gcdTotal < 0.01f,
+                GameState.CastingNonAbility() || isTeleport || gcdTotal < 0.01f,
                 castbarProgress * castbarEnd,
                 slidecastStart,
                 slidecastEnd,
                 castbarEnd
             );
 
-            if (!string.IsNullOrEmpty(helper.GetCastbarContents())) {
+            var castName = GameState.GetCastbarContents();
+            if (!string.IsNullOrEmpty(castName)) {
                 if (castbarEnd - castbarProgress <= 0.01f && gcdTotal > castTotal) {
                     helper.shortCastFinished = true;
-                    shortCastCachedSpellName = helper.GetCastbarContents();
+                    shortCastCachedSpellName = castName;
                 }
-                string abilityNameOutput = helper.GetCastbarContents();
+                string abilityNameOutput = castName;
                 if (conf.castTimePosition == 0 && conf.CastTimeEnabled)
                     abilityNameOutput += " (" + helper.remainingCastTimeString + ")";
                 if (helper.queuedAbilityName != " " && conf.CastBarShowQueuedSpell)
