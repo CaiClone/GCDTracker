@@ -224,8 +224,13 @@ namespace GCDTracker {
             SlideStart_RightTri = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
 
             // invoke Queuelock
-            if (conf.QueueLockEnabled)
+            if (conf.QueueLockEnabled && conf.ShowQuelockOnHardCasts)
                 HandleGCDOnly(bar, conf);
+            else {
+                Queue_VerticalBar = false;
+                Queue_Triangle = false;
+            }
+
 
             // move lines
             Slide_Bar_Start = Math.Max(Slide_Bar_Start, bar.CurrentPos);
