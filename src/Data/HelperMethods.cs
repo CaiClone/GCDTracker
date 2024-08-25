@@ -1,4 +1,5 @@
 ﻿using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Memory;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using System;
 using System.Globalization;
@@ -55,7 +56,7 @@ namespace GCDTracker.Data
 
         public static string ReadStringFromPointer(byte** ptr) { 
             if (ptr == null || *ptr == null) return "";
-            return Marshal.PtrToStringUTF8(new nint(*ptr));
+            return MemoryHelper.ReadSeStringNullTerminated(new nint(*ptr)).TextValue;
         }
         
         public static string GetAbilityName(uint actionID, ActionType actionType) {
