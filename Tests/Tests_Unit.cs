@@ -44,5 +44,16 @@ namespace Tests
                 Assert.AreEqual("ブリザガ", result);
             }
         }
+        [TestMethod]
+        public unsafe void TestSEString()
+        {
+            byte[] buffer = Encoding.UTF8.GetBytes("\u0002H\u0004�\u0002%\u0003\u0002I\u0004�\u0002&\u0003Vesper Bay Aetheryte Ticket\u0002I\u0002\u0001\u0003\u0002H\u0002\u0001\u0003");
+            fixed (byte* ptr = buffer)
+            {
+                byte* ptr2 = ptr;
+                string result = HelperMethods.ReadStringFromPointer(&ptr2);
+                Assert.AreEqual("%\u0003&\u0003Vesper Bay Aetheryte Ticket", result);
+            }
+        }
     }
 }
