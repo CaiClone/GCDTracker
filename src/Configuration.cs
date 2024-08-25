@@ -83,7 +83,6 @@ namespace GCDTracker
         public bool ShowQueuelockTriangles = true;
         public bool ShowSlidecastTriangles = true;
         public bool ShowTrianglesOnHardCasts = true;
-        public bool ShowQuelockOnHardCasts = true;
         public bool EnableCastText = true;
         public bool CastBarShowQueuedSpell = true;
         public bool HideAnimationLock = true;
@@ -494,7 +493,6 @@ namespace GCDTracker
                         if(CastBarEnabled) {
                             if (ShowAdvanced) {
                                 ImGui.Checkbox("Hide Animation Lock in Castbar Mode", ref HideAnimationLock);
-                                ImGui.Checkbox("Show Queuelock when cast time >= recast time", ref ShowQuelockOnHardCasts);
                                 if (ImGui.IsItemHovered()){
                                     ImGui.BeginTooltip();
                                     ImGui.Text("For long spells, show the queuelock indicator.");
