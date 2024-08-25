@@ -193,7 +193,7 @@ namespace GCDTracker {
 
             // in GCDBar mode:
             // draw oGCDs and clips
-            if (!isCastBar && !(helper.shortCastFinished && conf.HideAnimationLock)) {
+            if (!isCastBar) {
                 float gcdTime = gcdTime_slidecastStart;
                 float gcdTotal = gcdTotal_slidecastEnd;
 

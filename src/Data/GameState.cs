@@ -1,7 +1,6 @@
 using Dalamud.Game.ClientState.Objects.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using FFXIVClientStructs.FFXIV.Component.GUI;
-using System.Text.RegularExpressions;
 
 namespace GCDTracker.Data
 {
@@ -32,9 +31,7 @@ namespace GCDTracker.Data
             }
             var stringArrayData = DataStore.AtkStage->GetStringArrayData(StringArrayType.CastBar);
             if (stringArrayData == null) return "";
-            string contents = HelperMethods.ReadStringFromPointer(stringArrayData[0].StringArray);
-            string cleanedContents = new Regex("\x02.*?\x03").Replace(contents, string.Empty);
-            return cleanedContents;
+            return HelperMethods.ReadStringFromPointer(stringArrayData[0].StringArray);
         }
         
     }

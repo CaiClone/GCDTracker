@@ -85,7 +85,6 @@ namespace GCDTracker
         public bool ShowTrianglesOnHardCasts = true;
         public bool EnableCastText = true;
         public bool CastBarShowQueuedSpell = true;
-        public bool HideAnimationLock = true;
         public Vector4 slideCol = new(0f, 0f, 0f, 0.4f);
         public int triangleSize = 6;
         public float SlidecastDelay = 0.5f;
@@ -491,14 +490,6 @@ namespace GCDTracker
                     if (ImGui.BeginTabItem("Castbar (BETA)")) {
                         ImGui.Checkbox("Enable Castbar Mode", ref CastBarEnabled);
                         if(CastBarEnabled) {
-                            if (ShowAdvanced) {
-                                ImGui.Checkbox("Hide Animation Lock in Castbar Mode", ref HideAnimationLock);
-                                if (ImGui.IsItemHovered()){
-                                    ImGui.BeginTooltip();
-                                    ImGui.Text("For long spells, show the queuelock indicator.");
-                                    ImGui.EndTooltip();
-                                }
-                            }
                             ImGui.Separator();
                             ImGui.Checkbox("Enable Slidecast Functionality", ref SlideCastEnabled);
                             if(SlideCastEnabled) {
