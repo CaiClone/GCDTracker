@@ -300,5 +300,46 @@ namespace GCDTracker {
                 ui.DrawRightTriangle(ql_v.TR_C, ql_v.TR_X, ql_v.TR_Y, conf.backColBorder);
             }
         }
+
+public void DrawFloatingTriangles(PluginUI ui) {
+    float gcdTotal = DataStore.Action->TotalGCD;
+    float gcdElapsed = DataStore.Action->ElapsedGCD;
+    float gcdPercent = gcdElapsed / gcdTotal;
+    float castTotal = DataStore.Action->TotalCastTime;
+    float castElapsed = DataStore.Action->ElapsedCastTime;
+    float castPercent = castElapsed / castTotal;
+    float slidecastStart = (castTotal - 0.5f) / castTotal;
+    int triangleSize = (int)Math.Min(ui.w_size.X / 5, ui.w_size.Y / 5);
+    int borderOffset = (int)Math.Min(ui.w_size.X / 30, ui.w_size.Y / 30);
+    int halfTriangleSize = triangleSize / 2;
+    Vector4 red = new(1f, 0f, 0f, 1f);
+    Vector4 green = new(0f, 1f, 0f, 1f);
+    Vector4 bgCol = new(0f, 0f, 0f, 1f);
+
+    // slidecast
+    Vector2 slideTop = new(ui.w_cent.X - (int)(triangleSize / 1.5), ui.w_cent.Y - halfTriangleSize);
+    Vector2 slideLeft = slideTop + new Vector2(-triangleSize, triangleSize);
+    Vector2 slideRight = slideTop + new Vector2(triangleSize, triangleSize);
+    // queuelock
+    Vector2 queueBot = new(slideTop.X + (int)(1.5f * triangleSize), slideTop.Y + triangleSize);
+    Vector2 queueRight = queueBot - new Vector2(-triangleSize, triangleSize);
+    Vector2 queueLeft = queueBot - new Vector2(triangleSize, triangleSize);
+
+
+    Vector2 topLeft = slideTop - new Vector2(borderOffset, borderOffset);
+    Vector2 botLeft = slideLeft - new Vector2 (3 * borderOffset, -borderOffset);
+    Vector2 botRight = queueBot - new Vector2(-borderOffset, -borderOffset);
+    Vector2 topRight = queueRight - new Vector2(-(3 * borderOffset), borderOffset);
+
+    // Draw the parallelogram background
+    ui.DrawParallelogramFilledNoAA(topLeft, topRight, botRight, botLeft, bgCol);
+
+
+    Vector4 slideCol = castPercent != 0 && castPercent < slidecastStart ? red : green;
+    Vector4 queueCol = gcdPercent != 0 && gcdPercent < 0.8f ? red : green;
+
+    ui.DrawRightTriangle(slideTop, slideLeft, slideRight, slideCol);
+    ui.DrawRightTriangle(queueBot, queueRight, queueLeft, queueCol);
+}
     }
 }

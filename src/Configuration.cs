@@ -105,6 +105,11 @@ namespace GCDTracker
         public Vector4 ctComboActive = new(1f, 1f, 1f, 1f);
         public Vector2 ctsep = new(23, 23);
 
+        //Floating Triangles
+        public bool FloatingTrianglesEnable = false;
+        [JsonIgnore]
+        public bool WindowMoveableSQI = false;
+
         //Deprecated
         public bool ShowOutOfCombatGW = false;
         public bool BarShowOutOfCombat = false;
@@ -638,6 +643,13 @@ namespace GCDTracker
                             ImGui.EndPopup();
                         }
                     }
+                    ImGui.EndTabItem();
+                }
+                if (ImGui.BeginTabItem("Triangles")) {
+                    ImGui.Checkbox("Draw Floating Triangles", ref FloatingTrianglesEnable);
+                    ImGui.Checkbox("Move/resize Triangles", ref WindowMoveableSQI);
+                    if (WindowMoveableSQI)
+                        ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                     ImGui.EndTabItem();
                 }
             }

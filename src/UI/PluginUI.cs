@@ -113,6 +113,14 @@ namespace GCDTracker.UI {
                 ct.DrawComboLines(this, conf);
                 ImGui.End();
             }
+
+            if (conf.FloatingTrianglesEnable) {
+                SetupWindow("GCDTracker_SlideQueueIndicators", conf.WindowMoveableSQI);
+                gcd.DrawFloatingTriangles(this);
+                ImGui.End();
+            }
+
+
         }
 
         private void SetupWindow(string name,bool windowMovable) {
@@ -346,6 +354,15 @@ namespace GCDTracker.UI {
                     ImGui.GetColorU32(lineColor)
                 );
             }
+
+            draw.Flags = originalFlags;
+        }
+
+        public void DrawParallelogramFilledNoAA(Vector2 p1, Vector2 p2, Vector2 p3, Vector2 p4, Vector4 color) {
+            var originalFlags = draw.Flags;
+            draw.Flags &= ~ImDrawListFlags.AntiAliasedFill;
+
+            draw.AddQuadFilled(p1, p2, p3, p4, ImGui.GetColorU32(color));
 
             draw.Flags = originalFlags;
         }
