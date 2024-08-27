@@ -23,6 +23,8 @@ namespace GCDTracker.UI {
         public float TotalBarTime { get; private set; }
         public float GCDTotal { get; private set; }
         public float CastTotal { get; private set; }
+        public float QueueLockStart { get; private set; }
+        public float QueueLockScaleFactor { get; private set; }
         public int TriangleOffset { get; private set; }
         public bool IsCastBar { get; private set; }
         public bool IsShortCast { get; private set; }
@@ -30,6 +32,7 @@ namespace GCDTracker.UI {
         public Vector2 StartVertex { get; private set; }
         public Vector2 EndVertex { get; private set; }
         public Vector2 ProgressVertex { get; private set; }
+        public Vector4 ProgressBarColor { get; private set; }
 
         private BarInfo() { }
         public static BarInfo Instance {
@@ -40,13 +43,11 @@ namespace GCDTracker.UI {
         }
 
         public void Update(
+            Configuration conf,
             float sizeX,
             float centX,
-            float widthRatio,
             float sizeY,
             float centY,
-            float heightRatio,
-            int borderSize,
             float castBarCurrentPos,
             float gcdTime_slidecastStart,
             float gcdTotal_slidecastEnd,
@@ -56,28 +57,35 @@ namespace GCDTracker.UI {
             bool isShortCast,
             bool isNonAbility) {
 
-            CenterX = centX;
-            CenterY = centY;
-            Width = (int)(sizeX * widthRatio);
-            HalfWidth = Width % 2 == 0 ? (Width / 2) : (Width / 2) + 1;
-            RawHalfWidth = Width / 2;
-            Height = (int)(sizeY * heightRatio);
-            HalfHeight = Height % 2 == 0 ? (Height / 2) : (Height / 2) + 1;
-            RawHalfHeight = Height / 2;
-            BorderSize = borderSize;
-            HalfBorderSize = BorderSize % 2 == 0 ? (BorderSize / 2) : (BorderSize / 2) + 1;
-            BorderSizeAdj = BorderSize >= 1 ? BorderSize : 1;
-            BorderWidthPercent = (float)BorderSizeAdj / (float)Width;
-            CurrentPos = castBarCurrentPos;
-            GCDTime_SlidecastStart = gcdTime_slidecastStart;
-            GCDTotal_SlidecastEnd = gcdTotal_slidecastEnd;
-            TotalBarTime = totalBarTime;
-            TriangleOffset = triangleOffset;
             IsCastBar = isCastBar;
             IsShortCast = isShortCast;
             IsNonAbility = isNonAbility;
+            CurrentPos = castBarCurrentPos;
             GCDTotal = DataStore.Action->TotalGCD;
             CastTotal = DataStore.Action->TotalCastTime;
+            GCDTime_SlidecastStart = gcdTime_slidecastStart;
+            GCDTotal_SlidecastEnd = gcdTotal_slidecastEnd;
+            QueueLockStart = IsCastBar && !isShortCast
+                ? 0.8f * (GCDTotal / CastTotal)
+                : 0.8f;
+            QueueLockScaleFactor = IsCastBar && !isShortCast
+                ? GCDTotal / CastTotal
+                : 1f;
+            TotalBarTime = totalBarTime;
+            CenterX = centX;
+            CenterY = centY;
+            Width = GetBarSize(sizeX, conf.BarWidthRatio, CurrentPos, QueueLockStart, conf.pulseBarWidthAtQueue, QueueLockScaleFactor);
+            HalfWidth = Width % 2 == 0 ? (Width / 2) : (Width / 2) + 1;
+            RawHalfWidth = Width / 2;
+            Height = GetBarSize(sizeY, conf.BarHeightRatio, CurrentPos, QueueLockStart, conf.pulseBarHeightAtQueue, QueueLockScaleFactor);
+            HalfHeight = Height % 2 == 0 ? (Height / 2) : (Height / 2) + 1;
+            RawHalfHeight = Height / 2;
+            BorderSize = conf.BarBorderSizeInt;
+            HalfBorderSize = BorderSize % 2 == 0 ? (BorderSize / 2) : (BorderSize / 2) + 1;
+            BorderSizeAdj = BorderSize >= 1 ? BorderSize : 1;
+            BorderWidthPercent = (float)BorderSizeAdj / (float)Width;
+            TriangleOffset = triangleOffset;
+            ProgressBarColor = GetBarColor(conf.frontCol, CurrentPos, QueueLockStart, conf.pulseBarColorAtQueue, QueueLockScaleFactor);
 
             StartVertex = new(
                 (int)(CenterX - RawHalfWidth),
@@ -92,6 +100,60 @@ namespace GCDTracker.UI {
                 (int)(CenterY + HalfHeight)
             );
         }
+
+        private Vector4 GetBarColor(Vector4 progressBarColor, float currentPos, float queueLockStart, bool pulseBarColorAtQueue, float scaleFactor) {
+            if (currentPos <= queueLockStart - 0.02f * scaleFactor || !pulseBarColorAtQueue)
+                return progressBarColor;
+
+            Vector4 targetColor = (progressBarColor.X * 0.3f + progressBarColor.Y * 0.6f + progressBarColor.Z * 0.2f) > 0.7f 
+                                ? new Vector4(0f, 0f, 0f, progressBarColor.W) 
+                                : new Vector4(1f, 1f, 1f, progressBarColor.W);
+
+            if (currentPos < queueLockStart + 0.02f * scaleFactor) {
+                float factor = (currentPos - queueLockStart + 0.02f * scaleFactor) / (0.04f * scaleFactor);
+                GCDTracker.Log.Warning(factor.ToString());
+                return Vector4.Lerp(progressBarColor, targetColor, factor);
+            }
+            else if (currentPos < queueLockStart + 0.06f * scaleFactor) {
+                GCDTracker.Log.Warning(" ");
+                return targetColor;
+            }
+            else if (currentPos < queueLockStart + 0.1f * scaleFactor) {
+                float factor = (currentPos - queueLockStart - 0.06f * scaleFactor) / (0.04f * scaleFactor);
+                GCDTracker.Log.Warning(factor.ToString());
+                return Vector4.Lerp(targetColor, progressBarColor, factor);
+            }
+            else {
+                return progressBarColor;
+            }
+        }
+
+        private int GetBarSize(float size, float ratio, float currentPos, float queueLockStart, bool pulseAtQueue, float scaleFactor) {
+            int dimension = (int)(size * ratio);
+            if (currentPos <= queueLockStart - 0.02f * scaleFactor || !pulseAtQueue)
+                return dimension;
+            int targetDimension = (int)(dimension * 1.2f);
+
+            if (currentPos < queueLockStart + 0.02f * scaleFactor) {
+                float factor = (currentPos - queueLockStart + 0.02f * scaleFactor) / (0.04f * scaleFactor);
+                return (int)Lerp(dimension, targetDimension, factor);
+            }
+            else if (currentPos < queueLockStart + 0.06f * scaleFactor) {
+                return targetDimension;
+            }
+            else if (currentPos < queueLockStart + 0.1f * scaleFactor) {
+                float factor = (currentPos - queueLockStart - 0.06f * scaleFactor) / (0.04f * scaleFactor);
+                return (int)Lerp(targetDimension, dimension, factor);
+            }
+            else {
+                return dimension;
+            }
+        }
+
+        private float Lerp(float start, float end, float factor) {
+            return start + factor * (end - start);
+        }
+
     }
 
     public class SlideCastStartVertices {

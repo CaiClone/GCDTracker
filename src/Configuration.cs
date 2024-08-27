@@ -55,11 +55,15 @@ namespace GCDTracker
         public bool WheelEnabled = true;
         [JsonIgnore]
         public bool WindowMoveableGW = false;
+        public bool pulseWheelAtQueue = false;
 
         //GCDBar
         public bool BarEnabled = false;
         [JsonIgnore]
         public bool BarWindowMoveable = false;
+        public bool pulseBarColorAtQueue = false;
+        public bool pulseBarWidthAtQueue = false;
+        public bool pulseBarHeightAtQueue = false;
         public bool BarQueueLockWhenIdle = true;
         public bool BarQueueLockSlide = false;
         public bool BarRollGCDs = true;
@@ -616,6 +620,14 @@ namespace GCDTracker
                             ImGui.Text("If enabled, use Monospace font in GCDTracker.");
                             ImGui.EndTooltip();
                         }
+                        ImGui.Checkbox("Pulse GCDBar Color @ Queue Lock", ref pulseBarColorAtQueue);
+                        ImGui.Checkbox("Pulse GCDBar Width @ Queue Lock", ref pulseBarWidthAtQueue);
+                        ImGui.Checkbox("Pulse GCDBar Height @ Queue Lock", ref pulseBarHeightAtQueue);
+                        ImGui.Checkbox("Pulse GCDWheel Size @ Queue Lock", ref pulseWheelAtQueue);
+                        ImGui.Checkbox("Draw Floating Triangles", ref FloatingTrianglesEnable);
+                        ImGui.Checkbox("Move/resize Triangles", ref WindowMoveableSQI);
+                        if (WindowMoveableSQI)
+                            ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         ImGui.NewLine();
                         if (ImGui.Button("Reset All Settings to Default"))
                             showResetConfirmation = true;
@@ -643,13 +655,6 @@ namespace GCDTracker
                             ImGui.EndPopup();
                         }
                     }
-                    ImGui.EndTabItem();
-                }
-                if (ImGui.BeginTabItem("Triangles")) {
-                    ImGui.Checkbox("Draw Floating Triangles", ref FloatingTrianglesEnable);
-                    ImGui.Checkbox("Move/resize Triangles", ref WindowMoveableSQI);
-                    if (WindowMoveableSQI)
-                        ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                     ImGui.EndTabItem();
                 }
             }

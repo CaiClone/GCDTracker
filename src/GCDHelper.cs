@@ -488,6 +488,31 @@ namespace GCDTracker {
                 bg = conf.abcCol;
             return bg;
         }
+        public float GetWheelScale(float uiScale) {
+            float wheelPos = lastElapsedGCD / TotalGCD;
+            if (wheelPos <= 0.78f || !conf.pulseWheelAtQueue)
+                return uiScale;
+            float targetScale = uiScale * 1.6f;
+
+            if (wheelPos < 0.82f) {
+                float factor = (wheelPos - 0.78f) / 0.04f;
+                return Lerp(uiScale, targetScale, factor);
+            }
+            else if (wheelPos < 0.86f) {
+                return targetScale;
+            }
+            else if (wheelPos < 0.9f) {
+                float factor = (wheelPos - 0.86f) / 0.04f;
+                return Lerp(targetScale, uiScale, factor);
+            }
+            else {
+                return uiScale;
+            }
+        }
+
+        private float Lerp(float start, float end, float factor) {
+            return start + factor * (end - start);
+        }
 
         public bool CheckClip(bool iscast, float ogcd, float anlock, float gcdTotal, float gcdTime) =>
             !iscast && !isHardCast && DateTime.Now > lastGCDEnd + TimeSpan.FromMilliseconds(50)  &&

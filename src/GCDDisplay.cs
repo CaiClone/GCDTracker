@@ -34,17 +34,17 @@ namespace GCDTracker {
             helper.FlagAlerts(ui);
             helper.InvokeAlerts(0.5f, 0, ui);
             // Background
-            ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder);
-            ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, helper.BackgroundColor());
+            ui.DrawCircSegment(0f, 1f, 6f * helper.GetWheelScale(ui.Scale), conf.backColBorder);
+            ui.DrawCircSegment(0f, 1f, 3f * helper.GetWheelScale(ui.Scale), helper.BackgroundColor());
             if (conf.QueueLockEnabled) {
-                ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder);
-                ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, helper.BackgroundColor());
+                ui.DrawCircSegment(0.8f, 1, 9f * helper.GetWheelScale(ui.Scale), conf.backColBorder);
+                ui.DrawCircSegment(0.8f, 1, 6f * helper.GetWheelScale(ui.Scale), helper.BackgroundColor());
             }
-            ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
+            ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * helper.GetWheelScale(ui.Scale), conf.frontCol);
             foreach (var (ogcd, (anlock, iscast)) in abilityManager.ogcds) {
                 var isClipping = helper.CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
-                ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * ui.Scale, isClipping ? conf.clipCol : conf.anLockCol);
-                if (!iscast) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * ui.Scale, conf.ogcdCol);
+                ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * helper.GetWheelScale(ui.Scale), isClipping ? conf.clipCol : conf.anLockCol);
+                if (!iscast) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * helper.GetWheelScale(ui.Scale), conf.ogcdCol);
             }
         }
 
@@ -141,13 +141,11 @@ namespace GCDTracker {
             
             var bar = BarInfo.Instance;
             bar.Update(
+                conf,
                 ui.w_size.X,
                 ui.w_cent.X,
-                conf.BarWidthRatio,
                 ui.w_size.Y,
                 ui.w_cent.Y,
-                conf.BarHeightRatio,
-                conf.BarBorderSizeInt,
                 castBarCurrentPos,
                 gcdTime_slidecastStart, 
                 gcdTotal_slidecastEnd,
@@ -184,7 +182,7 @@ namespace GCDTracker {
             // in both modes:
             // draw cast/gcd progress (main) bar
             if(bar.CurrentPos > 0.001f)
-                ui.DrawRectFilledNoAA(bar.StartVertex, bar.ProgressVertex, conf.frontCol, conf.BarGradMode, conf.BarGradientMul);
+                ui.DrawRectFilledNoAA(bar.StartVertex, bar.ProgressVertex, bar.ProgressBarColor, conf.BarGradMode, conf.BarGradientMul);
             
             // in Castbar mode:
             // draw the slidecast bar
@@ -227,15 +225,17 @@ namespace GCDTracker {
                         (int)(bar.CenterY + bar.HalfHeight)
                     );
 
-                    ui.DrawRectFilledNoAA(oGCDStartVector, oGCDEndVector, isClipping ? conf.clipCol : conf.anLockCol);
-                    if (!iscast && (!isClipping || ogcdStart > 0.01f)) {
-                        Vector2 clipPos = new(
-                            bar.CenterX + (ogcdStart / gcdTotal * bar.Width) - bar.RawHalfWidth,
-                            bar.CenterY - bar.RawHalfHeight + 1f
-                        );
-                        ui.DrawRectFilledNoAA(clipPos,
-                            clipPos + new Vector2(2f * ui.Scale, bar.Height - 2f),
-                            conf.ogcdCol);
+                    if(!helper.shortCastFinished || isClipping) {
+                        ui.DrawRectFilledNoAA(oGCDStartVector, oGCDEndVector, isClipping ? conf.clipCol : conf.anLockCol);
+                        if (!iscast && (!isClipping || ogcdStart > 0.01f)) {
+                            Vector2 clipPos = new(
+                                bar.CenterX + (ogcdStart / gcdTotal * bar.Width) - bar.RawHalfWidth,
+                                bar.CenterY - bar.RawHalfHeight + 1f
+                            );
+                            ui.DrawRectFilledNoAA(clipPos,
+                                clipPos + new Vector2(2f * ui.Scale, bar.Height - 2f),
+                                conf.ogcdCol);
+                    }
                     }
                 }
             }
@@ -301,45 +301,45 @@ namespace GCDTracker {
             }
         }
 
-public void DrawFloatingTriangles(PluginUI ui) {
-    float gcdTotal = DataStore.Action->TotalGCD;
-    float gcdElapsed = DataStore.Action->ElapsedGCD;
-    float gcdPercent = gcdElapsed / gcdTotal;
-    float castTotal = DataStore.Action->TotalCastTime;
-    float castElapsed = DataStore.Action->ElapsedCastTime;
-    float castPercent = castElapsed / castTotal;
-    float slidecastStart = (castTotal - 0.5f) / castTotal;
-    int triangleSize = (int)Math.Min(ui.w_size.X / 5, ui.w_size.Y / 5);
-    int borderOffset = (int)Math.Min(ui.w_size.X / 30, ui.w_size.Y / 30);
-    int halfTriangleSize = triangleSize / 2;
-    Vector4 red = new(1f, 0f, 0f, 1f);
-    Vector4 green = new(0f, 1f, 0f, 1f);
-    Vector4 bgCol = new(0f, 0f, 0f, 1f);
+        public void DrawFloatingTriangles(PluginUI ui) {
+            float gcdTotal = DataStore.Action->TotalGCD;
+            float gcdElapsed = DataStore.Action->ElapsedGCD;
+            float gcdPercent = gcdElapsed / gcdTotal;
+            float castTotal = DataStore.Action->TotalCastTime;
+            float castElapsed = DataStore.Action->ElapsedCastTime;
+            float castPercent = castElapsed / castTotal;
+            float slidecastStart = (castTotal - 0.5f) / castTotal;
+            int triangleSize = (int)Math.Min(ui.w_size.X / 5, ui.w_size.Y / 5);
+            int borderOffset = (int)Math.Min(ui.w_size.X / 30, ui.w_size.Y / 30);
+            int halfTriangleSize = triangleSize / 2;
+            Vector4 red = new(1f, 0f, 0f, 1f);
+            Vector4 green = new(0f, 1f, 0f, 1f);
+            Vector4 bgCol = new(0f, 0f, 0f, .8f);
 
-    // slidecast
-    Vector2 slideTop = new(ui.w_cent.X - (int)(triangleSize / 1.5), ui.w_cent.Y - halfTriangleSize);
-    Vector2 slideLeft = slideTop + new Vector2(-triangleSize, triangleSize);
-    Vector2 slideRight = slideTop + new Vector2(triangleSize, triangleSize);
-    // queuelock
-    Vector2 queueBot = new(slideTop.X + (int)(1.5f * triangleSize), slideTop.Y + triangleSize);
-    Vector2 queueRight = queueBot - new Vector2(-triangleSize, triangleSize);
-    Vector2 queueLeft = queueBot - new Vector2(triangleSize, triangleSize);
-
-
-    Vector2 topLeft = slideTop - new Vector2(borderOffset, borderOffset);
-    Vector2 botLeft = slideLeft - new Vector2 (3 * borderOffset, -borderOffset);
-    Vector2 botRight = queueBot - new Vector2(-borderOffset, -borderOffset);
-    Vector2 topRight = queueRight - new Vector2(-(3 * borderOffset), borderOffset);
-
-    // Draw the parallelogram background
-    ui.DrawParallelogramFilledNoAA(topLeft, topRight, botRight, botLeft, bgCol);
+            // slidecast
+            Vector2 slideTop = new(ui.w_cent.X - (int)(triangleSize / 1.5), ui.w_cent.Y - halfTriangleSize);
+            Vector2 slideLeft = slideTop + new Vector2(-triangleSize, triangleSize);
+            Vector2 slideRight = slideTop + new Vector2(triangleSize, triangleSize);
+            // queuelock
+            Vector2 queueBot = new(slideTop.X + (int)(1.5f * triangleSize), slideTop.Y + triangleSize);
+            Vector2 queueRight = queueBot - new Vector2(-triangleSize, triangleSize);
+            Vector2 queueLeft = queueBot - new Vector2(triangleSize, triangleSize);
 
 
-    Vector4 slideCol = castPercent != 0 && castPercent < slidecastStart ? red : green;
-    Vector4 queueCol = gcdPercent != 0 && gcdPercent < 0.8f ? red : green;
+            Vector2 topLeft = slideTop - new Vector2(borderOffset / 2, borderOffset);
+            Vector2 botLeft = slideLeft - new Vector2 ((int)(2.5 * borderOffset), -borderOffset);
+            Vector2 botRight = queueBot - new Vector2(-(borderOffset / 2), -borderOffset);
+            Vector2 topRight = queueRight - new Vector2(-(int)(2.5f * borderOffset), borderOffset);
 
-    ui.DrawRightTriangle(slideTop, slideLeft, slideRight, slideCol);
-    ui.DrawRightTriangle(queueBot, queueRight, queueLeft, queueCol);
-}
+            // Draw the parallelogram background
+            ui.DrawParallelogramFilledNoAA(topLeft, topRight, botRight, botLeft, bgCol);
+
+
+            Vector4 slideCol = castPercent != 0 && castPercent < slidecastStart ? red : green;
+            Vector4 queueCol = gcdPercent != 0 && gcdPercent < 0.8f ? red : green;
+
+            ui.DrawRightTriangle(slideTop, slideLeft, slideRight, slideCol);
+            ui.DrawRightTriangle(queueBot, queueRight, queueLeft, queueCol);
+        }
     }
 }
