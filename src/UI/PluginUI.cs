@@ -114,7 +114,7 @@ namespace GCDTracker.UI {
                 ImGui.End();
             }
 
-            if (conf.FloatingTrianglesEnable) {
+            if (conf.FloatingTrianglesEnable || conf.WindowMoveableSQI) {
                 SetupWindow("GCDTracker_SlideQueueIndicators", conf.WindowMoveableSQI);
                 gcd.DrawFloatingTriangles(this);
                 ImGui.End();
