@@ -272,9 +272,10 @@ namespace GCDTracker {
         private bool idleTimerDone;
         private bool lastActionCast;
 
-        private bool clippedGCD;
         private bool checkClip;
         private bool checkABC;
+        public bool clippedOnThisGCD;
+        private bool clippedOnLastGCD;
         private bool abcOnThisGCD;
         private bool abcOnLastGCD;
         public bool isRunning;
@@ -408,10 +409,11 @@ namespace GCDTracker {
             // Reset state after the GCDTimeout
             if (idleTimerAccum >= GCDTimeoutBuffer) {
                 checkABC = false;
-                clippedGCD = false;
-                checkClip = false;
                 abcOnLastGCD = false;
                 abcOnThisGCD = false;
+                checkClip = false;
+                clippedOnLastGCD = false;
+                clippedOnThisGCD = false;
                 lastActionTP = false;
                 idleTimerDone = true;
             }
@@ -445,8 +447,8 @@ namespace GCDTracker {
 
         public bool ShouldStartClip() {
             checkClip = false;
-            clippedGCD = lastClipDelta > 0.01f;
-            return clippedGCD;
+            clippedOnThisGCD = lastClipDelta > 0.01f;
+            return clippedOnThisGCD;
         }
 
         public bool ShouldStartABC() {
@@ -464,7 +466,7 @@ namespace GCDTracker {
                 }
             }
             if (conf.abcAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat)){
-                if (!clippedGCD && checkABC && !abcBlocker && ShouldStartABC()) {
+                if (!(clippedOnThisGCD || clippedOnLastGCD) && checkABC && !abcBlocker && ShouldStartABC()) {
                     ui.StartAlert(false, 0);
                     abcOnThisGCD = true;
                 }
@@ -472,7 +474,7 @@ namespace GCDTracker {
         }
 
         public void InvokeAlerts(float relx, float rely, PluginUI ui){
-            if (conf.ClipAlertEnabled && clippedGCD)
+            if (conf.ClipAlertEnabled && clippedOnThisGCD)
                 ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
             if (conf.abcAlertEnabled && (abcOnThisGCD || abcOnLastGCD))
                 ui.DrawAlert(relx, rely, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, 3);
@@ -480,7 +482,7 @@ namespace GCDTracker {
 
         public Vector4 BackgroundColor(){
             var bg = conf.backCol;
-            if (conf.ColorClipEnabled && clippedGCD)
+            if (conf.ColorClipEnabled && (clippedOnLastGCD || clippedOnThisGCD))
                 bg = conf.clipCol;
             if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))
                 bg = conf.abcCol;
@@ -500,6 +502,8 @@ namespace GCDTracker {
             lastElapsedGCD = DataStore.Action->ElapsedGCD;
             lastGCDEnd = DateTime.Now;
             //I'm sure there's a better way to accomplish this
+            clippedOnLastGCD = clippedOnThisGCD;
+            clippedOnThisGCD = false;
             abcOnLastGCD = abcOnThisGCD;
             abcOnThisGCD = false;
             shortCastFinished = false;
