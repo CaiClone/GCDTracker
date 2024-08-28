@@ -1,7 +1,6 @@
 ﻿using Dalamud.Configuration;
 using Dalamud.Interface;
 using Dalamud.Plugin;
-using FFXIVClientStructs.FFXIV.Client.UI;
 using GCDTracker.Data;
 using ImGuiNET;
 using Newtonsoft.Json;

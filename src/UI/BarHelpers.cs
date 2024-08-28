@@ -89,6 +89,7 @@ namespace GCDTracker.UI {
                     conf.pulseBarWidthAtQueue, 
                     conf.pulseBarWidthAtSlide,
                     IsCastBar,
+                    true,
                     QueueLockScaleFactorCache);
                 PulseHeight = GetBarSize(
                     Height, 
@@ -98,6 +99,7 @@ namespace GCDTracker.UI {
                     conf.pulseBarHeightAtQueue, 
                     conf.pulseBarHeightAtSlide,
                     IsCastBar,
+                    false,
                     QueueLockScaleFactorCache);
                 ProgressPulseColor = GetBarColor(
                     conf.frontCol, 
@@ -168,11 +170,12 @@ namespace GCDTracker.UI {
             float slidecastStart, 
             bool pulseAtQueue, 
             bool pulseAtSlide, 
-            bool IsCastbar, 
+            bool IsCastbar,
+            bool isWidth,
             float scaleFactor) {
 
             int CalculateSize(int originalSize, float eventStart, float scaleFactor) {
-                int targetDimension = (int)(originalSize * 1.2f);
+                int targetDimension = (int)(originalSize * (isWidth ? 1.05f : 1.2f));
 
                 if (currentPos < eventStart + 0.02f * scaleFactor) {
                     float factor = (currentPos - eventStart + 0.02f * scaleFactor) / (0.04f * scaleFactor);
