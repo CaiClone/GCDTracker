@@ -1,6 +1,7 @@
 ﻿using Dalamud.Configuration;
 using Dalamud.Interface;
 using Dalamud.Plugin;
+using FFXIVClientStructs.FFXIV.Client.UI;
 using GCDTracker.Data;
 using ImGuiNET;
 using Newtonsoft.Json;
@@ -111,6 +112,8 @@ namespace GCDTracker
 
         //Floating Triangles
         public bool FloatingTrianglesEnable = false;
+        public bool SlidecastTriangleEnable = true;
+        public bool QueuelockTriangleEnable = true;
         [JsonIgnore]
         public bool WindowMoveableSQI = false;
 
@@ -625,6 +628,12 @@ namespace GCDTracker
                         ImGui.Checkbox("Pulse GCDBar Height @ Queue Lock", ref pulseBarHeightAtQueue);
                         ImGui.Checkbox("Pulse GCDWheel Size @ Queue Lock", ref pulseWheelAtQueue);
                         ImGui.Checkbox("Draw Floating Triangles", ref FloatingTrianglesEnable);
+                        if (FloatingTrianglesEnable){
+                            ImGui.Indent();
+                            ImGui.Checkbox("Draw Slidecast Triangle", ref SlidecastTriangleEnable);
+                            ImGui.Checkbox("Draw Queuelock Triangle", ref QueuelockTriangleEnable);
+                            ImGui.Unindent();
+                        }
                         ImGui.Checkbox("Move/resize Triangles", ref WindowMoveableSQI);
                         if (WindowMoveableSQI)
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
