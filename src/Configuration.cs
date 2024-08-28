@@ -626,13 +626,17 @@ namespace GCDTracker
                             ImGui.Text("If enabled, use Monospace font in GCDTracker.");
                             ImGui.EndTooltip();
                         }
+                        ImGui.NewLine();
                         ImGui.Checkbox("Pulse GCDBar Color @ Slide Lock", ref pulseBarColorAtSlide);
-
+                        ImGui.Checkbox("Pulse GCDBar Width @ Slide Lock", ref pulseBarWidthAtSlide);
                         ImGui.Checkbox("Pulse GCDBar Height @ Slide Lock", ref pulseBarHeightAtSlide);
+                        ImGui.NewLine();
                         ImGui.Checkbox("Pulse GCDBar Color @ Queue Lock", ref pulseBarColorAtQueue);
-
+                        ImGui.Checkbox("Pulse GCDBar Width @ Queue Lock", ref pulseBarWidthAtQueue);
                         ImGui.Checkbox("Pulse GCDBar Height @ Queue Lock", ref pulseBarHeightAtQueue);
+                        ImGui.NewLine();
                         ImGui.Checkbox("Pulse GCDWheel Size @ Queue Lock", ref pulseWheelAtQueue);
+                        ImGui.NewLine();
                         ImGui.Checkbox("Draw Floating Triangles", ref FloatingTrianglesEnable);
                         if (FloatingTrianglesEnable){
                             ImGui.Indent();
