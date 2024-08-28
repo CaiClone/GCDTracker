@@ -164,12 +164,14 @@ namespace GCDTracker {
                 DataStore.ActionManager->CastActionType, 
                 DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None
             );
+            var bar_v = BarVertices.Instance;
+            bar_v.Update(bar, go);
             var sc_sv = SlideCastStartVertices.Instance;
-            sc_sv.Update(bar, go);
+            sc_sv.Update(bar, bar_v, go);
             var sc_ev = SlideCastEndVertices.Instance;
-            sc_ev.Update(bar, go);
+            sc_ev.Update(bar, bar_v, go);
             var ql_v = QueueLockVertices.Instance;
-            ql_v.Update (bar, go); 
+            ql_v.Update (bar, bar_v, go); 
 
             float barGCDClipTime = 0;
             
@@ -177,13 +179,15 @@ namespace GCDTracker {
             // draw the background
             if (bar.CurrentPos < 0.2f)
                 bgCache = helper.BackgroundColor();
-            ui.DrawRectFilledNoAA(bar.StartVertex, bar.EndVertex, bgCache, conf.BarBgGradMode, conf.BarBgGradientMul);
+            ui.DrawRectFilledNoAA(bar_v.StartVertex, bar_v.EndVertex, bgCache, conf.BarBgGradMode, conf.BarBgGradientMul);
 
             // in both modes:
             // draw cast/gcd progress (main) bar
-            if(bar.CurrentPos > 0.001f)
-                ui.DrawRectFilledNoAA(bar.StartVertex, bar.ProgressVertex, bar.ProgressBarColor, conf.BarGradMode, conf.BarGradientMul);
             
+            if(bar.CurrentPos > 0.001f){
+                var progressBarColor = go.Allow_Bar_Pulse ? bar.ProgressPulseColor : bar.ProgressBarColor;
+                ui.DrawRectFilledNoAA(bar_v.StartVertex, bar_v.ProgressVertex, progressBarColor, conf.BarGradMode, conf.BarGradientMul);
+            }
             // in Castbar mode:
             // draw the slidecast bar
             if (conf.SlideCastEnabled)
@@ -208,32 +212,32 @@ namespace GCDTracker {
                         if (!helper.isHardCast) {
                             // create end vertex
                             Vector2 clipEndVector = new(
-                                (int)(bar.CenterX + ((barGCDClipTime / gcdTotal) * bar.Width) - bar.HalfWidth),
-                                (int)(bar.CenterY + bar.HalfHeight)
+                                (int)(bar.CenterX + ((barGCDClipTime / gcdTotal) * bar_v.Width) - bar_v.HalfWidth),
+                                (int)(bar.CenterY + bar_v.HalfHeight)
                             );
                             // Draw the clipped part at the beginning
-                            ui.DrawRectFilledNoAA(bar.StartVertex, clipEndVector, conf.clipCol);
+                            ui.DrawRectFilledNoAA(bar_v.StartVertex, clipEndVector, conf.clipCol);
                         }
                     }
 
                     Vector2 oGCDStartVector = new(
-                        (int)(bar.CenterX + ((ogcdStart / gcdTotal) * bar.Width) - bar.RawHalfWidth),
-                        (int)(bar.CenterY - bar.RawHalfHeight)
+                        (int)(bar.CenterX + ((ogcdStart / gcdTotal) * bar_v.Width) - bar_v.RawHalfWidth),
+                        (int)(bar.CenterY - bar_v.RawHalfHeight)
                     );
                     Vector2 oGCDEndVector = new(
-                        (int)(bar.CenterX + ((ogcdEnd / gcdTotal) * bar.Width) - bar.HalfWidth),
-                        (int)(bar.CenterY + bar.HalfHeight)
+                        (int)(bar.CenterX + ((ogcdEnd / gcdTotal) * bar_v.Width) - bar_v.HalfWidth),
+                        (int)(bar.CenterY + bar_v.HalfHeight)
                     );
 
                     if(!helper.shortCastFinished || isClipping) {
                         ui.DrawRectFilledNoAA(oGCDStartVector, oGCDEndVector, isClipping ? conf.clipCol : conf.anLockCol);
                         if (!iscast && (!isClipping || ogcdStart > 0.01f)) {
                             Vector2 clipPos = new(
-                                bar.CenterX + (ogcdStart / gcdTotal * bar.Width) - bar.RawHalfWidth,
-                                bar.CenterY - bar.RawHalfHeight + 1f
+                                bar.CenterX + (ogcdStart / gcdTotal * bar_v.Width) - bar_v.RawHalfWidth,
+                                bar.CenterY - bar_v.RawHalfHeight + 1f
                             );
                             ui.DrawRectFilledNoAA(clipPos,
-                                clipPos + new Vector2(2f * ui.Scale, bar.Height - 2f),
+                                clipPos + new Vector2(2f * ui.Scale, bar_v.Height - 2f),
                                 conf.ogcdCol);
                     }
                     }
@@ -249,8 +253,8 @@ namespace GCDTracker {
             // draw borders
             if (bar.BorderSize > 0) {
                 ui.DrawRect(
-                    bar.StartVertex - new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
-                    bar.EndVertex + new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
+                    bar_v.StartVertex - new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
+                    bar_v.EndVertex + new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
                     conf.backColBorder, bar.BorderSize);
             }
         }

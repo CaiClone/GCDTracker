@@ -42,6 +42,7 @@ namespace GCDTracker {
         public bool SlideStart_RightTri { get; private set; }
         public bool SlideEnd_RightTri { get; private set; }
         public bool Slide_Background { get; private set; }
+        public bool Allow_Bar_Pulse { get; private set;}
         public float Queue_Lock_Start { get; private set; }
         public float Slide_Bar_Start { get; private set; }
         public float Slide_Bar_End { get; private set; }
@@ -94,19 +95,19 @@ namespace GCDTracker {
                         };
                     }
                     else if (bar.IsShortCast) {
-                        Queue_Lock_Start = 0.8f;
+                        Queue_Lock_Start = bar.QueueLockStart;
                         if (Math.Abs(Slide_Bar_End - Queue_Lock_Start) < epsilon)
                             Slide_Bar_End = Queue_Lock_Start;
                         currentState = BarState.ShortCast;
                     }
                     else if (!bar.IsShortCast) {
-                        Queue_Lock_Start = 0.8f * (bar.GCDTotal / bar.CastTotal);
+                        Queue_Lock_Start = bar.QueueLockStart;
                         currentState = BarState.LongCast;
                     }
                 }
                 // Handle GCDBar
                 else if (!bar.IsCastBar && !bar.IsShortCast) {
-                    Queue_Lock_Start = 0.8f;
+                    Queue_Lock_Start = bar.QueueLockStart;
                     currentState = BarState.GCDOnly;
                 }
             }
@@ -154,6 +155,9 @@ namespace GCDTracker {
         }
 
         private void HandleGCDOnly(BarInfo bar, Configuration conf) {
+            // enable pulse
+            Allow_Bar_Pulse = true;
+            
             // draw line
             Queue_VerticalBar = true;      
 
@@ -194,6 +198,9 @@ namespace GCDTracker {
         }
 
         private void HandleCastBarShort(BarInfo bar, Configuration conf) {
+            // enable pulse
+            Allow_Bar_Pulse = true;
+            
             // draw lines
             SlideStart_VerticalBar = true;
             SlideEnd_VerticalBar = !conf.SlideCastFullBar;
@@ -216,7 +223,10 @@ namespace GCDTracker {
         }
 
         private void HandleCastBarLong(BarInfo bar, Configuration conf) {
-            //draw line
+            // enable pulse
+            Allow_Bar_Pulse = true;
+            
+            // draw line
             SlideStart_VerticalBar = true;
             
             // draw triangles
@@ -250,6 +260,7 @@ namespace GCDTracker {
             SlideStart_RightTri = false;
             SlideEnd_RightTri = false;
             Slide_Background = false;
+            Allow_Bar_Pulse = false;
         }
     }
 
@@ -488,6 +499,7 @@ namespace GCDTracker {
                 bg = conf.abcCol;
             return bg;
         }
+        
         public float GetWheelScale(float uiScale) {
             float wheelPos = lastElapsedGCD / TotalGCD;
             if (wheelPos <= 0.78f || !conf.pulseWheelAtQueue)
