@@ -175,7 +175,7 @@ namespace GCDTracker.UI {
             float scaleFactor) {
 
             int CalculateSize(int originalSize, float eventStart, float scaleFactor) {
-                int targetDimension = (int)(originalSize * (isWidth ? 1.05f : 1.2f));
+                int targetDimension = originalSize + (isWidth ? 10 : 5);
 
                 if (currentPos < eventStart + 0.02f * scaleFactor) {
                     float factor = (currentPos - eventStart + 0.02f * scaleFactor) / (0.04f * scaleFactor);
