@@ -8,6 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using static GCDTracker.GCDEventHandler.EventType;
+using static GCDTracker.GCDEventHandler.EventCause;
+using System.Collections.Specialized;
 
 
 [assembly: InternalsVisibleTo("Tests")]
@@ -267,6 +270,7 @@ namespace GCDTracker {
     public unsafe class GCDHelper {
         private readonly Configuration conf;
         private readonly AbilityManager abilityManager;
+        private readonly GCDEventHandler notify;
         public float TotalGCD = 3.5f;
         private DateTime lastGCDEnd = DateTime.Now;
 
@@ -286,9 +290,9 @@ namespace GCDTracker {
         private bool checkClip;
         private bool checkABC;
         public bool clippedOnThisGCD;
-        private bool clippedOnLastGCD;
-        private bool abcOnThisGCD;
-        private bool abcOnLastGCD;
+        public bool clippedOnLastGCD;
+        public bool abcOnThisGCD;
+        public bool abcOnLastGCD;
         public bool isRunning;
         public bool isHardCast;
         private float remainingCastTime;
@@ -296,8 +300,9 @@ namespace GCDTracker {
         public string queuedAbilityName = " ";
         public bool shortCastFinished = false;
 
-        public GCDHelper(Configuration conf) {
+        public GCDHelper(Configuration conf, GCDEventHandler notify) {
             this.conf = conf;
+            this.notify = notify;
             abilityManager = AbilityManager.Instance;
         }
 
@@ -486,9 +491,9 @@ namespace GCDTracker {
 
         public void InvokeAlerts(float relx, float rely, PluginUI ui){
             if (conf.ClipAlertEnabled && clippedOnThisGCD)
-                ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
+                notify.Now(FlyOutAlert, Clipped, ui, relx, rely);
             if (conf.abcAlertEnabled && (abcOnThisGCD || abcOnLastGCD))
-                ui.DrawAlert(relx, rely, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, 3);
+                notify.Now(FlyOutAlert, ABC, ui, relx, rely);
            }
 
         public Vector4 BackgroundColor(){

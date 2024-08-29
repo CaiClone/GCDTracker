@@ -6,6 +6,7 @@ using Lumina.Excel.GeneratedSheets;
 namespace GCDTracker.UI {
     public unsafe class BarInfo {
         private static BarInfo instance;
+        private readonly GCDEventHandler notify;
         public float CenterX { get; private set; }
         public float CenterY { get; private set; }
         public int Width { get; private set; }
@@ -41,6 +42,7 @@ namespace GCDTracker.UI {
 
         public void Update(
             Configuration conf,
+            GCDEventHandler notify,
             float sizeX,
             float centX,
             float sizeY,

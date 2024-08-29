@@ -48,6 +48,7 @@ namespace GCDTracker {
         private readonly Hook<HelperMethods.ReceiveActionEffectDetour> ReceiveActionEffectHook;
 
         private  GCDHelper helper;
+        private GCDEventHandler notify;
         private  GCDDisplay gcd;
         private readonly ComboTracker ct;
 
@@ -60,8 +61,9 @@ namespace GCDTracker {
             ComboStore.Init(config);
 
             ui = new PluginUI(config);
-            helper = new GCDHelper(config);
-            gcd = new GCDDisplay(config, Data, helper);
+            notify = new GCDEventHandler(config);
+            helper = new GCDHelper(config, notify);
+            gcd = new GCDDisplay(config, Data, helper, notify);
     
             ct = new ComboTracker();
 

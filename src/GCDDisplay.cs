@@ -13,14 +13,16 @@ namespace GCDTracker {
         private readonly Configuration conf;
         private readonly IDataManager dataManager;
         private readonly GCDHelper helper;
+        private readonly GCDEventHandler notify;
         private readonly AbilityManager abilityManager;
         string shortCastCachedSpellName;
         Vector4 bgCache;
 
-        public GCDDisplay (Configuration conf, IDataManager dataManager, GCDHelper helper) {
+        public GCDDisplay (Configuration conf, IDataManager dataManager, GCDHelper helper, GCDEventHandler notify) {
             this.conf = conf;
             this.dataManager = dataManager;
             this.helper = helper;
+            this.notify = notify;
             abilityManager = AbilityManager.Instance;
         }
 
@@ -142,6 +144,7 @@ namespace GCDTracker {
             var bar = BarInfo.Instance;
             bar.Update(
                 conf,
+                notify,
                 ui.w_size.X,
                 ui.w_cent.X,
                 ui.w_size.Y,
