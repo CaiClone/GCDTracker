@@ -722,7 +722,7 @@ namespace GCDTracker
                                     { nameof(ClipBackColor), new Vector4(0.9882353f, 0.32941177f, 0.0f, 1.0f) },
                                     { nameof(abcTextColor), new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
                                     { nameof(abcBackColor), new Vector4(1.0f, 0.7f, 0.0f, 1.0f) },
-                                    { nameof(backCol), new Vector4(0.3764706f, 0.3764706f, 0.3764706f, 0.5019608f) },
+                                    { nameof(backCol), new Vector4(0.3764706f, 0.3764706f, 0.3764706f, 0.667f) },
                                     { nameof(backColBorder), new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
                                     { nameof(frontCol), new Vector4(0.0f, 0.63529414f, 0.9882353f, 1.0f) },
                                     { nameof(ogcdCol), new Vector4(1.0f, 1.0f, 1.0f, 1.0f) },
