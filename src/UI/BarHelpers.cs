@@ -132,16 +132,16 @@ namespace GCDTracker.UI {
             }
 
             Vector4 ApplyColorTransition(Vector4 currentColor, float eventStart, Vector4 targetColor) {
-                if (currentPos > eventStart - 0.02f * scaleFactor) {
-                    if (currentPos < eventStart + 0.02f * scaleFactor) {
-                        float factor = (currentPos - eventStart + 0.02f * scaleFactor) / (0.04f * scaleFactor);
+                if (currentPos > eventStart - 0.025f * scaleFactor) {
+                    if (currentPos < eventStart + 0.025f * scaleFactor) {
+                        float factor = (currentPos - eventStart + 0.025f * scaleFactor) / (0.05f * scaleFactor);
                         return Vector4.Lerp(currentColor, targetColor, factor);
                     } 
-                    else if (currentPos < eventStart + 0.06f * scaleFactor) {
+                    else if (currentPos < eventStart + 0.075f * scaleFactor) {
                         return targetColor;
                     } 
-                    else if (currentPos < eventStart + 0.1f * scaleFactor) {
-                        float factor = (currentPos - eventStart - 0.06f * scaleFactor) / (0.04f * scaleFactor);
+                    else if (currentPos < eventStart + 0.125f * scaleFactor) {
+                        float factor = (currentPos - eventStart - 0.075f * scaleFactor) / (0.05f * scaleFactor);
                         return Vector4.Lerp(targetColor, currentColor, factor);
                     }
                 }
@@ -177,15 +177,15 @@ namespace GCDTracker.UI {
             int CalculateSize(int originalSize, float eventStart, float scaleFactor) {
                 int targetDimension = originalSize + (isWidth ? 10 : 5);
 
-                if (currentPos < eventStart + 0.02f * scaleFactor) {
-                    float factor = (currentPos - eventStart + 0.02f * scaleFactor) / (0.04f * scaleFactor);
+                if (currentPos < eventStart + 0.025f * scaleFactor) {
+                    float factor = (currentPos - eventStart + 0.025f * scaleFactor) / (0.05f * scaleFactor);
                     return (int)Lerp(originalSize, targetDimension, factor);
                 } 
-                else if (currentPos < eventStart + 0.06f * scaleFactor) {
+                else if (currentPos < eventStart + 0.075f * scaleFactor) {
                     return targetDimension;
                 } 
-                else if (currentPos < eventStart + 0.1f * scaleFactor) {
-                    float factor = (currentPos - eventStart - 0.06f * scaleFactor) / (0.04f * scaleFactor);
+                else if (currentPos < eventStart + 0.125f * scaleFactor) {
+                    float factor = (currentPos - eventStart - 0.075f * scaleFactor) / (0.05f * scaleFactor);
                     return (int)Lerp(targetDimension, originalSize, factor);
                 } 
                 else {
