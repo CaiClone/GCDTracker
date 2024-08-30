@@ -112,6 +112,11 @@ namespace GCDTracker.UI {
                     conf.slideCol,
                     IsCastBar);
             }
+            else {
+                PulseWidth = Width;
+                PulseHeight = Height;
+                ProgressPulseColor = conf.frontCol;
+            }
         }
 
         private Vector4 GetBarColor(
