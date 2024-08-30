@@ -8,9 +8,11 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using static GCDTracker.GCDEventHandler.EventType;
-using static GCDTracker.GCDEventHandler.EventCause;
+using static GCDTracker.EventType;
+using static GCDTracker.EventCause;
+using static GCDTracker.EventSource;
 using System.Collections.Specialized;
+using System.Reflection.PortableExecutable;
 
 
 [assembly: InternalsVisibleTo("Tests")]
@@ -45,7 +47,6 @@ namespace GCDTracker {
         public bool SlideStart_RightTri { get; private set; }
         public bool SlideEnd_RightTri { get; private set; }
         public bool Slide_Background { get; private set; }
-        public bool Allow_Bar_Pulse { get; private set;}
         public float Queue_Lock_Start { get; private set; }
         public float Slide_Bar_Start { get; private set; }
         public float Slide_Bar_End { get; private set; }
@@ -157,15 +158,15 @@ namespace GCDTracker {
             }
         }
 
-        private void HandleGCDOnly(BarInfo bar, Configuration conf) {
-            // enable pulse
-            Allow_Bar_Pulse = true;
-            
+        private void HandleGCDOnly(BarInfo bar, Configuration conf) {            
             // draw line
             Queue_VerticalBar = true;      
 
             // draw triangles
             Queue_Triangle = conf.ShowQueuelockTriangles;
+
+            // activate alerts
+            AlertCheckerQueue(bar, conf);
 
             // move lines
             if (conf.BarQueueLockSlide)
@@ -200,10 +201,7 @@ namespace GCDTracker {
             Slide_Background = false;
         }
 
-        private void HandleCastBarShort(BarInfo bar, Configuration conf) {
-            // enable pulse
-            Allow_Bar_Pulse = true;
-            
+        private void HandleCastBarShort(BarInfo bar, Configuration conf) {            
             // draw lines
             SlideStart_VerticalBar = true;
             SlideEnd_VerticalBar = !conf.SlideCastFullBar;
@@ -217,6 +215,9 @@ namespace GCDTracker {
             if (conf.QueueLockEnabled)
                 HandleGCDOnly(bar, conf);
 
+            // activate alerts
+            AlertCheckerSlide(bar, conf);
+
             // move lines
             Slide_Bar_Start = Math.Max(Slide_Bar_Start, Math.Min(bar.CurrentPos, Queue_Lock_Start));
             Slide_Bar_End = Math.Max(Slide_Bar_End, Math.Min(bar.CurrentPos, Queue_Lock_Start));
@@ -225,10 +226,7 @@ namespace GCDTracker {
             Slide_Background = conf.SlideCastBackground;
         }
 
-        private void HandleCastBarLong(BarInfo bar, Configuration conf) {
-            // enable pulse
-            Allow_Bar_Pulse = true;
-            
+        private void HandleCastBarLong(BarInfo bar, Configuration conf) {          
             // draw line
             SlideStart_VerticalBar = true;
             
@@ -239,6 +237,9 @@ namespace GCDTracker {
             // invoke Queuelock
             if (conf.QueueLockEnabled)
                 HandleGCDOnly(bar, conf);
+
+            // activate alerts
+            AlertCheckerSlide(bar, conf);
 
             // move lines
             Slide_Bar_Start = Math.Max(Slide_Bar_Start, bar.CurrentPos);
@@ -263,14 +264,56 @@ namespace GCDTracker {
             SlideStart_RightTri = false;
             SlideEnd_RightTri = false;
             Slide_Background = false;
-            Allow_Bar_Pulse = false;
+        }
+
+        private void AlertCheckerSlide(BarInfo bar, Configuration conf){
+            var notify = AlertManager.Instance;
+
+            // this is such a hack.  We only want trigger once per pass, so instead of tracking that, we are allowing it to queue
+            // multiple times here and just filtering it out in the GCDNotifier.
+            // TODO: Don't be so lazy and fix this properly
+
+            if (bar.CurrentPos >= Slide_Bar_Start - 0.025f && bar.CurrentPos < Slide_Bar_Start - 0.015f) {
+                if (conf.SlideCastEnabled) {
+                    if (conf.pulseBarColorAtSlide ) {
+                        notify.AddAlert(BarColorPulse, Slidecast, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                    }
+                    if (conf.pulseBarWidthAtSlide) {
+                        notify.AddAlert(BarWidthPluse, Slidecast, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                    }
+                    if (conf.pulseBarHeightAtSlide){
+                        notify.AddAlert(BarHeightPulse, Slidecast, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                    }
+                }
+            }
+        }
+        private void AlertCheckerQueue(BarInfo bar, Configuration conf){
+            var notify = AlertManager.Instance;
+
+            // this is such a hack.  We only want trigger once per pass, so instead of tracking that, we are allowing it to queue
+            // multiple times here and just filtering it out in the GCDNotifier.
+            // TODO: Don't be so lazy and fix this properly
+
+            if (bar.CurrentPos >= Queue_Lock_Start - 0.025f && bar.CurrentPos < Slide_Bar_Start - 0.015f) {
+                if (conf.QueueLockEnabled) {
+                    if (conf.pulseBarColorAtQueue ) {
+                        notify.AddAlert(BarColorPulse, Queuelock, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                    }
+                    if (conf.pulseBarWidthAtQueue) {
+                        notify.AddAlert(BarWidthPluse, Queuelock, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                    }
+                    if (conf.pulseBarHeightAtQueue){
+                        notify.AddAlert(BarHeightPulse, Queuelock, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                    }
+                }
+            }
         }
     }
 
     public unsafe class GCDHelper {
         private readonly Configuration conf;
         private readonly AbilityManager abilityManager;
-        private readonly GCDEventHandler notify;
+        private readonly AlertManager notify;
         public float TotalGCD = 3.5f;
         private DateTime lastGCDEnd = DateTime.Now;
 
@@ -300,10 +343,10 @@ namespace GCDTracker {
         public string queuedAbilityName = " ";
         public bool shortCastFinished = false;
 
-        public GCDHelper(Configuration conf, GCDEventHandler notify) {
+        public GCDHelper(Configuration conf) {
             this.conf = conf;
-            this.notify = notify;
             abilityManager = AbilityManager.Instance;
+            notify = AlertManager.Instance;
         }
 
         public void OnActionUse(byte ret, ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp) {
@@ -489,11 +532,11 @@ namespace GCDTracker {
             }
         }
 
-        public void InvokeAlerts(float relx, float rely, PluginUI ui){
+        public void InvokeAlerts(float relx, float rely, EventSource source, PluginUI ui){
             if (conf.ClipAlertEnabled && clippedOnThisGCD)
-                notify.Now(FlyOutAlert, Clipped, ui, relx, rely);
+                notify.AddAlert(FlyOutAlert, Clipped, source, relx, rely, 0f, 0f);
             if (conf.abcAlertEnabled && (abcOnThisGCD || abcOnLastGCD))
-                notify.Now(FlyOutAlert, ABC, ui, relx, rely);
+                notify.AddAlert(FlyOutAlert, ABC, source, relx, rely, 0f, 0f);
            }
 
         public Vector4 BackgroundColor(){

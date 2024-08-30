@@ -6,13 +6,10 @@ using Lumina.Excel.GeneratedSheets;
 namespace GCDTracker.UI {
     public unsafe class BarInfo {
         private static BarInfo instance;
-        private readonly GCDEventHandler notify;
         public float CenterX { get; private set; }
         public float CenterY { get; private set; }
         public int Width { get; private set; }
         public int Height { get; private set; }
-        public int PulseWidth { get; private set; }
-        public int PulseHeight { get; private set; }
         public int BorderSize { get; private set; }
         public int HalfBorderSize { get; private set; }
         public int BorderSizeAdj { get; private set; }
@@ -24,13 +21,11 @@ namespace GCDTracker.UI {
         public float CastTotal { get; private set; }
         public float QueueLockStart { get; private set; }
         public float QueueLockScaleFactor { get; private set; }
-        public float QueueLockScaleFactorCache { get; private set; }
         public int TriangleOffset { get; private set; }
         public bool IsCastBar { get; private set; }
         public bool IsShortCast { get; private set; }
         public bool IsNonAbility { get; private set; }
         public Vector4 ProgressBarColor { get; private set; }
-        public Vector4 ProgressPulseColor { get; private set; }
 
         private BarInfo() { }
         public static BarInfo Instance {
@@ -42,7 +37,6 @@ namespace GCDTracker.UI {
 
         public void Update(
             Configuration conf,
-            GCDEventHandler notify,
             float sizeX,
             float centX,
             float sizeY,
@@ -79,139 +73,7 @@ namespace GCDTracker.UI {
             TriangleOffset = triangleOffset;
             ProgressBarColor = conf.frontCol;
 
-
-            if (conf.pulseBarColorAtQueue || conf.pulseBarWidthAtQueue || conf.pulseBarHeightAtQueue || conf.pulseBarColorAtSlide) {
-                if (CurrentPos < 0.02f)
-                    QueueLockScaleFactorCache = QueueLockScaleFactor;
-                PulseWidth = GetBarSize(
-                    Width, 
-                    CurrentPos, 
-                    QueueLockStart, 
-                    GCDTime_SlidecastStart,
-                    conf.pulseBarWidthAtQueue, 
-                    conf.pulseBarWidthAtSlide,
-                    IsCastBar,
-                    true,
-                    QueueLockScaleFactorCache);
-                PulseHeight = GetBarSize(
-                    Height, 
-                    CurrentPos, 
-                    QueueLockStart, 
-                    GCDTime_SlidecastStart,
-                    conf.pulseBarHeightAtQueue, 
-                    conf.pulseBarHeightAtSlide,
-                    IsCastBar,
-                    false,
-                    QueueLockScaleFactorCache);
-                ProgressPulseColor = GetBarColor(
-                    conf.frontCol, 
-                    CurrentPos, 
-                    QueueLockStart,
-                    GCDTime_SlidecastStart,
-                    conf.pulseBarColorAtQueue,
-                    conf.pulseBarColorAtSlide,
-                    QueueLockScaleFactorCache,
-                    conf.slideCol,
-                    IsCastBar);
-            }
         }
-
-        private Vector4 GetBarColor(
-            Vector4 progressBarColor, 
-            float currentPos, 
-            float queueLockStart, 
-            float slidecastStart, 
-            bool pulseBarColorAtQueue, 
-            bool pulseBarColorAtSlide, 
-            float scaleFactor, 
-            Vector4 slideCol, 
-            bool IsCastbar) {
-
-            Vector4 CalculateTargetColor(Vector4 color) {
-                return (color.X * 0.3f + color.Y * 0.6f + color.Z * 0.2f) > 0.7f 
-                    ? new Vector4(0f, 0f, 0f, color.W) 
-                    : new Vector4(1f, 1f, 1f, color.W);
-            }
-
-            Vector4 ApplyColorTransition(Vector4 currentColor, float eventStart, Vector4 targetColor) {
-                if (currentPos > eventStart - 0.02f * scaleFactor) {
-                    if (currentPos < eventStart + 0.02f * scaleFactor) {
-                        float factor = (currentPos - eventStart + 0.02f * scaleFactor) / (0.04f * scaleFactor);
-                        return Vector4.Lerp(currentColor, targetColor, factor);
-                    } 
-                    else if (currentPos < eventStart + 0.06f * scaleFactor) {
-                        return targetColor;
-                    } 
-                    else if (currentPos < eventStart + 0.1f * scaleFactor) {
-                        float factor = (currentPos - eventStart - 0.06f * scaleFactor) / (0.04f * scaleFactor);
-                        return Vector4.Lerp(targetColor, currentColor, factor);
-                    }
-                }
-                return currentColor;
-            }
-
-            Vector4 resultColor = progressBarColor;
-
-            if (pulseBarColorAtQueue) {
-                Vector4 queueLockTargetColor = CalculateTargetColor(progressBarColor);
-                resultColor = ApplyColorTransition(resultColor, queueLockStart, queueLockTargetColor);
-            }
-
-            if (IsCastbar && pulseBarColorAtSlide) {
-                Vector4 slidecastTargetColor = new Vector4(slideCol.X, slideCol.Y, slideCol.Z, progressBarColor.W);
-                resultColor = ApplyColorTransition(resultColor, slidecastStart, slidecastTargetColor);
-            }
-
-            return resultColor;
-        }
-
-        private int GetBarSize(
-            int dimension, 
-            float currentPos, 
-            float queueLockStart, 
-            float slidecastStart, 
-            bool pulseAtQueue, 
-            bool pulseAtSlide, 
-            bool IsCastbar,
-            bool isWidth,
-            float scaleFactor) {
-
-            int CalculateSize(int originalSize, float eventStart, float scaleFactor) {
-                int targetDimension = originalSize + (isWidth ? 10 : 5);
-
-                if (currentPos < eventStart + 0.02f * scaleFactor) {
-                    float factor = (currentPos - eventStart + 0.02f * scaleFactor) / (0.04f * scaleFactor);
-                    return (int)Lerp(originalSize, targetDimension, factor);
-                } 
-                else if (currentPos < eventStart + 0.06f * scaleFactor) {
-                    return targetDimension;
-                } 
-                else if (currentPos < eventStart + 0.1f * scaleFactor) {
-                    float factor = (currentPos - eventStart - 0.06f * scaleFactor) / (0.04f * scaleFactor);
-                    return (int)Lerp(targetDimension, originalSize, factor);
-                } 
-                else {
-                    return originalSize;
-                }
-            }
-
-            float Lerp(float a, float b, float t) {
-                return a + (b - a) * t;
-            }
-
-            int resultSize = dimension;
-
-            if (pulseAtQueue && currentPos > queueLockStart - 0.02f * scaleFactor) {
-                resultSize = CalculateSize(dimension, queueLockStart, scaleFactor);
-            }
-
-            if (IsCastbar && pulseAtSlide && currentPos > slidecastStart - 0.02f * scaleFactor) {
-                resultSize = CalculateSize(resultSize, slidecastStart, scaleFactor);
-            }
-
-            return resultSize;
-        }
-
     }
 
     public class BarVertices {
@@ -236,11 +98,11 @@ namespace GCDTracker.UI {
             }
         }
 
-        public void Update(BarInfo bar, BarDecisionHelper go) {
-            Width = go.Allow_Bar_Pulse ? bar.PulseWidth : bar.Width;
+        public void Update(BarInfo bar, BarDecisionHelper go, GCDEventHandler notify) {
+            Width = notify.PulseWidth;
             HalfWidth = Width % 2 == 0 ? (Width / 2) : (Width / 2) + 1;
             RawHalfWidth = Width / 2;
-            Height = go.Allow_Bar_Pulse ? bar.PulseHeight : bar.Height;
+            Height = notify.PulseHeight;
             HalfHeight = Height % 2 == 0 ? (Height / 2) : (Height / 2) + 1;
             RawHalfHeight = Height / 2;
             BorderWidthPercent = (float)bar.BorderSizeAdj / (float)bar.Width;

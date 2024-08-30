@@ -6,6 +6,9 @@ using GCDTracker.UI;
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using static GCDTracker.EventType;
+using static GCDTracker.EventCause;
+using static GCDTracker.EventSource;
 
 [assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker {
@@ -13,28 +16,29 @@ namespace GCDTracker {
         private readonly Configuration conf;
         private readonly IDataManager dataManager;
         private readonly GCDHelper helper;
-        private readonly GCDEventHandler notify;
         private readonly AbilityManager abilityManager;
         string shortCastCachedSpellName;
         Vector4 bgCache;
 
-        public GCDDisplay (Configuration conf, IDataManager dataManager, GCDHelper helper, GCDEventHandler notify) {
+        public GCDDisplay (Configuration conf, IDataManager dataManager, GCDHelper helper) {
             this.conf = conf;
             this.dataManager = dataManager;
             this.helper = helper;
-            this.notify = notify;
             abilityManager = AbilityManager.Instance;
         }
 
         public void DrawGCDWheel(PluginUI ui) {
             float gcdTotal = helper.TotalGCD;
             float gcdTime = helper.lastElapsedGCD;
+            
+            var notify = GCDEventHandler.Instance;
+            notify.Update(null, conf, Wheel, ui);
 
             if (GameState.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !GameState.IsCastingTeleport())
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
             helper.FlagAlerts(ui);
-            helper.InvokeAlerts(0.5f, 0, ui);
+            helper.InvokeAlerts(0.5f, 0, Wheel, ui);
             // Background
             ui.DrawCircSegment(0f, 1f, 6f * helper.GetWheelScale(ui.Scale), conf.backColBorder);
             ui.DrawCircSegment(0f, 1f, 3f * helper.GetWheelScale(ui.Scale), helper.BackgroundColor());
@@ -58,7 +62,7 @@ namespace GCDTracker {
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
             helper.FlagAlerts(ui);
-            helper.InvokeAlerts((conf.BarWidthRatio + 1) / 2.1f, -0.3f, ui);
+            helper.InvokeAlerts((conf.BarWidthRatio + 1) / 2.1f, -0.3f, Bar, ui);
 
             DrawBarElements(
                 ui,
@@ -144,7 +148,6 @@ namespace GCDTracker {
             var bar = BarInfo.Instance;
             bar.Update(
                 conf,
-                notify,
                 ui.w_size.X,
                 ui.w_cent.X,
                 ui.w_size.Y,
@@ -167,8 +170,12 @@ namespace GCDTracker {
                 DataStore.ActionManager->CastActionType, 
                 DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None
             );
+
+            var notify = GCDEventHandler.Instance;
+            notify.Update(bar, conf, Bar, ui);
+
             var bar_v = BarVertices.Instance;
-            bar_v.Update(bar, go);
+            bar_v.Update(bar, go, notify);
             var sc_sv = SlideCastStartVertices.Instance;
             sc_sv.Update(bar, bar_v, go);
             var sc_ev = SlideCastEndVertices.Instance;
@@ -188,7 +195,7 @@ namespace GCDTracker {
             // draw cast/gcd progress (main) bar
             
             if(bar.CurrentPos > 0.001f){
-                var progressBarColor = go.Allow_Bar_Pulse ? bar.ProgressPulseColor : bar.ProgressBarColor;
+                var progressBarColor = notify.ProgressPulseColor;
                 ui.DrawRectFilledNoAA(bar_v.StartVertex, bar_v.ProgressVertex, progressBarColor, conf.BarGradMode, conf.BarGradientMul);
             }
             // in Castbar mode:
