@@ -50,11 +50,13 @@ namespace GCDTracker {
         public float Queue_Lock_Start { get; private set; }
         public float Slide_Bar_Start { get; private set; }
         public float Slide_Bar_End { get; private set; }
-
+        private readonly Dictionary<string, bool> triggeredAlerts = [];
         private float previousPos = 1f;
         static readonly float epsilon = 0.02f;
         
-        private BarDecisionHelper() { }
+        private BarDecisionHelper() {
+            triggeredAlerts = [];
+         }
         public static BarDecisionHelper Instance {
             get {
                 instance ??= new BarDecisionHelper();
@@ -264,46 +266,57 @@ namespace GCDTracker {
             SlideStart_RightTri = false;
             SlideEnd_RightTri = false;
             Slide_Background = false;
+            triggeredAlerts.Clear();
+        }
+
+        private bool CheckAlert(EventType type, EventCause cause) {
+            string key = $"{type}-{cause}";
+            return triggeredAlerts.ContainsKey(key) && triggeredAlerts[key];
+        }
+
+        private void MarkAlert(EventType type, EventCause cause) {
+            string key = $"{type}-{cause}";
+            triggeredAlerts[key] = true;
         }
 
         private void AlertCheckerSlide(BarInfo bar, Configuration conf){
             var notify = AlertManager.Instance;
-
-            // this is such a hack.  We only want trigger once per pass, so instead of tracking that, we are allowing it to queue
-            // multiple times here and just filtering it out in the GCDNotifier.
-            // TODO: Don't be so lazy and fix this properly
-
-            if (bar.CurrentPos >= Slide_Bar_Start - 0.025f && bar.CurrentPos < Slide_Bar_Start - 0.015f) {
+            if (bar.CurrentPos >= Slide_Bar_Start - 0.025f && bar.CurrentPos > 0.2f) {
                 if (conf.SlideCastEnabled) {
-                    if (conf.pulseBarColorAtSlide ) {
+                    if (conf.pulseBarColorAtSlide && !notify.AlertExists(BarColorPulse, Slidecast) && !CheckAlert(BarColorPulse, Slidecast)) {
                         notify.AddAlert(BarColorPulse, Slidecast, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                        MarkAlert(BarColorPulse, Slidecast);
                     }
-                    if (conf.pulseBarWidthAtSlide) {
+
+                    if (conf.pulseBarWidthAtSlide && !notify.AlertExists(BarWidthPluse, Slidecast) && !CheckAlert(BarWidthPluse, Slidecast)) {
                         notify.AddAlert(BarWidthPluse, Slidecast, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                        MarkAlert(BarWidthPluse, Slidecast);
                     }
-                    if (conf.pulseBarHeightAtSlide){
+
+                    if (conf.pulseBarHeightAtSlide && !notify.AlertExists(BarHeightPulse, Slidecast) && !CheckAlert(BarHeightPulse, Slidecast)) {
                         notify.AddAlert(BarHeightPulse, Slidecast, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                        MarkAlert(BarHeightPulse, Slidecast);
                     }
                 }
             }
         }
+
         private void AlertCheckerQueue(BarInfo bar, Configuration conf){
             var notify = AlertManager.Instance;
-
-            // this is such a hack.  We only want trigger once per pass, so instead of tracking that, we are allowing it to queue
-            // multiple times here and just filtering it out in the GCDNotifier.
-            // TODO: Don't be so lazy and fix this properly
-
-            if (bar.CurrentPos >= Queue_Lock_Start - 0.025f && bar.CurrentPos < Slide_Bar_Start - 0.015f) {
+            if (bar.CurrentPos >= Queue_Lock_Start - 0.025f && bar.CurrentPos > 0.2f) {
                 if (conf.QueueLockEnabled) {
-                    if (conf.pulseBarColorAtQueue ) {
+                    if (conf.pulseBarColorAtQueue && !notify.AlertExists(BarColorPulse, Queuelock) && !CheckAlert(BarColorPulse, Queuelock)) {
                         notify.AddAlert(BarColorPulse, Queuelock, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
                     }
-                    if (conf.pulseBarWidthAtQueue) {
+
+                    if (conf.pulseBarWidthAtQueue && !notify.AlertExists(BarWidthPluse, Queuelock) && !CheckAlert(BarWidthPluse, Queuelock)) {
                         notify.AddAlert(BarWidthPluse, Queuelock, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                        MarkAlert(BarWidthPluse, Queuelock);
                     }
-                    if (conf.pulseBarHeightAtQueue){
+
+                    if (conf.pulseBarHeightAtQueue && !notify.AlertExists(BarHeightPulse, Queuelock) && !CheckAlert(BarHeightPulse, Queuelock)) {
                         notify.AddAlert(BarHeightPulse, Queuelock, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                        MarkAlert(BarHeightPulse, Queuelock);
                     }
                 }
             }

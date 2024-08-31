@@ -2,6 +2,8 @@
 using GCDTracker.UI;
 using System.Collections.Generic;
 using System.Numerics;
+using System.Linq;
+using Lumina.Excel.GeneratedSheets;
 
 namespace GCDTracker {
 
@@ -108,6 +110,9 @@ namespace GCDTracker {
         public void ClearAlerts() {
             alertQueue.Clear();
         }
+        public bool AlertExists(EventType type, EventCause reason) {
+            return alertQueue.Any(alert => alert.Type == type && alert.Reason == reason);
+        }
     }
 
 
@@ -143,7 +148,6 @@ namespace GCDTracker {
         public void Update(BarInfo bar, Configuration conf, EventSource source, PluginUI ui){
             int alertCount = AlertManager.Instance.AlertCount;
             Queue<Alert> tempQueue = new Queue<Alert>();
-
             for (int i = 0; i < alertCount; i++) {
                 var alert = AlertManager.Instance.PeekAlert();
                 if (alert != null) {
@@ -197,24 +201,26 @@ namespace GCDTracker {
                     bar.CurrentPos, 
                     BarColorTime,
                     BarColorScale,
-                    BarColorCause);
+                    BarColorCause,
+                    BarColor);
                 PulseWidth = GetBarSize(
                     bar.Width, 
                     bar.CurrentPos,
-                    BarHeightTime,
-                    BarHeightScale,
-                    BarWidthType);
+                    BarWidthTime,
+                    BarWidthScale,
+                    BarWidthType,
+                    BarWidth);
                 PulseHeight = GetBarSize(
                     bar.Height, 
                     bar.CurrentPos,
                     BarHeightTime,
                     BarHeightScale,
-                    BarHeightType);
-                    GCDTracker.Log.Warning(PulseWidth.ToString());
+                    BarHeightType,
+                    BarHeight);
             }
         }
 
-        private void FlyOutAlert(Configuration conf,float relx, float rely, EventCause reason, PluginUI ui){
+        private static void FlyOutAlert(Configuration conf,float relx, float rely, EventCause reason, PluginUI ui){
             switch (reason){
                 case EventCause.Clipped:
                     ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
@@ -231,7 +237,8 @@ namespace GCDTracker {
             float currentPos, 
             float startTime,
             float scaleFactor,
-            EventCause reason) {
+            EventCause reason,
+            bool enable) {
 
             Vector4 CalculateTargetColor(Vector4 color) {
                 return (color.X * 0.3f + color.Y * 0.6f + color.Z * 0.2f) > 0.7f 
@@ -239,21 +246,25 @@ namespace GCDTracker {
                     : new Vector4(1f, 1f, 1f, color.W);
             }
 
-            Vector4 ApplyColorTransition(Vector4 currentColor, float eventStart, Vector4 targetColor) {
-                if (currentPos > eventStart - 0.05f * scaleFactor) {
+            Vector4 ApplyColorTransition(Vector4 currentColor, float eventStart, Vector4 targetColor, bool enable) {
+                if (currentPos >= eventStart && currentPos < eventStart + 0.15f && enable) {
                     if (currentPos < eventStart + 0.05f * scaleFactor) {
-                        float factor = (currentPos - eventStart + 0.05f * scaleFactor) / (0.05f * scaleFactor);
+                        float factor = (currentPos - eventStart) / (0.05f * scaleFactor);
                         return Vector4.Lerp(currentColor, targetColor, factor);
                     } 
                     else if (currentPos < eventStart + 0.1f * scaleFactor) {
                         return targetColor;
                     } 
                     else if (currentPos < eventStart + 0.15f * scaleFactor) {
-                        float factor = (currentPos - eventStart - 0.15f * scaleFactor) / (0.05f * scaleFactor);
+                        float factor = (currentPos - (eventStart + 0.1f * scaleFactor)) / (0.05f * scaleFactor);
                         return Vector4.Lerp(targetColor, currentColor, factor);
                     }
                 }
+
                 BarColor = false;
+                BarColorTime = 0f;
+                BarColorScale = 0f;
+                BarColorCause = EventCause.None;
                 return currentColor;
             }
 
@@ -263,7 +274,7 @@ namespace GCDTracker {
                 targetColor = CalculateTargetColor(progressBarColor);
             if (reason == EventCause.Slidecast)
                 targetColor = new Vector4(slideCol.X, slideCol.Y, slideCol.Z, progressBarColor.W);
-            resultColor = ApplyColorTransition(resultColor, startTime, targetColor);
+            resultColor = ApplyColorTransition(resultColor, startTime, targetColor, enable);
 
             return resultColor;
         }
@@ -273,29 +284,40 @@ namespace GCDTracker {
             float currentPos, 
             float starTime, 
             float scaleFactor,
-            EventType type) {
+            EventType type,
+            bool enable) {
 
-            int CalculateSize(int originalSize, float eventStart, float scaleFactor, int offset) {
+            int CalculateSize(int originalSize, float eventStart, float scaleFactor, int offset, bool enable) {
                 int targetDimension = originalSize + offset;
 
-                if (currentPos < eventStart + 0.05f * scaleFactor) {
-                    float factor = (currentPos - eventStart + 0.05f * scaleFactor) / (0.05f * scaleFactor);
-                    return (int)Lerp(originalSize, targetDimension, factor);
-                } 
-                else if (currentPos < eventStart + 0.1f * scaleFactor) {
-                    return targetDimension;
-                } 
-                else if (currentPos < eventStart + 0.15f * scaleFactor) {
-                    float factor = (currentPos - eventStart - 0.15f * scaleFactor) / (0.05f * scaleFactor);
-                    return (int)Lerp(targetDimension, originalSize, factor);
-                } 
-                else {
-                    if (type == EventType.BarWidthPluse)
-                        BarWidth = false;
-                    if (type == EventType.BarHeightPulse)
-                        BarHeight = false;
-                    return originalSize;
+                if (currentPos >= eventStart && currentPos < eventStart + 0.15f && enable) {
+                    if (currentPos < eventStart + 0.05f * scaleFactor) {
+                        float factor = (currentPos - eventStart) / (0.05f * scaleFactor);
+                        return (int)Lerp(originalSize, targetDimension, factor);
+                    } 
+                    else if (currentPos < eventStart + 0.1f * scaleFactor) {
+                        return targetDimension;
+                    } 
+                    else if (currentPos < eventStart + 0.15f * scaleFactor) {
+                        float factor = (currentPos - (eventStart + 0.1f * scaleFactor)) / (0.05f * scaleFactor);
+                        return (int)Lerp(targetDimension, originalSize, factor);
+                    } 
                 }
+
+                // I forgot these {} and I swear to god it took me like an entire day to find it
+                if (type == EventType.BarWidthPluse) {
+                    BarWidth = false;
+                    BarWidthTime = 0f;
+                    BarWidthScale = 0f;
+                    BarWidthType = EventType.None;
+                }
+                if (type == EventType.BarHeightPulse) {
+                    BarHeight = false;
+                    BarHeightTime = 0f;
+                    BarHeightScale = 0f;
+                    BarHeightType = EventType.None;
+                }
+                return originalSize;
             }
 
             float Lerp(float a, float b, float t) {
@@ -307,7 +329,8 @@ namespace GCDTracker {
                 offset = 10;
             if (type == EventType.BarHeightPulse)
                 offset = 5;
-            int resultSize = CalculateSize(dimension, starTime, scaleFactor, offset);
+            int resultSize = CalculateSize(dimension, starTime, scaleFactor, offset, enable);
+            
             return resultSize;
         }
 
