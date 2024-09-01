@@ -6,8 +6,6 @@ using GCDTracker.UI;
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using static GCDTracker.EventType;
-using static GCDTracker.EventCause;
 using static GCDTracker.EventSource;
 
 [assembly: InternalsVisibleTo("Tests")]
@@ -39,18 +37,19 @@ namespace GCDTracker {
             if (gcdTotal < 0.1f) return;
             helper.FlagAlerts(ui);
             helper.InvokeAlerts(0.5f, 0, Wheel, ui);
+            helper.AlertCheckerWheel(conf, gcdTime / gcdTotal);
             // Background
-            ui.DrawCircSegment(0f, 1f, 6f * helper.GetWheelScale(ui.Scale), conf.backColBorder);
-            ui.DrawCircSegment(0f, 1f, 3f * helper.GetWheelScale(ui.Scale), helper.BackgroundColor());
+            ui.DrawCircSegment(0f, 1f, 6f * notify.WheelScale, conf.backColBorder);
+            ui.DrawCircSegment(0f, 1f, 3f * notify.WheelScale, helper.BackgroundColor());
             if (conf.QueueLockEnabled) {
-                ui.DrawCircSegment(0.8f, 1, 9f * helper.GetWheelScale(ui.Scale), conf.backColBorder);
-                ui.DrawCircSegment(0.8f, 1, 6f * helper.GetWheelScale(ui.Scale), helper.BackgroundColor());
+                ui.DrawCircSegment(0.8f, 1, 9f * notify.WheelScale, conf.backColBorder);
+                ui.DrawCircSegment(0.8f, 1, 6f * notify.WheelScale, helper.BackgroundColor());
             }
-            ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * helper.GetWheelScale(ui.Scale), conf.frontCol);
+            ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * notify.WheelScale, conf.frontCol);
             foreach (var (ogcd, (anlock, iscast)) in abilityManager.ogcds) {
                 var isClipping = helper.CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
-                ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * helper.GetWheelScale(ui.Scale), isClipping ? conf.clipCol : conf.anLockCol);
-                if (!iscast) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * helper.GetWheelScale(ui.Scale), conf.ogcdCol);
+                ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * notify.WheelScale, isClipping ? conf.clipCol : conf.anLockCol);
+                if (!iscast) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * notify.WheelScale, conf.ogcdCol);
             }
         }
 

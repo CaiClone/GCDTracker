@@ -1,7 +1,6 @@
 using System;
 using System.Numerics;
 using GCDTracker.Data;
-using Lumina.Excel.GeneratedSheets;
 
 namespace GCDTracker.UI {
     public unsafe class BarInfo {

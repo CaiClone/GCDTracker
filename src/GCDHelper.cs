@@ -11,8 +11,6 @@ using System.Runtime.CompilerServices;
 using static GCDTracker.EventType;
 using static GCDTracker.EventCause;
 using static GCDTracker.EventSource;
-using System.Collections.Specialized;
-using System.Reflection.PortableExecutable;
 
 
 [assembly: InternalsVisibleTo("Tests")]
@@ -284,17 +282,17 @@ namespace GCDTracker {
             if (bar.CurrentPos >= Slide_Bar_Start - 0.025f && bar.CurrentPos > 0.2f) {
                 if (conf.SlideCastEnabled) {
                     if (conf.pulseBarColorAtSlide && !notify.AlertExists(BarColorPulse, Slidecast) && !CheckAlert(BarColorPulse, Slidecast)) {
-                        notify.AddAlert(BarColorPulse, Slidecast, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                        notify.AddAlert(BarColorPulse, Slidecast, Bar, 0f, 0f);
                         MarkAlert(BarColorPulse, Slidecast);
                     }
 
-                    if (conf.pulseBarWidthAtSlide && !notify.AlertExists(BarWidthPluse, Slidecast) && !CheckAlert(BarWidthPluse, Slidecast)) {
-                        notify.AddAlert(BarWidthPluse, Slidecast, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
-                        MarkAlert(BarWidthPluse, Slidecast);
+                    if (conf.pulseBarWidthAtSlide && !notify.AlertExists(BarWidthPulse, Slidecast) && !CheckAlert(BarWidthPulse, Slidecast)) {
+                        notify.AddAlert(BarWidthPulse, Slidecast, Bar, 0f, 0f);
+                        MarkAlert(BarWidthPulse, Slidecast);
                     }
 
                     if (conf.pulseBarHeightAtSlide && !notify.AlertExists(BarHeightPulse, Slidecast) && !CheckAlert(BarHeightPulse, Slidecast)) {
-                        notify.AddAlert(BarHeightPulse, Slidecast, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                        notify.AddAlert(BarHeightPulse, Slidecast, Bar, 0f, 0f);
                         MarkAlert(BarHeightPulse, Slidecast);
                     }
                 }
@@ -306,16 +304,17 @@ namespace GCDTracker {
             if (bar.CurrentPos >= Queue_Lock_Start - 0.025f && bar.CurrentPos > 0.2f) {
                 if (conf.QueueLockEnabled) {
                     if (conf.pulseBarColorAtQueue && !notify.AlertExists(BarColorPulse, Queuelock) && !CheckAlert(BarColorPulse, Queuelock)) {
-                        notify.AddAlert(BarColorPulse, Queuelock, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                        notify.AddAlert(BarColorPulse, Queuelock, Bar, 0f, 0f);
+                        MarkAlert(BarColorPulse, Queuelock);
                     }
 
-                    if (conf.pulseBarWidthAtQueue && !notify.AlertExists(BarWidthPluse, Queuelock) && !CheckAlert(BarWidthPluse, Queuelock)) {
-                        notify.AddAlert(BarWidthPluse, Queuelock, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
-                        MarkAlert(BarWidthPluse, Queuelock);
+                    if (conf.pulseBarWidthAtQueue && !notify.AlertExists(BarWidthPulse, Queuelock) && !CheckAlert(BarWidthPulse, Queuelock)) {
+                        notify.AddAlert(BarWidthPulse, Queuelock, Bar, 0f, 0f);
+                        MarkAlert(BarWidthPulse, Queuelock);
                     }
 
                     if (conf.pulseBarHeightAtQueue && !notify.AlertExists(BarHeightPulse, Queuelock) && !CheckAlert(BarHeightPulse, Queuelock)) {
-                        notify.AddAlert(BarHeightPulse, Queuelock, Bar, 0f, 0f, bar.CurrentPos, bar.QueueLockScaleFactor);
+                        notify.AddAlert(BarHeightPulse, Queuelock, Bar, 0f, 0f);
                         MarkAlert(BarHeightPulse, Queuelock);
                     }
                 }
@@ -351,6 +350,7 @@ namespace GCDTracker {
         public bool abcOnLastGCD;
         public bool isRunning;
         public bool isHardCast;
+        public bool wheelPulseTriggered;
         private float remainingCastTime;
         public string remainingCastTimeString;
         public string queuedAbilityName = " ";
@@ -547,10 +547,25 @@ namespace GCDTracker {
 
         public void InvokeAlerts(float relx, float rely, EventSource source, PluginUI ui){
             if (conf.ClipAlertEnabled && clippedOnThisGCD)
-                notify.AddAlert(FlyOutAlert, Clipped, source, relx, rely, 0f, 0f);
+                notify.AddAlert(FlyOutAlert, Clipped, source, relx, rely);
             if (conf.abcAlertEnabled && (abcOnThisGCD || abcOnLastGCD))
-                notify.AddAlert(FlyOutAlert, ABC, source, relx, rely, 0f, 0f);
+                notify.AddAlert(FlyOutAlert, ABC, source, relx, rely);
            }
+
+        public void AlertCheckerWheel(Configuration conf, float wheelPos) {
+            var notify = AlertManager.Instance;
+            if (wheelPos < 0.2f ){
+                wheelPulseTriggered = false;
+            }
+            if (wheelPos >= 0.8f - 0.025f && wheelPos > 0.2f) {
+                if (conf.QueueLockEnabled) {
+                    if (conf.pulseWheelAtQueue && !notify.AlertExists(WheelPulse, Queuelock) && !wheelPulseTriggered) {
+                        notify.AddAlert(WheelPulse, Queuelock, Wheel, 0f, 0f);
+                        wheelPulseTriggered = true;
+                    }
+                }
+            }
+        }
 
         public Vector4 BackgroundColor(){
             var bg = conf.backCol;
@@ -559,32 +574,6 @@ namespace GCDTracker {
             if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))
                 bg = conf.abcCol;
             return bg;
-        }
-        
-        public float GetWheelScale(float uiScale) {
-            float wheelPos = lastElapsedGCD / TotalGCD;
-            if (wheelPos <= 0.78f || !conf.pulseWheelAtQueue)
-                return uiScale;
-            float targetScale = uiScale * 1.6f;
-
-            if (wheelPos < 0.82f) {
-                float factor = (wheelPos - 0.78f) / 0.04f;
-                return Lerp(uiScale, targetScale, factor);
-            }
-            else if (wheelPos < 0.86f) {
-                return targetScale;
-            }
-            else if (wheelPos < 0.9f) {
-                float factor = (wheelPos - 0.86f) / 0.04f;
-                return Lerp(targetScale, uiScale, factor);
-            }
-            else {
-                return uiScale;
-            }
-        }
-
-        private float Lerp(float start, float end, float factor) {
-            return start + factor * (end - start);
         }
 
         public bool CheckClip(bool iscast, float ogcd, float anlock, float gcdTotal, float gcdTime) =>
