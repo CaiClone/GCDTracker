@@ -11,6 +11,8 @@ using System.Runtime.CompilerServices;
 using static GCDTracker.EventType;
 using static GCDTracker.EventCause;
 
+
+
 [assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker {
     public class AbilityManager {
@@ -535,7 +537,6 @@ namespace GCDTracker {
             // Check and flag Clip Alert
             if(conf.ClipAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat)){
                 if (checkClip && ShouldStartClip()) {
-                    //Kind of silly to do this twice, 
                     notify.AddAlert(FlyOutAlert, Clipped, lastClipDelta);
                     MarkAlert(FlyOutAlert, Clipped);
                     lastClipDelta = 0;
@@ -552,16 +553,6 @@ namespace GCDTracker {
                 }
             }
         }
-
-public void LogHelperAlerts() {
-    if (helperAlerts.Count == 0) {
-        GCDTracker.Log.Warning("helperAlerts is empty.");
-    } else {
-        foreach (var alert in helperAlerts) {
-            GCDTracker.Log.Warning($"Alert: {alert.Key}, State: {alert.Value}");
-        }
-    }
-}
 
         public void PulseCheckerWheel(Configuration conf, float wheelPos) {
             if (wheelPos >= 0.8f - 0.025f && wheelPos > 0.2f) {
@@ -632,7 +623,6 @@ public void LogHelperAlerts() {
 
         private void MarkAlert(EventType type, EventCause cause) {
             string key = $"{type}-{cause}";
-            GCDTracker.Log.Warning($"Marking Alert with Key: {key}");
             helperAlerts[key] = true;
         }
     }

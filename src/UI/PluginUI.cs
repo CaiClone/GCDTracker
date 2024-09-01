@@ -184,10 +184,10 @@ namespace GCDTracker.UI {
             var padding = new Vector2(10, 5) * textSize;
 
             if (!notify.alertAnimEnabled.IsDone) notify.alertAnimEnabled.Update();
-            if (!notify.alertAnimEnabled.IsDone) notify.alertAnimEnabled.Update();
+            if (!notify.alertAnimPos.IsDone) notify.alertAnimPos.Update();
 
             var animAlpha = notify.alertAnimEnabled.EasedPoint.X;
-            var animPos = notify.alertAnimEnabled.EasedPoint;
+            var animPos = notify.alertAnimPos.EasedPoint;
 
             draw.AddRectFilled(
                 textStartPos - padding + animPos,

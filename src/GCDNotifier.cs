@@ -85,7 +85,6 @@ namespace GCDTracker {
         public int PulseHeight { get; private set; }
         public Vector4 ProgressPulseColor { get; private set; }
         public float WheelScale { get; private set; }
-        private bool FlyOut;
         private EventCause FlyOutCause;
         private bool BarColor;
         private EventCause BarColorCause;
@@ -148,8 +147,7 @@ namespace GCDTracker {
 
         private void HandleAlert(Alert alert) {
             switch (alert.Type) {
-                case EventType.FlyOutAlert when !FlyOut:
-                    FlyOut = true;
+                case EventType.FlyOutAlert:
                     FlyOutCause = alert.Reason;
                     FlyOutAlert(alert.LastClipDelta);
                     break;
@@ -186,11 +184,6 @@ namespace GCDTracker {
         }
 
         private void UpdateFlyOut(PluginUI ui, Configuration conf, EventCause reason, float relx, float rely) {
-            if (alertAnimEnabled.IsDone) {
-                FlyOut = false;
-                FlyOutCause = EventCause.None;
-            }
-            
             switch (reason) {
                 case EventCause.Clipped:
                     ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
