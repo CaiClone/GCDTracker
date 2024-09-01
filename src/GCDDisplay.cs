@@ -31,20 +31,24 @@ namespace GCDTracker {
             if (GameState.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !GameState.IsCastingTeleport())
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
-            helper.FlagAlerts(ui);
-            helper.InvokeAlerts(0.5f, 0, ui);
+            helper.FlyOutAlertChecker();
+            helper.PulseCheckerWheel(conf, gcdTime / gcdTotal);
+
+            var notify = GCDEventHandler.Instance;
+            notify.Update(null, conf, ui);
+
             // Background
-            ui.DrawCircSegment(0f, 1f, 6f * helper.GetWheelScale(ui.Scale), conf.backColBorder);
-            ui.DrawCircSegment(0f, 1f, 3f * helper.GetWheelScale(ui.Scale), helper.BackgroundColor());
+            ui.DrawCircSegment(0f, 1f, 6f * notify.WheelScale, conf.backColBorder);
+            ui.DrawCircSegment(0f, 1f, 3f * notify.WheelScale, helper.BackgroundColor());
             if (conf.QueueLockEnabled) {
-                ui.DrawCircSegment(0.8f, 1, 9f * helper.GetWheelScale(ui.Scale), conf.backColBorder);
-                ui.DrawCircSegment(0.8f, 1, 6f * helper.GetWheelScale(ui.Scale), helper.BackgroundColor());
+                ui.DrawCircSegment(0.8f, 1, 9f * notify.WheelScale, conf.backColBorder);
+                ui.DrawCircSegment(0.8f, 1, 6f * notify.WheelScale, helper.BackgroundColor());
             }
-            ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * helper.GetWheelScale(ui.Scale), conf.frontCol);
+            ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * notify.WheelScale, conf.frontCol);
             foreach (var (ogcd, (anlock, iscast)) in abilityManager.ogcds) {
                 var isClipping = helper.CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
-                ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * helper.GetWheelScale(ui.Scale), isClipping ? conf.clipCol : conf.anLockCol);
-                if (!iscast) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * helper.GetWheelScale(ui.Scale), conf.ogcdCol);
+                ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * notify.WheelScale, isClipping ? conf.clipCol : conf.anLockCol);
+                if (!iscast) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * notify.WheelScale, conf.ogcdCol);
             }
         }
 
@@ -55,8 +59,9 @@ namespace GCDTracker {
             if (GameState.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !GameState.IsCastingTeleport())
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
-            helper.FlagAlerts(ui);
-            helper.InvokeAlerts((conf.BarWidthRatio + 1) / 2.1f, -0.3f, ui);
+            
+            if (!conf.WheelEnabled)
+                helper.FlyOutAlertChecker();
 
             DrawBarElements(
                 ui,
@@ -164,8 +169,12 @@ namespace GCDTracker {
                 DataStore.ActionManager->CastActionType, 
                 DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None
             );
+
+            var notify = GCDEventHandler.Instance;
+            notify.Update(bar, conf, ui);
+
             var bar_v = BarVertices.Instance;
-            bar_v.Update(bar, go);
+            bar_v.Update(bar, go, notify);
             var sc_sv = SlideCastStartVertices.Instance;
             sc_sv.Update(bar, bar_v, go);
             var sc_ev = SlideCastEndVertices.Instance;
@@ -183,9 +192,8 @@ namespace GCDTracker {
 
             // in both modes:
             // draw cast/gcd progress (main) bar
-            
             if(bar.CurrentPos > 0.001f){
-                var progressBarColor = go.Allow_Bar_Pulse ? bar.ProgressPulseColor : bar.ProgressBarColor;
+                var progressBarColor = notify.ProgressPulseColor;
                 ui.DrawRectFilledNoAA(bar_v.StartVertex, bar_v.ProgressVertex, progressBarColor, conf.BarGradMode, conf.BarGradientMul);
             }
             // in Castbar mode:

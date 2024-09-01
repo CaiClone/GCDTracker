@@ -8,6 +8,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Numerics;
 using System.Runtime.CompilerServices;
+using static GCDTracker.EventType;
+using static GCDTracker.EventCause;
+
 
 
 [assembly: InternalsVisibleTo("Tests")]
@@ -42,15 +45,16 @@ namespace GCDTracker {
         public bool SlideStart_RightTri { get; private set; }
         public bool SlideEnd_RightTri { get; private set; }
         public bool Slide_Background { get; private set; }
-        public bool Allow_Bar_Pulse { get; private set;}
         public float Queue_Lock_Start { get; private set; }
         public float Slide_Bar_Start { get; private set; }
         public float Slide_Bar_End { get; private set; }
-
+        private readonly Dictionary<string, bool> triggeredAlerts = [];
         private float previousPos = 1f;
         static readonly float epsilon = 0.02f;
         
-        private BarDecisionHelper() { }
+        private BarDecisionHelper() {
+            triggeredAlerts = [];
+         }
         public static BarDecisionHelper Instance {
             get {
                 instance ??= new BarDecisionHelper();
@@ -154,15 +158,15 @@ namespace GCDTracker {
             }
         }
 
-        private void HandleGCDOnly(BarInfo bar, Configuration conf) {
-            // enable pulse
-            Allow_Bar_Pulse = true;
-            
+        private void HandleGCDOnly(BarInfo bar, Configuration conf) {            
             // draw line
             Queue_VerticalBar = true;      
 
             // draw triangles
             Queue_Triangle = conf.ShowQueuelockTriangles;
+
+            // activate alerts
+            PulseCheckerQueue(bar, conf);
 
             // move lines
             if (conf.BarQueueLockSlide)
@@ -197,10 +201,7 @@ namespace GCDTracker {
             Slide_Background = false;
         }
 
-        private void HandleCastBarShort(BarInfo bar, Configuration conf) {
-            // enable pulse
-            Allow_Bar_Pulse = true;
-            
+        private void HandleCastBarShort(BarInfo bar, Configuration conf) {            
             // draw lines
             SlideStart_VerticalBar = true;
             SlideEnd_VerticalBar = !conf.SlideCastFullBar;
@@ -214,6 +215,9 @@ namespace GCDTracker {
             if (conf.QueueLockEnabled)
                 HandleGCDOnly(bar, conf);
 
+            // activate alerts
+            PulseCheckerSlide(bar, conf);
+
             // move lines
             Slide_Bar_Start = Math.Max(Slide_Bar_Start, Math.Min(bar.CurrentPos, Queue_Lock_Start));
             Slide_Bar_End = Math.Max(Slide_Bar_End, Math.Min(bar.CurrentPos, Queue_Lock_Start));
@@ -222,10 +226,7 @@ namespace GCDTracker {
             Slide_Background = conf.SlideCastBackground;
         }
 
-        private void HandleCastBarLong(BarInfo bar, Configuration conf) {
-            // enable pulse
-            Allow_Bar_Pulse = true;
-            
+        private void HandleCastBarLong(BarInfo bar, Configuration conf) {          
             // draw line
             SlideStart_VerticalBar = true;
             
@@ -236,6 +237,9 @@ namespace GCDTracker {
             // invoke Queuelock
             if (conf.QueueLockEnabled)
                 HandleGCDOnly(bar, conf);
+
+            // activate alerts
+            PulseCheckerSlide(bar, conf);
 
             // move lines
             Slide_Bar_Start = Math.Max(Slide_Bar_Start, bar.CurrentPos);
@@ -260,15 +264,71 @@ namespace GCDTracker {
             SlideStart_RightTri = false;
             SlideEnd_RightTri = false;
             Slide_Background = false;
-            Allow_Bar_Pulse = false;
+            triggeredAlerts.Clear();
+        }
+
+        private bool CheckAlert(EventType type, EventCause cause) {
+            string key = $"{type}-{cause}";
+            return triggeredAlerts.ContainsKey(key) && triggeredAlerts[key];
+        }
+
+        private void MarkAlert(EventType type, EventCause cause) {
+            string key = $"{type}-{cause}";
+            triggeredAlerts[key] = true;
+        }
+
+        private void PulseCheckerSlide(BarInfo bar, Configuration conf){
+            var notify = AlertManager.Instance;
+            if (bar.CurrentPos >= Slide_Bar_Start - 0.025f && bar.CurrentPos > 0.2f) {
+                if (conf.SlideCastEnabled) {
+                    if (conf.pulseBarColorAtSlide && !notify.AlertExists(BarColorPulse, Slidecast) && !CheckAlert(BarColorPulse, Slidecast)) {
+                        notify.AddAlert(BarColorPulse, Slidecast);
+                        MarkAlert(BarColorPulse, Slidecast);
+                    }
+
+                    if (conf.pulseBarWidthAtSlide && !notify.AlertExists(BarWidthPulse, Slidecast) && !CheckAlert(BarWidthPulse, Slidecast)) {
+                        notify.AddAlert(BarWidthPulse, Slidecast);
+                        MarkAlert(BarWidthPulse, Slidecast);
+                    }
+
+                    if (conf.pulseBarHeightAtSlide && !notify.AlertExists(BarHeightPulse, Slidecast) && !CheckAlert(BarHeightPulse, Slidecast)) {
+                        notify.AddAlert(BarHeightPulse, Slidecast);
+                        MarkAlert(BarHeightPulse, Slidecast);
+                    }
+                }
+            }
+        }
+
+        private void PulseCheckerQueue(BarInfo bar, Configuration conf){
+            var notify = AlertManager.Instance;
+            if (bar.CurrentPos >= Queue_Lock_Start - 0.025f && bar.CurrentPos > 0.2f) {
+                if (conf.QueueLockEnabled) {
+                    if (conf.pulseBarColorAtQueue && !notify.AlertExists(BarColorPulse, Queuelock) && !CheckAlert(BarColorPulse, Queuelock)) {
+                        notify.AddAlert(BarColorPulse, Queuelock);
+                        MarkAlert(BarColorPulse, Queuelock);
+                    }
+
+                    if (conf.pulseBarWidthAtQueue && !notify.AlertExists(BarWidthPulse, Queuelock) && !CheckAlert(BarWidthPulse, Queuelock)) {
+                        notify.AddAlert(BarWidthPulse, Queuelock);
+                        MarkAlert(BarWidthPulse, Queuelock);
+                    }
+
+                    if (conf.pulseBarHeightAtQueue && !notify.AlertExists(BarHeightPulse, Queuelock) && !CheckAlert(BarHeightPulse, Queuelock)) {
+                        notify.AddAlert(BarHeightPulse, Queuelock);
+                        MarkAlert(BarHeightPulse, Queuelock);
+                    }
+                }
+            }
         }
     }
 
     public unsafe class GCDHelper {
         private readonly Configuration conf;
         private readonly AbilityManager abilityManager;
+        private readonly AlertManager notify;
         public float TotalGCD = 3.5f;
         private DateTime lastGCDEnd = DateTime.Now;
+        private readonly Dictionary<string, bool> helperAlerts = [];
 
         public float lastElapsedGCD;
         private float lastClipDelta;
@@ -286,9 +346,9 @@ namespace GCDTracker {
         private bool checkClip;
         private bool checkABC;
         public bool clippedOnThisGCD;
-        private bool clippedOnLastGCD;
-        private bool abcOnThisGCD;
-        private bool abcOnLastGCD;
+        public bool clippedOnLastGCD;
+        public bool abcOnThisGCD;
+        public bool abcOnLastGCD;
         public bool isRunning;
         public bool isHardCast;
         private float remainingCastTime;
@@ -299,6 +359,8 @@ namespace GCDTracker {
         public GCDHelper(Configuration conf) {
             this.conf = conf;
             abilityManager = AbilityManager.Instance;
+            notify = AlertManager.Instance;
+            helperAlerts = [];
         }
 
         public void OnActionUse(byte ret, ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp) {
@@ -408,6 +470,7 @@ namespace GCDTracker {
                 abcBlocker = false;
                 lastActionTP = false;
                 GCDTimeoutBuffer = (int)(1000 * conf.GCDTimeout);
+                helperAlerts.Clear();
             }
             if (!isRunning && !idleTimerDone) {
                 idleTimerAccum += framework.UpdateDelta.Milliseconds;
@@ -468,28 +531,39 @@ namespace GCDTracker {
             return DataStore.ClientState?.LocalPlayer?.TargetObjectId == targetBuffer;
         }
 
-        public void FlagAlerts(PluginUI ui){
+        public void FlyOutAlertChecker(){
             bool inCombat = DataStore.Condition?[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat] ?? false;
+
+            // Check and flag Clip Alert
             if(conf.ClipAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat)){
                 if (checkClip && ShouldStartClip()) {
-                    ui.StartAlert(true, lastClipDelta);
+                    notify.AddAlert(FlyOutAlert, Clipped, lastClipDelta);
+                    MarkAlert(FlyOutAlert, Clipped);
                     lastClipDelta = 0;
                 }
             }
-            if (conf.abcAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat)){
+
+            // Check and flag ABC Alert
+            var clipInQueue = notify.AlertExists(FlyOutAlert, Clipped) || CheckAlert(FlyOutAlert, Clipped);
+            if (conf.abcAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat) && !clipInQueue){
                 if (!(clippedOnThisGCD || clippedOnLastGCD) && checkABC && !abcBlocker && ShouldStartABC()) {
-                    ui.StartAlert(false, 0);
+                    notify.AddAlert(FlyOutAlert, ABC);
+                    MarkAlert(FlyOutAlert, ABC);
                     abcOnThisGCD = true;
                 }
             }
         }
 
-        public void InvokeAlerts(float relx, float rely, PluginUI ui){
-            if (conf.ClipAlertEnabled && clippedOnThisGCD)
-                ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
-            if (conf.abcAlertEnabled && (abcOnThisGCD || abcOnLastGCD))
-                ui.DrawAlert(relx, rely, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, 3);
-           }
+        public void PulseCheckerWheel(Configuration conf, float wheelPos) {
+            if (wheelPos >= 0.8f - 0.025f && wheelPos > 0.2f) {
+                if (conf.QueueLockEnabled) {
+                    if (conf.pulseWheelAtQueue && !notify.AlertExists(WheelPulse, Queuelock) && !CheckAlert(WheelPulse, Queuelock)) {
+                        notify.AddAlert(WheelPulse, Queuelock);
+                        MarkAlert(WheelPulse, Queuelock);
+                    }
+                }
+            }
+        }
 
         public Vector4 BackgroundColor(){
             var bg = conf.backCol;
@@ -498,32 +572,6 @@ namespace GCDTracker {
             if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))
                 bg = conf.abcCol;
             return bg;
-        }
-        
-        public float GetWheelScale(float uiScale) {
-            float wheelPos = lastElapsedGCD / TotalGCD;
-            if (wheelPos <= 0.78f || !conf.pulseWheelAtQueue)
-                return uiScale;
-            float targetScale = uiScale * 1.6f;
-
-            if (wheelPos < 0.82f) {
-                float factor = (wheelPos - 0.78f) / 0.04f;
-                return Lerp(uiScale, targetScale, factor);
-            }
-            else if (wheelPos < 0.86f) {
-                return targetScale;
-            }
-            else if (wheelPos < 0.9f) {
-                float factor = (wheelPos - 0.86f) / 0.04f;
-                return Lerp(targetScale, uiScale, factor);
-            }
-            else {
-                return uiScale;
-            }
-        }
-
-        private float Lerp(float start, float end, float factor) {
-            return start + factor * (end - start);
         }
 
         public bool CheckClip(bool iscast, float ogcd, float anlock, float gcdTotal, float gcdTime) =>
@@ -566,6 +614,16 @@ namespace GCDTracker {
                 abilityManager.ogcds[ogcd.Key + diff] = ogcd.Value;
             foreach (var ogcd in toSlide)
                 abilityManager.ogcds.Remove(ogcd.Key);
+        }
+
+        private bool CheckAlert(EventType type, EventCause cause) {
+            string key = $"{type}-{cause}";
+            return helperAlerts.ContainsKey(key) && helperAlerts[key];
+        }
+
+        private void MarkAlert(EventType type, EventCause cause) {
+            string key = $"{type}-{cause}";
+            helperAlerts[key] = true;
         }
     }
 }
