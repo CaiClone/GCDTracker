@@ -81,6 +81,10 @@ namespace GCDTracker {
     public class GCDEventHandler {
         private static GCDEventHandler instance;
 
+        private const float TransitionDuration = 300f;
+        private const float FirstStageEnd = 100f;
+        private const float SecondStageEnd = 200f;
+
         public int PulseWidth { get; private set; }
         public int PulseHeight { get; private set; }
         public Vector4 ProgressPulseColor { get; private set; }
@@ -128,7 +132,6 @@ namespace GCDTracker {
             }
             if (bar == null) {
                 UpdateWheelProperties(ui.Scale);
-
             }
         }
 
@@ -212,30 +215,25 @@ namespace GCDTracker {
 
         private Vector4 ApplyColorTransition(Vector4 startColor, Vector4 targetColor, bool enable, ref bool transitionActive, ref EventCause transitionCause, ref DateTime startTime) {
             float elapsedTime = (float)(DateTime.Now - startTime).TotalMilliseconds;
-            const float transitionDuration = 300f;
 
-            if (!enable || elapsedTime >= transitionDuration) {
+            if (!enable || elapsedTime >= TransitionDuration) {
                 transitionActive = false;
                 transitionCause = EventCause.None;
                 startTime = DateTime.MinValue;
                 return startColor;
             }
 
-            const float firstStageEnd = 100f;
-            const float secondStageEnd = 200f;
-
             return elapsedTime switch {
-                < firstStageEnd => Vector4.Lerp(startColor, targetColor, elapsedTime / firstStageEnd),
-                < secondStageEnd => targetColor,
-                _ => Vector4.Lerp(targetColor, startColor, (elapsedTime - secondStageEnd) / (transitionDuration - secondStageEnd))
+                < FirstStageEnd => Vector4.Lerp(startColor, targetColor, elapsedTime / FirstStageEnd),
+                < SecondStageEnd => targetColor,
+                _ => Vector4.Lerp(targetColor, startColor, (elapsedTime - SecondStageEnd) / (TransitionDuration - SecondStageEnd))
             };
         }
 
         private int ApplySizeTransition(int startDimension, int offset, bool enable, ref bool transitionActive, ref EventType transitionType, ref DateTime startTime) {
             float elapsedTime = (float)(DateTime.Now - startTime).TotalMilliseconds;
-            const float transitionDuration = 300f;
 
-            if (!enable || elapsedTime >= transitionDuration) {
+            if (!enable || elapsedTime >= TransitionDuration) {
                 transitionActive = false;
                 transitionType = EventType.None;
                 startTime = DateTime.MinValue;
@@ -243,21 +241,15 @@ namespace GCDTracker {
             }
 
             int targetDimension = startDimension + offset;
-            const float firstStageEnd = 100f;
-            const float secondStageEnd = 200f;
 
             return (int)(elapsedTime switch {
-                < firstStageEnd => Lerp(startDimension, targetDimension, elapsedTime / firstStageEnd),
-                < secondStageEnd => targetDimension,
-                _ => Lerp(targetDimension, startDimension, (elapsedTime - secondStageEnd) / (transitionDuration - secondStageEnd))
+                < FirstStageEnd => Lerp(startDimension, targetDimension, elapsedTime / FirstStageEnd),
+                < SecondStageEnd => targetDimension,
+                _ => Lerp(targetDimension, startDimension, (elapsedTime - SecondStageEnd) / (TransitionDuration - SecondStageEnd))
             });
         }
 
         public float GetWheelScale(float uiScale, bool enable) {
-            const float transitionDuration = 300f;
-            const float firstStageEnd = 100f;
-            const float secondStageEnd = 200f;
-
             if (enable && wheelStartTime == DateTime.MinValue) {
                 wheelStartTime = DateTime.Now;
             }
@@ -265,11 +257,10 @@ namespace GCDTracker {
             float elapsedTime = (float)(DateTime.Now - wheelStartTime).TotalMilliseconds;
             float targetScale = uiScale * 1.6f;
 
-            return elapsedTime switch
-            {
-                < firstStageEnd => Lerp(uiScale, targetScale, elapsedTime / firstStageEnd),
-                < secondStageEnd => targetScale,
-                < transitionDuration => Lerp(targetScale, uiScale, (elapsedTime - secondStageEnd) / (transitionDuration - secondStageEnd)),
+            return elapsedTime switch {
+                < FirstStageEnd => Lerp(uiScale, targetScale, elapsedTime / FirstStageEnd),
+                < SecondStageEnd => targetScale,
+                < TransitionDuration => Lerp(targetScale, uiScale, (elapsedTime - SecondStageEnd) / (TransitionDuration - SecondStageEnd)),
                 _ => ResetWheel(uiScale)
             };
         }
