@@ -9,8 +9,6 @@ using System.Numerics;
 namespace GCDTracker.UI {
     public class PluginUI {
         public bool IsVisible { get; set; }
-        private readonly Easing alertAnimEnabled;
-        private readonly Easing alertAnimPos;
         public GCDDisplay gcd;
         public GCDHelper helper;       
         public ComboTracker ct;
@@ -20,19 +18,9 @@ namespace GCDTracker.UI {
         public Vector2 w_size;
         public float Scale;
         private ImDrawListPtr draw;
-        private readonly string[] alertText;
 
         public PluginUI(Configuration conf) {
             this.conf = conf;
-            alertAnimEnabled = new OutCubic(new(0, 0, 0, 2, 1000)) {
-                Point1 = new(0.25f, 0),
-                Point2 = new(1f, 0)
-            };
-            alertAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
-                Point1 = new(0, 0),
-                Point2 = new(0, -20)
-            };
-            alertText = ["CLIP", "0.0", "0.00", "A-B-C"];
         }
 
         public void Draw() {
@@ -176,18 +164,10 @@ namespace GCDTracker.UI {
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backCol), 3f * Scale);
         }
 
-        public void StartAlert(bool isClip, float ms) {
-            if (isClip) {
-                alertText[1] = string.Format("{0:0.0}", ms);
-                alertText[2] = string.Format("{0:0.00}", ms);
-            }
-            alertAnimEnabled.Restart();
-            alertAnimPos.Restart();
-        }
-
         public void DrawAlert(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol, int alertTextPrecision = 0) {
-            if (!alertAnimEnabled.IsRunning || alertAnimEnabled.IsDone) return;
-            if (alertTextPrecision > alertText.Length - 1){
+            var notify = GCDEventHandler.Instance;
+
+            if (alertTextPrecision > notify.alertText.Length - 1){
                 GCDTracker.Log.Error("Alert text precision invalid");
                 return;
             }
@@ -195,7 +175,7 @@ namespace GCDTracker.UI {
                 ImGui.PushFont(UiBuilder.MonoFont);
             ImGui.SetWindowFontScale(textSize);
 
-            var textSz = ImGui.CalcTextSize(alertText[alertTextPrecision]);
+            var textSz = ImGui.CalcTextSize(notify.alertText[alertTextPrecision]);
             var textStartPos =
                 w_cent
                 - (w_size / 2)
@@ -203,11 +183,11 @@ namespace GCDTracker.UI {
                 - (textSz / 2);
             var padding = new Vector2(10, 5) * textSize;
 
-            if (!alertAnimEnabled.IsDone) alertAnimEnabled.Update();
-            if (!alertAnimPos.IsDone) alertAnimPos.Update();
+            if (!notify.alertAnimEnabled.IsDone) notify.alertAnimEnabled.Update();
+            if (!notify.alertAnimEnabled.IsDone) notify.alertAnimEnabled.Update();
 
-            var animAlpha = alertAnimEnabled.EasedPoint.X;
-            var animPos = alertAnimPos.EasedPoint;
+            var animAlpha = notify.alertAnimEnabled.EasedPoint.X;
+            var animPos = notify.alertAnimEnabled.EasedPoint;
 
             draw.AddRectFilled(
                 textStartPos - padding + animPos,
@@ -216,7 +196,7 @@ namespace GCDTracker.UI {
             draw.AddText(
                 textStartPos + animPos,
                 ImGui.GetColorU32(textCol.WithAlpha(1-animAlpha)),
-                alertText[alertTextPrecision]);
+                notify.alertText[alertTextPrecision]);
 
             ImGui.SetWindowFontScale(1f);
             if (conf.OverrideDefaltFont)

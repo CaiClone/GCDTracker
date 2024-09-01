@@ -1,5 +1,7 @@
 using GCDTracker.UI;
 using System.Collections.Generic;
+using Dalamud.Interface.Animation;
+using Dalamud.Interface.Animation.EasingFunctions;
 using System.Numerics;
 using System.Linq;
 using System;
@@ -25,27 +27,21 @@ namespace GCDTracker {
         None
     }
 
-    public enum EventSource {
-        Wheel,
-        Bar,
-        None
-    }
-
     public class Alert
     {
         public EventType Type { get; set; }
         public EventCause Reason { get; set; }
-        public EventSource Source { get; set; }
         public float LocationX { get; set; }
         public float LocationY { get; set; }
+        public float LastClipDelta { get; set; }
 
-        public Alert(EventType type, EventCause reason, EventSource source, float locationX, float locationY)
+        public Alert(EventType type, EventCause reason, float lastClipDelta, float locationX, float locationY)
         {
             Type = type;
             Reason = reason;
-            Source = source;
             LocationX = locationX;
             LocationY = locationY;
+            LastClipDelta = lastClipDelta;
         }
     }
 
@@ -59,8 +55,8 @@ namespace GCDTracker {
 
         public int AlertCount => alertQueue.Count;
 
-        public void AddAlert(EventType type, EventCause reason, EventSource source, float locationX, float locationY) {
-            alertQueue.Enqueue(new Alert(type, reason, source, locationX, locationY));
+        public void AddAlert(EventType type, EventCause reason, float locationX = 0f, float locationY = 0f, float lastClipDelta = 0f) {
+            alertQueue.Enqueue(new Alert(type, reason, locationX, locationY, lastClipDelta));
         }
 
         public Alert PeekAlert() => alertQueue.Count > 0 ? alertQueue.Peek() : null;
@@ -89,6 +85,8 @@ namespace GCDTracker {
         public int PulseHeight { get; private set; }
         public Vector4 ProgressPulseColor { get; private set; }
         public float WheelScale { get; private set; }
+        private bool FlyOut;
+        private EventCause FlyOutCause;
         private bool BarColor;
         private EventCause BarColorCause;
         private bool BarWidth;
@@ -101,57 +99,76 @@ namespace GCDTracker {
         private DateTime heightStartTime = DateTime.MinValue;
         private DateTime wheelStartTime = DateTime.MinValue;
 
-        private GCDEventHandler() { }
+        public readonly Easing alertAnimEnabled;
+        public readonly Easing alertAnimPos;
+        public readonly string[] alertText;
+
+        private GCDEventHandler() {
+            alertAnimEnabled = new OutCubic(new(0, 0, 0, 2, 1000)) {
+                Point1 = new(0.25f, 0),
+                Point2 = new(1f, 0)
+            };
+            alertAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
+                Point1 = new(0, 0),
+                Point2 = new(0, -20)
+            };
+            alertText = ["CLIP", "0.0", "0.00", "A-B-C"];
+        }
 
         public static GCDEventHandler Instance => instance ??= new GCDEventHandler();
 
-        public void Update(BarInfo bar, Configuration conf, EventSource source, PluginUI ui) {
+        public void StartAlert(bool isClip, float ms) {
+            if (isClip) {
+                alertText[1] = string.Format("{0:0.0}", ms);
+                alertText[2] = string.Format("{0:0.00}", ms);
+            }
+            alertAnimEnabled.Restart();
+            alertAnimPos.Restart();
+        }
+
+        public void Update(BarInfo bar, Configuration conf, PluginUI ui) {
             int alertCount = AlertManager.Instance.AlertCount;
-            Queue<Alert> tempQueue = new Queue<Alert>();
 
             for (int i = 0; i < alertCount; i++) {
                 var alert = AlertManager.Instance.PeekAlert();
                 if (alert == null) continue;
-
-                if (alert.Source == source) {
-                    HandleAlert(alert, conf, ui);
-                    AlertManager.Instance.DequeueAlert();
-                } else {
-                    tempQueue.Enqueue(alert);
-                    AlertManager.Instance.DequeueAlert();
-                }
+                HandleAlert(alert);
+                AlertManager.Instance.DequeueAlert();
             }
 
-            while (tempQueue.Count > 0) {
-                var alert = tempQueue.Dequeue();
-                AlertManager.Instance.AddAlert(alert.Type, alert.Reason, alert.Source, alert.LocationX, alert.LocationY);
-            }
-            
             if (bar != null) {    
                 UpdateBarProperties(bar, conf);
+                UpdateFlyOut(ui, conf, FlyOutCause, (conf.BarWidthRatio + 1) / 2.1f, -0.3f);
             }
-            if (bar == null) {
+            else {
                 UpdateWheelProperties(ui.Scale);
+                UpdateFlyOut(ui, conf, FlyOutCause, 0.5f, 0f);
             }
         }
 
-        private void HandleAlert(Alert alert, Configuration conf, PluginUI ui) {
+        private void HandleAlert(Alert alert) {
             switch (alert.Type) {
-                case EventType.FlyOutAlert:
-                    FlyOutAlert(conf, alert.LocationX, alert.LocationY, alert.Reason, ui);
+                case EventType.FlyOutAlert when !FlyOut:
+                    FlyOut = true;
+                    FlyOutCause = alert.Reason;
+                    FlyOutAlert(alert.LastClipDelta);
                     break;
+
                 case EventType.BarColorPulse when !BarColor:
                     BarColor = true;
                     BarColorCause = alert.Reason;
                     break;
+
                 case EventType.BarWidthPulse when !BarWidth:
                     BarWidth = true;
                     BarWidthType = alert.Type;
                     break;
+
                 case EventType.BarHeightPulse when !BarHeight:
                     BarHeight = true;
                     BarHeightType = alert.Type;
                     break;
+
                 case EventType.WheelPulse when !wheelPulse:
                     wheelPulse = true;
                     break;
@@ -168,13 +185,30 @@ namespace GCDTracker {
             WheelScale = GetWheelScale(uiScale, wheelPulse);
         }
 
-        private static void FlyOutAlert(Configuration conf, float relX, float relY, EventCause reason, PluginUI ui) {
+        private void UpdateFlyOut(PluginUI ui, Configuration conf, EventCause reason, float relx, float rely) {
+            if (alertAnimEnabled.IsDone) {
+                FlyOut = false;
+                FlyOutCause = EventCause.None;
+            }
+            
             switch (reason) {
                 case EventCause.Clipped:
-                    ui.DrawAlert(relX, relY, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
+                    ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
+                    break;
+                
+                case EventCause.ABC:
+                    ui.DrawAlert(relx, rely, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, 3);
+                    break;
+            }
+        }
+
+        private void FlyOutAlert(float lastClipDelta) {
+            switch (FlyOutCause) {
+                case EventCause.Clipped:
+                    StartAlert(true, lastClipDelta);
                     break;
                 case EventCause.ABC:
-                    ui.DrawAlert(relX, relY, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, 3);
+                    StartAlert(false, lastClipDelta);
                     break;
             }
         }

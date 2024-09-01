@@ -6,7 +6,6 @@ using GCDTracker.UI;
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
-using static GCDTracker.EventSource;
 
 [assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker {
@@ -28,16 +27,16 @@ namespace GCDTracker {
         public void DrawGCDWheel(PluginUI ui) {
             float gcdTotal = helper.TotalGCD;
             float gcdTime = helper.lastElapsedGCD;
-            
-            var notify = GCDEventHandler.Instance;
-            notify.Update(null, conf, Wheel, ui);
 
             if (GameState.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !GameState.IsCastingTeleport())
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
-            helper.FlagAlerts(ui);
-            helper.InvokeAlerts(0.5f, 0, Wheel, ui);
-            helper.AlertCheckerWheel(conf, gcdTime / gcdTotal);
+            helper.FlyOutAlertChecker();
+            helper.PulseCheckerWheel(conf, gcdTime / gcdTotal);
+
+            var notify = GCDEventHandler.Instance;
+            notify.Update(null, conf, ui);
+
             // Background
             ui.DrawCircSegment(0f, 1f, 6f * notify.WheelScale, conf.backColBorder);
             ui.DrawCircSegment(0f, 1f, 3f * notify.WheelScale, helper.BackgroundColor());
@@ -60,8 +59,9 @@ namespace GCDTracker {
             if (GameState.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !GameState.IsCastingTeleport())
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
-            helper.FlagAlerts(ui);
-            helper.InvokeAlerts((conf.BarWidthRatio + 1) / 2.1f, -0.3f, Bar, ui);
+            
+            if (!conf.WheelEnabled)
+                helper.FlyOutAlertChecker();
 
             DrawBarElements(
                 ui,
@@ -171,7 +171,7 @@ namespace GCDTracker {
             );
 
             var notify = GCDEventHandler.Instance;
-            notify.Update(bar, conf, Bar, ui);
+            notify.Update(bar, conf, ui);
 
             var bar_v = BarVertices.Instance;
             bar_v.Update(bar, go, notify);
@@ -192,7 +192,6 @@ namespace GCDTracker {
 
             // in both modes:
             // draw cast/gcd progress (main) bar
-            
             if(bar.CurrentPos > 0.001f){
                 var progressBarColor = notify.ProgressPulseColor;
                 ui.DrawRectFilledNoAA(bar_v.StartVertex, bar_v.ProgressVertex, progressBarColor, conf.BarGradMode, conf.BarGradientMul);
