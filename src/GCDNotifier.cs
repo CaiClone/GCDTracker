@@ -174,7 +174,7 @@ namespace GCDTracker {
         }
 
         private void UpdateBarProperties(BarInfo bar, Configuration conf) {
-            ProgressPulseColor = GetBarColor(conf.frontCol, conf.slideCol, BarColorCause, BarColor);
+            ProgressPulseColor = GetBarColor(conf.frontCol, conf.slideCol, BarColorCause, BarColor, conf.subtlePulses);
             PulseWidth = GetBarSize(bar.Width, BarWidthType, BarWidth, conf.subtlePulses, ref widthStartTime);
             PulseHeight = GetBarSize(bar.Height, BarHeightType, BarHeight, conf.subtlePulses, ref heightStartTime);
         }
@@ -183,7 +183,7 @@ namespace GCDTracker {
             WheelScale = GetWheelScale(uiScale, wheelPulse, conf.subtlePulses);
         }
 
-        private void UpdateFlyOut(PluginUI ui, Configuration conf, EventCause reason, float relx, float rely) {
+        private static void UpdateFlyOut(PluginUI ui, Configuration conf, EventCause reason, float relx, float rely) {
             switch (reason) {
                 case EventCause.Clipped:
                     ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
@@ -206,12 +206,16 @@ namespace GCDTracker {
             }
         }
 
-        private Vector4 GetBarColor(Vector4 progressBarColor, Vector4 slideCol, EventCause reason, bool enable) {
+        private Vector4 GetBarColor(Vector4 progressBarColor, Vector4 slideCol, EventCause reason, bool enable, bool subtlePulses) {
             Vector4 targetColor = reason switch {
                 EventCause.Queuelock => CalculateTargetColor(progressBarColor),
                 EventCause.Slidecast => new Vector4(slideCol.X, slideCol.Y, slideCol.Z, progressBarColor.W),
                 _ => progressBarColor
             };
+
+            if (subtlePulses) {
+                targetColor = Vector4.Lerp(targetColor, progressBarColor, 0.5f);
+            }
 
             if (colorStartTime == DateTime.MinValue && enable) {
                 colorStartTime = DateTime.Now;
@@ -240,7 +244,7 @@ namespace GCDTracker {
             return ApplySizeTransition(dimension, offset, enable, ref type == EventType.BarWidthPulse ? ref BarWidth : ref BarHeight, ref type == EventType.BarWidthPulse ? ref BarWidthType : ref BarHeightType, ref startTime);
         }
 
-        private Vector4 ApplyColorTransition(Vector4 startColor, Vector4 targetColor, bool enable, ref bool transitionActive, ref EventCause transitionCause, ref DateTime startTime) {
+        private static Vector4 ApplyColorTransition(Vector4 startColor, Vector4 targetColor, bool enable, ref bool transitionActive, ref EventCause transitionCause, ref DateTime startTime) {
             float elapsedTime = (float)(DateTime.Now - startTime).TotalMilliseconds;
 
             if (!enable || elapsedTime >= TransitionDuration) {
@@ -257,7 +261,7 @@ namespace GCDTracker {
             };
         }
 
-        private int ApplySizeTransition(int startDimension, int offset, bool enable, ref bool transitionActive, ref EventType transitionType, ref DateTime startTime) {
+        private static int ApplySizeTransition(int startDimension, int offset, bool enable, ref bool transitionActive, ref EventType transitionType, ref DateTime startTime) {
             float elapsedTime = (float)(DateTime.Now - startTime).TotalMilliseconds;
 
             if (!enable || elapsedTime >= TransitionDuration) {
