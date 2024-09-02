@@ -719,19 +719,19 @@ namespace GCDTracker
                             ImGui.SameLine();
                             if (ImGui.Button("Use DelvUI Inspired Colors")) {
                                 ResetColors(new Dictionary<string, object> {
-                                    { nameof(clipCol), new Vector4(0.9882353f, 0.32941177f, 0.0f, 0.6666667f) },
-                                    { nameof(abcCol), new Vector4(0.9882353f, 0.8235294f, 0.0f, 0.6666667f) },
+                                    { nameof(clipCol), new Vector4(0.9882353f, 0.32941177f, 0.0f, 0.8f) },
+                                    { nameof(abcCol), new Vector4(0.9882353f, 0.8235294f, 0.0f, 0.8f) },
                                     { nameof(ClipTextColor), new Vector4(0.9f, 0.9f, 0.9f, 1.0f) },
                                     { nameof(ClipBackColor), new Vector4(0.9882353f, 0.32941177f, 0.0f, 1.0f) },
                                     { nameof(abcTextColor), new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
                                     { nameof(abcBackColor), new Vector4(1.0f, 0.7f, 0.0f, 1.0f) },
-                                    { nameof(backCol), new Vector4(0.3764706f, 0.3764706f, 0.3764706f, 0.667f) },
+                                    { nameof(backCol), new Vector4(0.3764706f, 0.3764706f, 0.3764706f, 0.8f) },
                                     { nameof(backColBorder), new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
                                     { nameof(frontCol), new Vector4(0.0f, 0.63529414f, 0.9882353f, 1.0f) },
                                     { nameof(ogcdCol), new Vector4(1.0f, 1.0f, 1.0f, 1.0f) },
                                     { nameof(anLockCol), new Vector4(1.0f, 1.0f, 1.0f, 0.26666668f) },
                                     { nameof(BarBackColBorder), new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
-                                    { nameof(slideCol), new Vector4(0.6745098f, 0.0f, 0.9882353f, 0.667f) },
+                                    { nameof(slideCol), new Vector4(0.6745098f, 0.0f, 0.9882353f, 0.8f) },
                                     { nameof(ctComboUsed), new Vector4(0.431f, 0.431f, 0.431f, 1.0f) },
                                     { nameof(ctComboActive), new Vector4(1.0f, 1.0f, 1.0f, 1.0f) },
                                     { nameof(BarBackCol), new Vector4(0.376f, 0.376f, 0.376f, 0.667f) },
