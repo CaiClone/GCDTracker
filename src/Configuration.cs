@@ -32,6 +32,7 @@ namespace GCDTracker
         public bool ColorClipEnabled = true;
         public bool abcAlertEnabled = false;
         public bool ColorABCEnabled = false;
+        public bool subtlePulses = false;
         [JsonIgnore]
         private bool showResetConfirmation = false;
         [JsonIgnore]
@@ -637,6 +638,8 @@ namespace GCDTracker
                         ImGui.Checkbox("Pulse GCDBar Height @ Queue Lock", ref pulseBarHeightAtQueue);
                         ImGui.NewLine();
                         ImGui.Checkbox("Pulse GCDWheel Size @ Queue Lock", ref pulseWheelAtQueue);
+                        ImGui.NewLine();
+                        ImGui.Checkbox("Reduce Pulse Magnitude (Subtle Pulses)", ref subtlePulses);
                         ImGui.NewLine();
                         ImGui.Checkbox("Draw Floating Triangles", ref FloatingTrianglesEnable);
                         if (FloatingTrianglesEnable){

@@ -140,7 +140,7 @@ namespace GCDTracker {
                 UpdateFlyOut(ui, conf, FlyOutCause, (conf.BarWidthRatio + 1) / 2.1f, -0.3f);
             }
             else {
-                UpdateWheelProperties(ui.Scale);
+                UpdateWheelProperties(conf, ui.Scale);
                 UpdateFlyOut(ui, conf, FlyOutCause, 0.5f, 0f);
             }
         }
@@ -175,12 +175,12 @@ namespace GCDTracker {
 
         private void UpdateBarProperties(BarInfo bar, Configuration conf) {
             ProgressPulseColor = GetBarColor(conf.frontCol, conf.slideCol, BarColorCause, BarColor);
-            PulseWidth = GetBarSize(bar.Width, BarWidthType, BarWidth, ref widthStartTime);
-            PulseHeight = GetBarSize(bar.Height, BarHeightType, BarHeight, ref heightStartTime);
+            PulseWidth = GetBarSize(bar.Width, BarWidthType, BarWidth, conf.subtlePulses, ref widthStartTime);
+            PulseHeight = GetBarSize(bar.Height, BarHeightType, BarHeight, conf.subtlePulses, ref heightStartTime);
         }
 
-        private void UpdateWheelProperties(float uiScale) {
-            WheelScale = GetWheelScale(uiScale, wheelPulse);
+        private void UpdateWheelProperties(Configuration conf, float uiScale) {
+            WheelScale = GetWheelScale(uiScale, wheelPulse, conf.subtlePulses);
         }
 
         private void UpdateFlyOut(PluginUI ui, Configuration conf, EventCause reason, float relx, float rely) {
@@ -226,10 +226,10 @@ namespace GCDTracker {
             }
         }
 
-        private int GetBarSize(int dimension, EventType type, bool enable, ref DateTime startTime) {
+        private int GetBarSize(int dimension, EventType type, bool enable, bool subtlePulses, ref DateTime startTime) {
             int offset = type switch {
-                EventType.BarWidthPulse => 10,
-                EventType.BarHeightPulse => 5,
+                EventType.BarWidthPulse => subtlePulses ? 5: 10,
+                EventType.BarHeightPulse => subtlePulses ? 3: 5,
                 _ => 0
             };
 
@@ -276,13 +276,13 @@ namespace GCDTracker {
             });
         }
 
-        public float GetWheelScale(float uiScale, bool enable) {
+        public float GetWheelScale(float uiScale, bool enable, bool subtlePulses) {
             if (enable && wheelStartTime == DateTime.MinValue) {
                 wheelStartTime = DateTime.Now;
             }
 
             float elapsedTime = (float)(DateTime.Now - wheelStartTime).TotalMilliseconds;
-            float targetScale = uiScale * 1.6f;
+            float targetScale = uiScale * (subtlePulses ? 1.3f : 1.6f);
 
             return elapsedTime switch {
                 < FirstStageEnd => Lerp(uiScale, targetScale, elapsedTime / FirstStageEnd),
