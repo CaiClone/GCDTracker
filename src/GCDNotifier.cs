@@ -15,7 +15,6 @@ namespace GCDTracker {
         BarHeightPulse,
         BarBackground,
         WheelPulse,
-        FloatingTriangle,
         None
     }
 
@@ -33,13 +32,11 @@ namespace GCDTracker {
         None
     }
 
-    public class Alert(EventType type, EventCause reason, EventSource source, float lastClipDelta, float locationX, float locationY, bool active, bool started, DateTime startTime)
+    public class Alert(EventType type, EventCause reason, EventSource source, float lastClipDelta, bool active, bool started, DateTime startTime)
     {
         public EventType Type { get; set; } = type;
         public EventCause Reason { get; set; } = reason;
         public EventSource Source { get; set; } = source;
-        public float LocationX { get; set; } = locationX;
-        public float LocationY { get; set; } = locationY;
         public float LastClipDelta { get; set; } = lastClipDelta;
         public bool Active { get; set; } = active;
         public bool Started { get; set; } = started;
@@ -65,7 +62,7 @@ namespace GCDTracker {
                 foreach (EventCause cause in Enum.GetValues(typeof(EventCause))) {
                     foreach (EventSource source in Enum.GetValues(typeof(EventSource))) {
                         if (type != EventType.None && cause != EventCause.None && source != EventSource.None) {
-                            alertQueue.Enqueue(new Alert(type, cause, source, 0f, 0f, 0f, false, false, DateTime.MinValue));
+                            alertQueue.Enqueue(new Alert(type, cause, source, 0f, false, false, DateTime.MinValue));
                         }
                     }
                 }
@@ -101,8 +98,6 @@ namespace GCDTracker {
                     reason: oldAlert.Reason,
                     source: oldAlert.Source,
                     lastClipDelta: lastClipDelta ?? oldAlert.LastClipDelta,
-                    locationX: oldAlert.LocationX,
-                    locationY: oldAlert.LocationY,
                     active: true,
                     started: oldAlert.Started,
                     startTime: oldAlert.StartTime != DateTime.MinValue ? oldAlert.StartTime : DateTime.Now
