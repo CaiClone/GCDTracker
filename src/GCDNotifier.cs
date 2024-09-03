@@ -5,6 +5,9 @@ using Dalamud.Interface.Animation.EasingFunctions;
 using System.Numerics;
 using System.Linq;
 using System;
+using static GCDTracker.EventType;
+using static GCDTracker.EventCause;
+using static GCDTracker.EventSource;
 
 namespace GCDTracker {
 
@@ -21,7 +24,7 @@ namespace GCDTracker {
     public enum EventCause {
         Slidecast,
         Queuelock,
-        Clipped,
+        Clip,
         ABC,
         None
     }
@@ -32,82 +35,55 @@ namespace GCDTracker {
         None
     }
 
-    public class Alert(EventType type, EventCause reason, EventSource source, float lastClipDelta, bool active, bool started, DateTime startTime)
+    public class Alert(EventType type, EventCause reason, EventSource source)
     {
-        public EventType Type { get; set; } = type;
-        public EventCause Reason { get; set; } = reason;
-        public EventSource Source { get; set; } = source;
-        public float LastClipDelta { get; set; } = lastClipDelta;
-        public bool Active { get; set; } = active;
-        public bool Started { get; set; } = started;
-        public DateTime StartTime { get; set; } = startTime;
+        public EventType Type { get; } = type;
+        public EventCause Reason { get; } = reason;
+        public EventSource Source { get; } = source;
+        public float LastClipDelta { get; set; } = 0f;
+        public bool Active { get; set; } = false;
+        public bool Started { get; set; } = false;
+        public DateTime StartTime { get; set; } = DateTime.MinValue;
     }
 
-    public class AlertManager
-    {
+    public class AlertManager {
         private static AlertManager instance;
-        private readonly Queue<Alert> alertQueue = new Queue<Alert>();
-        private AlertManager() {
-            InitializeAlerts();
-        }
+        private readonly Dictionary<(EventType, EventCause, EventSource), Alert> alertDictionary = new();
+
+        private AlertManager() { }
+
         public static AlertManager Instance => instance ??= new AlertManager();
 
-        private void InitializeAlerts() {
-            /// probably should make this not initalize the world ///
-            /// I tried a bunch of ways to add the entries when we PeekAlert ///
-            /// but for whatever reason, that causes UpdateBarValues to only ///
-            /// see one of the two entries (either Slidecast or Queuelock gets ///
-            /// ignored).  No idea why that happens and no time to investigate ///
-            foreach (EventType type in Enum.GetValues(typeof(EventType))) {
-                foreach (EventCause cause in Enum.GetValues(typeof(EventCause))) {
-                    foreach (EventSource source in Enum.GetValues(typeof(EventSource))) {
-                        if (type != EventType.None && cause != EventCause.None && source != EventSource.None) {
-                            alertQueue.Enqueue(new Alert(type, cause, source, 0f, false, false, DateTime.MinValue));
-                        }
-                    }
+        private Alert GetOrCreateAlert(EventType type, EventCause cause, EventSource source) {
+            var key = (type, cause, source);
+
+            if (!alertDictionary.TryGetValue(key, out var alert)) {
+                alert = new Alert(type, cause, source);
+                alertDictionary[key] = alert;
+            }
+
+            return alert;
+        }
+
+        public IEnumerable<Alert> PeekAlert(EventType type, EventCause[] causes, EventSource source) {
+            foreach (var cause in causes) {
+                var key = (type, cause, source);
+
+                if (alertDictionary.TryGetValue(key, out var alert) && (alert.Active || alert.Started)) {
+                    yield return alert;
                 }
             }
         }
 
+        public Dictionary<(EventType, EventCause, EventSource), Alert> GetAlertDictionary() => alertDictionary;
 
-        public IEnumerable<Alert> PeekAlert(EventType? type = null, EventCause? reason = null, EventSource? source = null) {
-            return alertQueue.Where(alert =>
-                (!type.HasValue || alert.Type == type.Value) &&
-                (!reason.HasValue || alert.Reason == reason.Value) &&
-                (!source.HasValue || alert.Source == source.Value));
-        }
-        public bool AlertActive(EventType type, EventCause reason) {
-            return alertQueue.Any(alert => alert.Type == type && alert.Reason == reason && alert.Active);
-        }
+        public void ActivateAlert(EventType type, EventCause cause, EventSource source, float? lastClipDelta = null) {
+            var alert = GetOrCreateAlert(type, cause, source);
 
-        public void ActivateAlert(EventType? type = null, EventCause? reason = null, EventSource? source = null, float? lastClipDelta = null) {
-            /// this is full of jank and needs refactored ///
-            var alertsToKeep = new Queue<Alert>();
-            var matchingAlerts = PeekAlert(type, reason, source).ToList();
-
-            while (alertQueue.Count > 0) {
-                var alert = alertQueue.Dequeue();
-                if (!matchingAlerts.Contains(alert)) {
-                    alertsToKeep.Enqueue(alert);
-                }
-            }
-
-            foreach (var oldAlert in matchingAlerts) {
-                var newAlert = new Alert(
-                    type: oldAlert.Type,
-                    reason: oldAlert.Reason,
-                    source: oldAlert.Source,
-                    lastClipDelta: lastClipDelta ?? oldAlert.LastClipDelta,
-                    active: true,
-                    started: oldAlert.Started,
-                    startTime: oldAlert.StartTime != DateTime.MinValue ? oldAlert.StartTime : DateTime.Now
-                );
-                alertsToKeep.Enqueue(newAlert);
-            }
-
-            foreach (var alert in alertsToKeep) {
-                alertQueue.Enqueue(alert);
-            }
+            alert.LastClipDelta = lastClipDelta ?? alert.LastClipDelta;
+            alert.Active = true;
+            alert.Started = false;
+            alert.StartTime = DateTime.Now;
         }
     }
 
@@ -127,6 +103,7 @@ namespace GCDTracker {
         public readonly Easing clipAnimEnabled;
         public readonly Easing clipAnimPos;
         public readonly string[] alertText;
+        private DateTime lastLogTime = DateTime.MinValue;
 
         private GCDEventHandler() {
             abcAnimEnabled = new OutCubic(new(0, 0, 0, 2, 1000)) {
@@ -145,7 +122,7 @@ namespace GCDTracker {
                 Point1 = new(0, 0),
                 Point2 = new(0, -20)
             };
-            alertText = ["CLIP", "0.0", "0.00", "A-B-C"];
+            alertText = new[] { "CLIP", "0.0", "0.00", "A-B-C" };
         }
 
         public static GCDEventHandler Instance => instance ??= new GCDEventHandler();
@@ -155,11 +132,23 @@ namespace GCDTracker {
                 abcAnimEnabled.Restart();
                 abcAnimPos.Restart();
             }
-            if (cause == EventCause.Clipped) {
-                alertText[1] = string.Format("{0:0.0}", ms);
-                alertText[2] = string.Format("{0:0.00}", ms);
+            if (cause == EventCause.Clip) {
+                alertText[1] = $"{ms:0.0}";
+                alertText[2] = $"{ms:0.00}";
                 clipAnimEnabled.Restart();
                 clipAnimPos.Restart();
+            }
+        }
+
+        private static void LogAlertManagerContents() {
+            var alertManager = AlertManager.Instance;
+            GCDTracker.Log.Warning(new string('=', 10));
+            foreach (var kvp in alertManager.GetAlertDictionary()) {
+                var key = kvp.Key;
+                var alert = kvp.Value;
+                GCDTracker.Log.Warning($"Alert - Type: {key.Item1}, Cause: {key.Item2}, Source: {key.Item3}, " +
+                                    $"Active: {alert.Active}, Started: {alert.Started}, LastClipDelta: {alert.LastClipDelta}, " +
+                                    $"StartTime: {alert.StartTime}");
             }
         }
 
@@ -172,41 +161,54 @@ namespace GCDTracker {
                 UpdateWheelProperties(conf, ui.Scale);
                 UpdateFlyOutAlerts(ui, conf, EventSource.Wheel);
             }
+        
+            if ((DateTime.Now - lastLogTime).TotalSeconds >= 1) {
+                LogAlertManagerContents();
+                lastLogTime = DateTime.Now;
+            }
+        }
+
+        private static IEnumerable<Alert> PeekAlert(EventType type, EventCause[] causes, EventSource source) {
+            return AlertManager.Instance.PeekAlert(type, causes, source);
         }
 
         private void UpdateBarProperties(BarInfo bar, Configuration conf) {
-            var colorAlerts = AlertManager.Instance.PeekAlert(EventType.BarColorPulse, null, EventSource.Bar);
-            foreach (var alert in colorAlerts) {
-                ProgressPulseColor = GetBarColor(conf.frontCol, conf.slideCol, alert, conf.subtlePulses);
-            }
+            var causes = new[] { Slidecast, Queuelock };
 
-            var widthAlerts = AlertManager.Instance.PeekAlert(EventType.BarWidthPulse, null, EventSource.Bar);
-            foreach (var alert in widthAlerts) {
-                PulseWidth = GetBarSize(bar.Width, alert, conf.subtlePulses);
-            }
+            var colorAlert = PeekAlert(BarColorPulse, causes, Bar).FirstOrDefault();
+            ProgressPulseColor = colorAlert != null 
+                ? GetBarColor(conf, colorAlert) 
+                : conf.frontCol;
 
-            var heightAlerts = AlertManager.Instance.PeekAlert(EventType.BarHeightPulse, null, EventSource.Bar);
-            foreach (var alert in heightAlerts) {
-                PulseHeight = GetBarSize(bar.Height, alert, conf.subtlePulses);
-            }
+            var widthAlert = PeekAlert(BarWidthPulse, causes, Bar).FirstOrDefault();
+            PulseWidth = widthAlert != null 
+                ? GetBarSize(bar.Width, widthAlert, conf.subtlePulses) 
+                : bar.Width;
+
+            var heightAlert = PeekAlert(BarHeightPulse, causes, Bar).FirstOrDefault();
+            PulseHeight = heightAlert != null 
+                ? GetBarSize(bar.Height, heightAlert, conf.subtlePulses) 
+                : bar.Height;
         }
 
         private void UpdateWheelProperties(Configuration conf, float uiScale) {
-            var alerts = AlertManager.Instance.PeekAlert(EventType.WheelPulse, EventCause.Queuelock, EventSource.Wheel);
-            foreach (var alert in alerts) {
-                WheelScale = GetWheelScale(uiScale, alert, conf.subtlePulses);
-            }
+            var causes = new[] { Queuelock };
+
+            var scaleAlert = PeekAlert(WheelPulse, causes, Wheel).FirstOrDefault();
+            WheelScale = scaleAlert != null 
+                ? GetWheelScale(uiScale, scaleAlert, conf.subtlePulses) 
+                : uiScale;
         }
 
-        public void UpdateFlyOutAlerts(PluginUI ui, Configuration conf, EventSource source) {
-            var flyOutAlerts = AlertManager.Instance.PeekAlert(EventType.FlyOutAlert, null, EventSource.Bar);
-
+        private void UpdateFlyOutAlerts(PluginUI ui, Configuration conf, EventSource source) {
+            var causes = new[] { ABC, Clip };
+            var flyOutAlerts = PeekAlert(FlyOutAlert, causes, source);
             foreach (var alert in flyOutAlerts) {
                 if (!alert.Active && !alert.Started)
                     continue;
 
-                float relx = (source == EventSource.Bar) ? (conf.BarWidthRatio + 1) / 2.1f : 0.5f;
-                float rely = (source == EventSource.Bar) ? -0.3f : 0f;
+                float relx = (source == Bar) ? (conf.BarWidthRatio + 1) / 2.1f : 0.5f;
+                float rely = (source == Bar) ? -0.3f : 0f;
 
                 if (alert.Active) {
                     StartAlert(alert.LastClipDelta, alert.Reason);
@@ -216,37 +218,28 @@ namespace GCDTracker {
 
                 ui.DrawAlert(relx, rely, alert);
 
-                switch (alert.Reason) {
-                    case EventCause.ABC:
-                        if (abcAnimEnabled.IsDone)
-                            alert.Started = false;
-                        break;
-
-                    case EventCause.Clipped:
-                        if (clipAnimEnabled.IsDone)
-                            alert.Started = false;
-                        break;
+                if (alert.Reason == ABC && abcAnimEnabled.IsDone || alert.Reason == Clip && clipAnimEnabled.IsDone) {
+                    alert.Started = false;
                 }
             }
         }
 
-
-        private static Vector4 GetBarColor(Vector4 progressBarColor, Vector4 slideCol, Alert alert, bool subtlePulses) {
+        private static Vector4 GetBarColor(Configuration conf, Alert alert) {
             Vector4 targetColor = alert.Reason switch {
-                EventCause.Queuelock => CalculateTargetColor(progressBarColor),
-                EventCause.Slidecast => new Vector4(slideCol.X, slideCol.Y, slideCol.Z, progressBarColor.W),
-                _ => progressBarColor
+                EventCause.Queuelock => CalculateTargetColor(conf.frontCol),
+                EventCause.Slidecast => new Vector4(conf.slideCol.X, conf.slideCol.Y, conf.slideCol.Z, conf.frontCol.W),
+                _ => conf.frontCol
             };
 
-            if (subtlePulses) {
-                targetColor = Vector4.Lerp(targetColor, progressBarColor, 0.5f);
+            if (conf.subtlePulses) {
+                targetColor = Vector4.Lerp(targetColor, conf.frontCol, 0.5f);
             }
 
             if (alert.StartTime == DateTime.MinValue && alert.Active) {
                 alert.StartTime = DateTime.Now;
             }
 
-            return ApplyColorTransition(progressBarColor, targetColor, alert);
+            return ApplyColorTransition(conf.frontCol, targetColor, alert);
 
             static Vector4 CalculateTargetColor(Vector4 color) {
                 return (color.X * 0.3f + color.Y * 0.6f + color.Z * 0.2f) > 0.7f 
@@ -325,7 +318,6 @@ namespace GCDTracker {
             return uiScale;
         }
 
-        static float Lerp(float a, float b, float t) => a + (b - a) * t;
-        
+        private static float Lerp(float a, float b, float t) => a + (b - a) * t;
     }
 }

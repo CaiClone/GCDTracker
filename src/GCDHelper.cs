@@ -538,17 +538,17 @@ namespace GCDTracker {
             // Check and flag Clip Alert
             if(conf.ClipAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat)){
                 if (checkClip && ShouldStartClip()) {
-                    notify.ActivateAlert(FlyOutAlert, Clipped, EventSource.Bar, lastClipDelta);
-                    MarkAlert(FlyOutAlert, Clipped);
+                    notify.ActivateAlert(FlyOutAlert, Clip, Bar, lastClipDelta);
+                    MarkAlert(FlyOutAlert, Clip);
                     lastClipDelta = 0;
                 }
             }
 
             // Check and flag ABC Alert
-            var clipInQueue = CheckAlert(FlyOutAlert, Clipped);
+            var clipInQueue = CheckAlert(FlyOutAlert, Clip);
             if (conf.abcAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat) && !clipInQueue){
                 if (!(ClippedOnThisGCD || ClippedOnLastGCD) && checkABC && !abcBlocker && ShouldStartABC()) {
-                    notify.ActivateAlert(FlyOutAlert, ABC, EventSource.Bar);
+                    notify.ActivateAlert(FlyOutAlert, ABC, Bar);
                     MarkAlert(FlyOutAlert, ABC);
                     ABCOnThisGCD = true;
                 }

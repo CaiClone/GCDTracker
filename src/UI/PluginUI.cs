@@ -165,7 +165,7 @@ namespace GCDTracker.UI {
 
         public void DrawAlert(float relx, float rely, Alert alert) {
             var notify = GCDEventHandler.Instance;
-            var config = alert.Reason == EventCause.Clipped 
+            var config = alert.Reason == EventCause.Clip 
                 ? new AlertConfig {
                     AnimEnabled = notify.clipAnimEnabled,
                     AnimPos = notify.clipAnimPos,
