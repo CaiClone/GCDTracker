@@ -103,7 +103,7 @@ namespace GCDTracker {
         public readonly Easing clipAnimEnabled;
         public readonly Easing clipAnimPos;
         public readonly string[] alertText;
-        private DateTime lastLogTime = DateTime.MinValue;
+        // private DateTime lastLogTime = DateTime.MinValue;
 
         private GCDEventHandler() {
             abcAnimEnabled = new OutCubic(new(0, 0, 0, 2, 1000)) {
@@ -140,6 +140,7 @@ namespace GCDTracker {
             }
         }
 
+        /*
         private static void LogAlertManagerContents() {
             var alertManager = AlertManager.Instance;
             GCDTracker.Log.Warning(new string('=', 10));
@@ -151,6 +152,7 @@ namespace GCDTracker {
                                     $"StartTime: {alert.StartTime}");
             }
         }
+        */
 
         public void Update(BarInfo bar, Configuration conf, PluginUI ui) {
             if (bar != null) {    
@@ -161,11 +163,12 @@ namespace GCDTracker {
                 UpdateWheelProperties(conf, ui.Scale);
                 UpdateFlyOutAlerts(ui, conf, EventSource.Wheel);
             }
-        
+            /*
             if ((DateTime.Now - lastLogTime).TotalSeconds >= 1) {
                 LogAlertManagerContents();
                 lastLogTime = DateTime.Now;
             }
+            */
         }
 
         private static IEnumerable<Alert> PeekAlert(EventType type, EventCause[] causes, EventSource source) {
