@@ -548,7 +548,6 @@ namespace GCDTracker {
             var clipInQueue = CheckAlert(FlyOutAlert, Clipped);
             if (conf.abcAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat) && !clipInQueue){
                 if (!(ClippedOnThisGCD || ClippedOnLastGCD) && checkABC && !abcBlocker && ShouldStartABC()) {
-                    GCDTracker.Log.Warning("ABC ACTIVATED");
                     notify.ActivateAlert(FlyOutAlert, ABC, EventSource.Bar);
                     MarkAlert(FlyOutAlert, ABC);
                     ABCOnThisGCD = true;
