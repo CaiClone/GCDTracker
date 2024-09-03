@@ -1,6 +1,5 @@
 ﻿using Dalamud.Interface;
 using Dalamud.Interface.Animation;
-using Dalamud.Interface.Animation.EasingFunctions;
 using GCDTracker.Data;
 using ImGuiNET;
 using System;
@@ -164,44 +163,70 @@ namespace GCDTracker.UI {
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backCol), 3f * Scale);
         }
 
-        public void DrawAlert(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol, int alertTextPrecision = 0) {
+        public void DrawAlert(float relx, float rely, Alert alert) {
             var notify = GCDEventHandler.Instance;
+            var config = alert.Reason == EventCause.Clipped 
+                ? new AlertConfig {
+                    AnimEnabled = notify.clipAnimEnabled,
+                    AnimPos = notify.clipAnimPos,
+                    TextColor = conf.ClipTextColor,
+                    BackColor = conf.ClipBackColor,
+                    TextSize = conf.ClipTextSize,
+                    TextPrecision = conf.ClipAlertPrecision
+                }
+                : new AlertConfig {
+                    AnimEnabled = notify.abcAnimEnabled,
+                    AnimPos = notify.abcAnimPos,
+                    TextColor = conf.abcTextColor,
+                    BackColor = conf.abcBackColor,
+                    TextSize = conf.abcTextSize,
+                    TextPrecision = 3
+                };
 
-            if (alertTextPrecision > notify.alertText.Length - 1){
+            // Update animations
+            if (!config.AnimEnabled.IsDone) config.AnimEnabled.Update();
+            if (!config.AnimPos.IsDone) config.AnimPos.Update();
+
+            // Validate alertTextPrecision
+            if (config.TextPrecision > notify.alertText.Length - 1) {
                 GCDTracker.Log.Error("Alert text precision invalid");
                 return;
             }
-            if (conf.OverrideDefaltFont)
-                ImGui.PushFont(UiBuilder.MonoFont);
-            ImGui.SetWindowFontScale(textSize);
 
-            var textSz = ImGui.CalcTextSize(notify.alertText[alertTextPrecision]);
-            var textStartPos =
-                w_cent
-                - (w_size / 2)
-                + new Vector2(w_size.X * relx, w_size.Y * rely)
-                - (textSz / 2);
-            var padding = new Vector2(10, 5) * textSize;
+            float animAlpha = config.AnimEnabled.EasedPoint.X;
+            Vector2 animPos = config.AnimPos.EasedPoint;
 
-            if (!notify.alertAnimEnabled.IsDone) notify.alertAnimEnabled.Update();
-            if (!notify.alertAnimPos.IsDone) notify.alertAnimPos.Update();
-
-            var animAlpha = notify.alertAnimEnabled.EasedPoint.X;
-            var animPos = notify.alertAnimPos.EasedPoint;
+            var textSz = ImGui.CalcTextSize(notify.alertText[config.TextPrecision]);
+            var textStartPos = 
+                w_cent - (w_size / 2) + 
+                new Vector2(w_size.X * relx, w_size.Y * rely) - 
+                (textSz / 2);
+            var padding = new Vector2(10, 5) * config.TextSize;
 
             draw.AddRectFilled(
                 textStartPos - padding + animPos,
                 textStartPos + textSz + padding + animPos,
-                ImGui.GetColorU32(backCol.WithAlpha(1-animAlpha)), 10f);
+                ImGui.GetColorU32(config.BackColor.WithAlpha(1 - animAlpha)), 10f);
             draw.AddText(
                 textStartPos + animPos,
-                ImGui.GetColorU32(textCol.WithAlpha(1-animAlpha)),
-                notify.alertText[alertTextPrecision]);
+                ImGui.GetColorU32(config.TextColor.WithAlpha(1 - animAlpha)),
+                notify.alertText[config.TextPrecision]);
 
             ImGui.SetWindowFontScale(1f);
             if (conf.OverrideDefaltFont)
                 ImGui.PopFont();
         }
+
+        private class AlertConfig {
+            public Easing AnimEnabled { get; set; }
+            public Easing AnimPos { get; set; }
+            public Vector4 TextColor { get; set; }
+            public Vector4 BackColor { get; set; }
+            public float TextSize { get; set; }
+            public int TextPrecision { get; set; }
+        }
+
+
 
         public void DrawTextOutline(Vector2 textPos, Vector4 textColor, string text, float outlineThickness) {
             Vector4 calculatedOutlineColor = new Vector4(1f, 1f, 1f, textColor.W);

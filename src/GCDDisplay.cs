@@ -1,5 +1,4 @@
 using Dalamud.Game.ClientState.Objects.Enums;
-using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using GCDTracker.Data;
 using GCDTracker.UI;
@@ -31,8 +30,8 @@ namespace GCDTracker {
             if (GameState.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !GameState.IsCastingTeleport())
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
-            helper.FlyOutAlertChecker();
-            helper.PulseCheckerWheel(conf, gcdTime / gcdTotal);
+            helper.MiscEventChecker();
+            helper.WheelCheckQueueEvent(conf, gcdTime / gcdTotal);
 
             var notify = GCDEventHandler.Instance;
             notify.Update(null, conf, ui);
@@ -61,7 +60,7 @@ namespace GCDTracker {
             if (gcdTotal < 0.1f) return;
             
             if (!conf.WheelEnabled)
-                helper.FlyOutAlertChecker();
+                helper.MiscEventChecker();
 
             DrawBarElements(
                 ui,
@@ -217,7 +216,7 @@ namespace GCDTracker {
                         ogcdEnd = gcdTotal;
                         barGCDClipTime += ogcdStart + anlock - gcdTotal;
                         //prevent red bar when we "clip" a hard-cast ability
-                        if (!helper.isHardCast) {
+                        if (!helper.IsHardCast) {
                             // create end vertex
                             Vector2 clipEndVector = new(
                                 (int)(bar.CenterX + ((barGCDClipTime / gcdTotal) * bar_v.Width) - bar_v.HalfWidth),

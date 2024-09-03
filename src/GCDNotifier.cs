@@ -27,50 +27,92 @@ namespace GCDTracker {
         None
     }
 
-    public class Alert
-    {
-        public EventType Type { get; set; }
-        public EventCause Reason { get; set; }
-        public float LocationX { get; set; }
-        public float LocationY { get; set; }
-        public float LastClipDelta { get; set; }
+    public enum EventSource {
+        Bar,
+        Wheel,
+        None
+    }
 
-        public Alert(EventType type, EventCause reason, float lastClipDelta, float locationX, float locationY)
-        {
-            Type = type;
-            Reason = reason;
-            LocationX = locationX;
-            LocationY = locationY;
-            LastClipDelta = lastClipDelta;
-        }
+    public class Alert(EventType type, EventCause reason, EventSource source, float lastClipDelta, float locationX, float locationY, bool active, bool started, DateTime startTime)
+    {
+        public EventType Type { get; set; } = type;
+        public EventCause Reason { get; set; } = reason;
+        public EventSource Source { get; set; } = source;
+        public float LocationX { get; set; } = locationX;
+        public float LocationY { get; set; } = locationY;
+        public float LastClipDelta { get; set; } = lastClipDelta;
+        public bool Active { get; set; } = active;
+        public bool Started { get; set; } = started;
+        public DateTime StartTime { get; set; } = startTime;
     }
 
     public class AlertManager
     {
         private static AlertManager instance;
         private readonly Queue<Alert> alertQueue = new Queue<Alert>();
-        private AlertManager() { }
-
+        private AlertManager() {
+            InitializeAlerts();
+        }
         public static AlertManager Instance => instance ??= new AlertManager();
 
-        public int AlertCount => alertQueue.Count;
-
-        public void AddAlert(EventType type, EventCause reason, float locationX = 0f, float locationY = 0f, float lastClipDelta = 0f) {
-            alertQueue.Enqueue(new Alert(type, reason, locationX, locationY, lastClipDelta));
-        }
-
-        public Alert PeekAlert() => alertQueue.Count > 0 ? alertQueue.Peek() : null;
-
-        public void DequeueAlert() {
-            if (alertQueue.Count > 0) {
-                alertQueue.Dequeue();
+        private void InitializeAlerts() {
+            /// probably should make this not initalize the world ///
+            /// I tried a bunch of ways to add the entries when we PeekAlert ///
+            /// but for whatever reason, that causes UpdateBarValues to only ///
+            /// see one of the two entries (either Slidecast or Queuelock gets ///
+            /// ignored).  No idea why that happens and no time to investigate ///
+            foreach (EventType type in Enum.GetValues(typeof(EventType))) {
+                foreach (EventCause cause in Enum.GetValues(typeof(EventCause))) {
+                    foreach (EventSource source in Enum.GetValues(typeof(EventSource))) {
+                        if (type != EventType.None && cause != EventCause.None && source != EventSource.None) {
+                            alertQueue.Enqueue(new Alert(type, cause, source, 0f, 0f, 0f, false, false, DateTime.MinValue));
+                        }
+                    }
+                }
             }
         }
 
-        public void ClearAlerts() => alertQueue.Clear();
 
-        public bool AlertExists(EventType type, EventCause reason) {
-            return alertQueue.Any(alert => alert.Type == type && alert.Reason == reason);
+        public IEnumerable<Alert> PeekAlert(EventType? type = null, EventCause? reason = null, EventSource? source = null) {
+            return alertQueue.Where(alert =>
+                (!type.HasValue || alert.Type == type.Value) &&
+                (!reason.HasValue || alert.Reason == reason.Value) &&
+                (!source.HasValue || alert.Source == source.Value));
+        }
+        public bool AlertActive(EventType type, EventCause reason) {
+            return alertQueue.Any(alert => alert.Type == type && alert.Reason == reason && alert.Active);
+        }
+
+        public void ActivateAlert(EventType? type = null, EventCause? reason = null, EventSource? source = null, float? lastClipDelta = null) {
+            /// this is full of jank and needs refactored ///
+            var alertsToKeep = new Queue<Alert>();
+            var matchingAlerts = PeekAlert(type, reason, source).ToList();
+
+            while (alertQueue.Count > 0) {
+                var alert = alertQueue.Dequeue();
+                if (!matchingAlerts.Contains(alert)) {
+                    alertsToKeep.Enqueue(alert);
+                }
+            }
+
+            foreach (var oldAlert in matchingAlerts) {
+                var newAlert = new Alert(
+                    type: oldAlert.Type,
+                    reason: oldAlert.Reason,
+                    source: oldAlert.Source,
+                    lastClipDelta: lastClipDelta ?? oldAlert.LastClipDelta,
+                    locationX: oldAlert.LocationX,
+                    locationY: oldAlert.LocationY,
+                    active: true,
+                    started: oldAlert.Started,
+                    startTime: oldAlert.StartTime != DateTime.MinValue ? oldAlert.StartTime : DateTime.Now
+                );
+                alertsToKeep.Enqueue(newAlert);
+            }
+
+            foreach (var alert in alertsToKeep) {
+                alertQueue.Enqueue(alert);
+            }
         }
     }
 
@@ -85,29 +127,26 @@ namespace GCDTracker {
         public int PulseHeight { get; private set; }
         public Vector4 ProgressPulseColor { get; private set; }
         public float WheelScale { get; private set; }
-        private EventCause FlyOutCause;
-        private bool BarColor;
-        private EventCause BarColorCause;
-        private bool BarWidth;
-        private EventType BarWidthType;
-        private bool BarHeight;
-        private EventType BarHeightType;
-        private bool wheelPulse;
-        private DateTime colorStartTime = DateTime.MinValue;
-        private DateTime widthStartTime = DateTime.MinValue;
-        private DateTime heightStartTime = DateTime.MinValue;
-        private DateTime wheelStartTime = DateTime.MinValue;
-
-        public readonly Easing alertAnimEnabled;
-        public readonly Easing alertAnimPos;
+        public readonly Easing abcAnimEnabled;
+        public readonly Easing abcAnimPos;
+        public readonly Easing clipAnimEnabled;
+        public readonly Easing clipAnimPos;
         public readonly string[] alertText;
 
         private GCDEventHandler() {
-            alertAnimEnabled = new OutCubic(new(0, 0, 0, 2, 1000)) {
+            abcAnimEnabled = new OutCubic(new(0, 0, 0, 2, 1000)) {
                 Point1 = new(0.25f, 0),
                 Point2 = new(1f, 0)
             };
-            alertAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
+            abcAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
+                Point1 = new(0, 0),
+                Point2 = new(0, -20)
+            };
+            clipAnimEnabled = new OutCubic(new(0, 0, 0, 2, 1000)) {
+                Point1 = new(0.25f, 0),
+                Point2 = new(1f, 0)
+            };
+            clipAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
                 Point1 = new(0, 0),
                 Point2 = new(0, -20)
             };
@@ -116,98 +155,89 @@ namespace GCDTracker {
 
         public static GCDEventHandler Instance => instance ??= new GCDEventHandler();
 
-        public void StartAlert(bool isClip, float ms) {
-            if (isClip) {
+        public void StartAlert(float ms, EventCause cause) {
+            if (cause == EventCause.ABC){
+                abcAnimEnabled.Restart();
+                abcAnimPos.Restart();
+            }
+            if (cause == EventCause.Clipped) {
                 alertText[1] = string.Format("{0:0.0}", ms);
                 alertText[2] = string.Format("{0:0.00}", ms);
+                clipAnimEnabled.Restart();
+                clipAnimPos.Restart();
             }
-            alertAnimEnabled.Restart();
-            alertAnimPos.Restart();
         }
 
         public void Update(BarInfo bar, Configuration conf, PluginUI ui) {
-            int alertCount = AlertManager.Instance.AlertCount;
-
-            for (int i = 0; i < alertCount; i++) {
-                var alert = AlertManager.Instance.PeekAlert();
-                if (alert == null) continue;
-                HandleAlert(alert);
-                AlertManager.Instance.DequeueAlert();
-            }
-
             if (bar != null) {    
                 UpdateBarProperties(bar, conf);
-                UpdateFlyOut(ui, conf, FlyOutCause, (conf.BarWidthRatio + 1) / 2.1f, -0.3f);
+                UpdateFlyOutAlerts(ui, conf, EventSource.Bar);
             }
             else {
                 UpdateWheelProperties(conf, ui.Scale);
-                UpdateFlyOut(ui, conf, FlyOutCause, 0.5f, 0f);
-            }
-        }
-
-        private void HandleAlert(Alert alert) {
-            switch (alert.Type) {
-                case EventType.FlyOutAlert:
-                    FlyOutCause = alert.Reason;
-                    FlyOutAlert(alert.LastClipDelta);
-                    break;
-
-                case EventType.BarColorPulse when !BarColor:
-                    BarColor = true;
-                    BarColorCause = alert.Reason;
-                    break;
-
-                case EventType.BarWidthPulse when !BarWidth:
-                    BarWidth = true;
-                    BarWidthType = alert.Type;
-                    break;
-
-                case EventType.BarHeightPulse when !BarHeight:
-                    BarHeight = true;
-                    BarHeightType = alert.Type;
-                    break;
-
-                case EventType.WheelPulse when !wheelPulse:
-                    wheelPulse = true;
-                    break;
+                UpdateFlyOutAlerts(ui, conf, EventSource.Wheel);
             }
         }
 
         private void UpdateBarProperties(BarInfo bar, Configuration conf) {
-            ProgressPulseColor = GetBarColor(conf.frontCol, conf.slideCol, BarColorCause, BarColor, conf.subtlePulses);
-            PulseWidth = GetBarSize(bar.Width, BarWidthType, BarWidth, conf.subtlePulses, ref widthStartTime);
-            PulseHeight = GetBarSize(bar.Height, BarHeightType, BarHeight, conf.subtlePulses, ref heightStartTime);
+            var colorAlerts = AlertManager.Instance.PeekAlert(EventType.BarColorPulse, null, EventSource.Bar);
+            foreach (var alert in colorAlerts) {
+                ProgressPulseColor = GetBarColor(conf.frontCol, conf.slideCol, alert, conf.subtlePulses);
+            }
+
+            var widthAlerts = AlertManager.Instance.PeekAlert(EventType.BarWidthPulse, null, EventSource.Bar);
+            foreach (var alert in widthAlerts) {
+                PulseWidth = GetBarSize(bar.Width, alert, conf.subtlePulses);
+            }
+
+            var heightAlerts = AlertManager.Instance.PeekAlert(EventType.BarHeightPulse, null, EventSource.Bar);
+            foreach (var alert in heightAlerts) {
+                PulseHeight = GetBarSize(bar.Height, alert, conf.subtlePulses);
+            }
         }
 
         private void UpdateWheelProperties(Configuration conf, float uiScale) {
-            WheelScale = GetWheelScale(uiScale, wheelPulse, conf.subtlePulses);
-        }
-
-        private static void UpdateFlyOut(PluginUI ui, Configuration conf, EventCause reason, float relx, float rely) {
-            switch (reason) {
-                case EventCause.Clipped:
-                    ui.DrawAlert(relx, rely, conf.ClipTextSize, conf.ClipTextColor, conf.ClipBackColor, conf.ClipAlertPrecision);
-                    break;
-                
-                case EventCause.ABC:
-                    ui.DrawAlert(relx, rely, conf.abcTextSize, conf.abcTextColor, conf.abcBackColor, 3);
-                    break;
+            var alerts = AlertManager.Instance.PeekAlert(EventType.WheelPulse, EventCause.Queuelock, EventSource.Wheel);
+            foreach (var alert in alerts) {
+                WheelScale = GetWheelScale(uiScale, alert, conf.subtlePulses);
             }
         }
 
-        private void FlyOutAlert(float lastClipDelta) {
-            switch (FlyOutCause) {
-                case EventCause.Clipped:
-                    StartAlert(true, lastClipDelta);
-                    break;
-                case EventCause.ABC:
-                    StartAlert(false, lastClipDelta);
-                    break;
+        public void UpdateFlyOutAlerts(PluginUI ui, Configuration conf, EventSource source) {
+            var flyOutAlerts = AlertManager.Instance.PeekAlert(EventType.FlyOutAlert, null, EventSource.Bar);
+
+            foreach (var alert in flyOutAlerts) {
+                if (!alert.Active && !alert.Started)
+                    continue;
+
+                float relx = (source == EventSource.Bar) ? (conf.BarWidthRatio + 1) / 2.1f : 0.5f;
+                float rely = (source == EventSource.Bar) ? -0.3f : 0f;
+
+                if (alert.Active) {
+                    StartAlert(alert.LastClipDelta, alert.Reason);
+                    alert.Active = false;
+                    alert.Started = true;
+                }
+
+                ui.DrawAlert(relx, rely, alert);
+
+                switch (alert.Reason) {
+                    case EventCause.ABC:
+                        if (abcAnimEnabled.IsDone)
+                            alert.Started = false;
+                        break;
+
+                    case EventCause.Clipped:
+                        if (clipAnimEnabled.IsDone)
+                            alert.Started = false;
+                        break;
+                }
             }
         }
 
-        private Vector4 GetBarColor(Vector4 progressBarColor, Vector4 slideCol, EventCause reason, bool enable, bool subtlePulses) {
-            Vector4 targetColor = reason switch {
+
+        private static Vector4 GetBarColor(Vector4 progressBarColor, Vector4 slideCol, Alert alert, bool subtlePulses) {
+            Vector4 targetColor = alert.Reason switch {
                 EventCause.Queuelock => CalculateTargetColor(progressBarColor),
                 EventCause.Slidecast => new Vector4(slideCol.X, slideCol.Y, slideCol.Z, progressBarColor.W),
                 _ => progressBarColor
@@ -217,11 +247,11 @@ namespace GCDTracker {
                 targetColor = Vector4.Lerp(targetColor, progressBarColor, 0.5f);
             }
 
-            if (colorStartTime == DateTime.MinValue && enable) {
-                colorStartTime = DateTime.Now;
+            if (alert.StartTime == DateTime.MinValue && alert.Active) {
+                alert.StartTime = DateTime.Now;
             }
 
-            return ApplyColorTransition(progressBarColor, targetColor, enable, ref BarColor, ref BarColorCause, ref colorStartTime);
+            return ApplyColorTransition(progressBarColor, targetColor, alert);
 
             static Vector4 CalculateTargetColor(Vector4 color) {
                 return (color.X * 0.3f + color.Y * 0.6f + color.Z * 0.2f) > 0.7f 
@@ -230,27 +260,26 @@ namespace GCDTracker {
             }
         }
 
-        private int GetBarSize(int dimension, EventType type, bool enable, bool subtlePulses, ref DateTime startTime) {
-            int offset = type switch {
+        private static int GetBarSize(int dimension, Alert alert, bool subtlePulses) {
+            int offset = alert.Type switch {
                 EventType.BarWidthPulse => subtlePulses ? 5: 10,
                 EventType.BarHeightPulse => subtlePulses ? 3: 5,
                 _ => 0
             };
 
-            if (startTime == DateTime.MinValue && enable) {
-                startTime = DateTime.Now;
+            if (alert.StartTime == DateTime.MinValue && alert.Active) {
+                alert.StartTime = DateTime.Now;
             }
 
-            return ApplySizeTransition(dimension, offset, enable, ref type == EventType.BarWidthPulse ? ref BarWidth : ref BarHeight, ref type == EventType.BarWidthPulse ? ref BarWidthType : ref BarHeightType, ref startTime);
+            return ApplySizeTransition(dimension, offset, alert);
         }
 
-        private static Vector4 ApplyColorTransition(Vector4 startColor, Vector4 targetColor, bool enable, ref bool transitionActive, ref EventCause transitionCause, ref DateTime startTime) {
-            float elapsedTime = (float)(DateTime.Now - startTime).TotalMilliseconds;
+        private static Vector4 ApplyColorTransition(Vector4 startColor, Vector4 targetColor, Alert alert) {
+            float elapsedTime = (float)(DateTime.Now - alert.StartTime).TotalMilliseconds;
 
-            if (!enable || elapsedTime >= TransitionDuration) {
-                transitionActive = false;
-                transitionCause = EventCause.None;
-                startTime = DateTime.MinValue;
+            if (!alert.Active || elapsedTime >= TransitionDuration) {
+                alert.Active = false;
+                alert.StartTime = DateTime.MinValue;
                 return startColor;
             }
 
@@ -261,13 +290,12 @@ namespace GCDTracker {
             };
         }
 
-        private static int ApplySizeTransition(int startDimension, int offset, bool enable, ref bool transitionActive, ref EventType transitionType, ref DateTime startTime) {
-            float elapsedTime = (float)(DateTime.Now - startTime).TotalMilliseconds;
+        private static int ApplySizeTransition(int startDimension, int offset, Alert alert) {
+            float elapsedTime = (float)(DateTime.Now - alert.StartTime).TotalMilliseconds;
 
-            if (!enable || elapsedTime >= TransitionDuration) {
-                transitionActive = false;
-                transitionType = EventType.None;
-                startTime = DateTime.MinValue;
+            if (!alert.Active || elapsedTime >= TransitionDuration) {
+                alert.Active = false;
+                alert.StartTime = DateTime.MinValue;
                 return startDimension;
             }
 
@@ -280,25 +308,25 @@ namespace GCDTracker {
             });
         }
 
-        public float GetWheelScale(float uiScale, bool enable, bool subtlePulses) {
-            if (enable && wheelStartTime == DateTime.MinValue) {
-                wheelStartTime = DateTime.Now;
+        public static float GetWheelScale(float uiScale, Alert alert, bool subtlePulses) {
+            if (alert.Active && alert.StartTime == DateTime.MinValue) {
+                alert.StartTime = DateTime.Now;
             }
 
-            float elapsedTime = (float)(DateTime.Now - wheelStartTime).TotalMilliseconds;
+            float elapsedTime = (float)(DateTime.Now - alert.StartTime).TotalMilliseconds;
             float targetScale = uiScale * (subtlePulses ? 1.3f : 1.6f);
 
             return elapsedTime switch {
                 < FirstStageEnd => Lerp(uiScale, targetScale, elapsedTime / FirstStageEnd),
                 < SecondStageEnd => targetScale,
                 < TransitionDuration => Lerp(targetScale, uiScale, (elapsedTime - SecondStageEnd) / (TransitionDuration - SecondStageEnd)),
-                _ => ResetWheel(uiScale)
+                _ => ResetWheel(uiScale, alert)
             };
         }
 
-        private float ResetWheel(float uiScale) {
-            wheelPulse = false;
-            wheelStartTime = DateTime.MinValue;
+        private static float ResetWheel(float uiScale, Alert alert) {
+            alert.Active = false;
+            alert.StartTime = DateTime.MinValue;
             return uiScale;
         }
 

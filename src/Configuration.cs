@@ -95,7 +95,7 @@ namespace GCDTracker
         public bool ShowTrianglesOnHardCasts = true;
         public bool EnableCastText = true;
         public bool CastBarShowQueuedSpell = true;
-        public Vector4 slideCol = new(0f, 0f, 0f, 0.4f);
+        public Vector4 slideCol = new(0.6745098f, 0.0f, 0.9882353f, 0.8f);
         public int triangleSize = 6;
         public float SlidecastDelay = 0.5f;
         public float CastBarTextSize = 0.92f;

@@ -10,6 +10,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using static GCDTracker.EventType;
 using static GCDTracker.EventCause;
+using static GCDTracker.EventSource;
 
 
 
@@ -117,7 +118,7 @@ namespace GCDTracker {
             }
 
             // Idle State
-            else if (!helper.isRunning)
+            else if (!helper.IsRunning)
                 currentState = BarState.Idle;
 
             previousPos = Math.Max(previousPos, bar.CurrentPos);
@@ -166,7 +167,7 @@ namespace GCDTracker {
             Queue_Triangle = conf.ShowQueuelockTriangles;
 
             // activate alerts
-            PulseCheckerQueue(bar, conf);
+            BarCheckQueueEvent(bar, conf);
 
             // move lines
             if (conf.BarQueueLockSlide)
@@ -216,7 +217,7 @@ namespace GCDTracker {
                 HandleGCDOnly(bar, conf);
 
             // activate alerts
-            PulseCheckerSlide(bar, conf);
+            BarCheckSlideEvent(bar, conf);
 
             // move lines
             Slide_Bar_Start = Math.Max(Slide_Bar_Start, Math.Min(bar.CurrentPos, Queue_Lock_Start));
@@ -239,7 +240,7 @@ namespace GCDTracker {
                 HandleGCDOnly(bar, conf);
 
             // activate alerts
-            PulseCheckerSlide(bar, conf);
+            BarCheckSlideEvent(bar, conf);
 
             // move lines
             Slide_Bar_Start = Math.Max(Slide_Bar_Start, bar.CurrentPos);
@@ -277,44 +278,44 @@ namespace GCDTracker {
             triggeredAlerts[key] = true;
         }
 
-        private void PulseCheckerSlide(BarInfo bar, Configuration conf){
+        private void BarCheckSlideEvent(BarInfo bar, Configuration conf){
             var notify = AlertManager.Instance;
             if (bar.CurrentPos >= Slide_Bar_Start - 0.025f && bar.CurrentPos > 0.2f) {
                 if (conf.SlideCastEnabled) {
-                    if (conf.pulseBarColorAtSlide && !notify.AlertExists(BarColorPulse, Slidecast) && !CheckAlert(BarColorPulse, Slidecast)) {
-                        notify.AddAlert(BarColorPulse, Slidecast);
+                    if (conf.pulseBarColorAtSlide && !CheckAlert(BarColorPulse, Slidecast)) {
+                        notify.ActivateAlert(BarColorPulse, Slidecast, Bar);
                         MarkAlert(BarColorPulse, Slidecast);
                     }
 
-                    if (conf.pulseBarWidthAtSlide && !notify.AlertExists(BarWidthPulse, Slidecast) && !CheckAlert(BarWidthPulse, Slidecast)) {
-                        notify.AddAlert(BarWidthPulse, Slidecast);
+                    if (conf.pulseBarWidthAtSlide && !CheckAlert(BarWidthPulse, Slidecast)) {
+                        notify.ActivateAlert(BarWidthPulse, Slidecast, Bar);
                         MarkAlert(BarWidthPulse, Slidecast);
                     }
 
-                    if (conf.pulseBarHeightAtSlide && !notify.AlertExists(BarHeightPulse, Slidecast) && !CheckAlert(BarHeightPulse, Slidecast)) {
-                        notify.AddAlert(BarHeightPulse, Slidecast);
+                    if (conf.pulseBarHeightAtSlide && !CheckAlert(BarHeightPulse, Slidecast)) {
+                        notify.ActivateAlert(BarHeightPulse, Slidecast, Bar);
                         MarkAlert(BarHeightPulse, Slidecast);
                     }
                 }
             }
         }
 
-        private void PulseCheckerQueue(BarInfo bar, Configuration conf){
+        private void BarCheckQueueEvent(BarInfo bar, Configuration conf){
             var notify = AlertManager.Instance;
             if (bar.CurrentPos >= Queue_Lock_Start - 0.025f && bar.CurrentPos > 0.2f) {
                 if (conf.QueueLockEnabled) {
-                    if (conf.pulseBarColorAtQueue && !notify.AlertExists(BarColorPulse, Queuelock) && !CheckAlert(BarColorPulse, Queuelock)) {
-                        notify.AddAlert(BarColorPulse, Queuelock);
+                    if (conf.pulseBarColorAtQueue && !CheckAlert(BarColorPulse, Queuelock)) {
+                        notify.ActivateAlert(BarColorPulse, Queuelock, Bar);
                         MarkAlert(BarColorPulse, Queuelock);
                     }
 
-                    if (conf.pulseBarWidthAtQueue && !notify.AlertExists(BarWidthPulse, Queuelock) && !CheckAlert(BarWidthPulse, Queuelock)) {
-                        notify.AddAlert(BarWidthPulse, Queuelock);
+                    if (conf.pulseBarWidthAtQueue && !CheckAlert(BarWidthPulse, Queuelock)) {
+                        notify.ActivateAlert(BarWidthPulse, Queuelock, Bar);
                         MarkAlert(BarWidthPulse, Queuelock);
                     }
 
-                    if (conf.pulseBarHeightAtQueue && !notify.AlertExists(BarHeightPulse, Queuelock) && !CheckAlert(BarHeightPulse, Queuelock)) {
-                        notify.AddAlert(BarHeightPulse, Queuelock);
+                    if (conf.pulseBarHeightAtQueue && !CheckAlert(BarHeightPulse, Queuelock)) {
+                        notify.ActivateAlert(BarHeightPulse, Queuelock, Bar);
                         MarkAlert(BarHeightPulse, Queuelock);
                     }
                 }
@@ -345,12 +346,12 @@ namespace GCDTracker {
 
         private bool checkClip;
         private bool checkABC;
-        public bool clippedOnThisGCD;
-        public bool clippedOnLastGCD;
-        public bool abcOnThisGCD;
-        public bool abcOnLastGCD;
-        public bool isRunning;
-        public bool isHardCast;
+        public bool ClippedOnThisGCD;
+        public bool ClippedOnLastGCD;
+        public bool ABCOnThisGCD;
+        public bool ABCOnLastGCD;
+        public bool IsRunning;
+        public bool IsHardCast;
         private float remainingCastTime;
         public string remainingCastTimeString;
         public string queuedAbilityName = " ";
@@ -456,15 +457,15 @@ namespace GCDTracker {
 
         public void GCDTimeoutHelper(IFramework framework) {
             // Determine if we are running
-            isRunning = (DataStore.Action->ElapsedGCD != DataStore.Action->TotalGCD) || GameState.IsCasting();
+            IsRunning = (DataStore.Action->ElapsedGCD != DataStore.Action->TotalGCD) || GameState.IsCasting();
             // Detect Teleports for when the carbar is off
             if (conf.ShowOnlyGCDRunning && GameState.IsCastingTeleport()) {
                 lastActionTP = true;
             }
             // Reset idleTimer when we start casting
-            if (isRunning && idleTimerReset) {
+            if (IsRunning && idleTimerReset) {
                 idleTimerAccum = 0;
-                isHardCast = false;
+                IsHardCast = false;
                 idleTimerReset = false;
                 idleTimerDone = false;
                 abcBlocker = false;
@@ -472,22 +473,22 @@ namespace GCDTracker {
                 GCDTimeoutBuffer = (int)(1000 * conf.GCDTimeout);
                 helperAlerts.Clear();
             }
-            if (!isRunning && !idleTimerDone) {
+            if (!IsRunning && !idleTimerDone) {
                 idleTimerAccum += framework.UpdateDelta.Milliseconds;
                 idleTimerReset = true;
             }
             // Handle caster tax
-            if (!isHardCast && GameState.IsCasting() && DataStore.Action->TotalCastTime - 0.1f >= DataStore.Action->TotalGCD)
-                isHardCast = true;
-            checkABC = !abcBlocker && (idleTimerAccum >= (isHardCast ? (conf.abcDelay + 120) : conf.abcDelay));
+            if (!IsHardCast && GameState.IsCasting() && DataStore.Action->TotalCastTime - 0.1f >= DataStore.Action->TotalGCD)
+                IsHardCast = true;
+            checkABC = !abcBlocker && (idleTimerAccum >= (IsHardCast ? (conf.abcDelay + 120) : conf.abcDelay));
             // Reset state after the GCDTimeout
             if (idleTimerAccum >= GCDTimeoutBuffer) {
                 checkABC = false;
-                abcOnLastGCD = false;
-                abcOnThisGCD = false;
+                ABCOnLastGCD = false;
+                ABCOnThisGCD = false;
                 checkClip = false;
-                clippedOnLastGCD = false;
-                clippedOnThisGCD = false;
+                ClippedOnLastGCD = false;
+                ClippedOnThisGCD = false;
                 lastActionTP = false;
                 idleTimerDone = true;
             }
@@ -521,8 +522,8 @@ namespace GCDTracker {
 
         public bool ShouldStartClip() {
             checkClip = false;
-            clippedOnThisGCD = lastClipDelta > 0.01f;
-            return clippedOnThisGCD;
+            ClippedOnThisGCD = lastClipDelta > 0.01f;
+            return ClippedOnThisGCD;
         }
 
         public bool ShouldStartABC() {
@@ -531,34 +532,35 @@ namespace GCDTracker {
             return DataStore.ClientState?.LocalPlayer?.TargetObjectId == targetBuffer;
         }
 
-        public void FlyOutAlertChecker(){
+        public void MiscEventChecker(){
             bool inCombat = DataStore.Condition?[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat] ?? false;
 
             // Check and flag Clip Alert
             if(conf.ClipAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat)){
                 if (checkClip && ShouldStartClip()) {
-                    notify.AddAlert(FlyOutAlert, Clipped, lastClipDelta);
+                    notify.ActivateAlert(FlyOutAlert, Clipped, EventSource.Bar, lastClipDelta);
                     MarkAlert(FlyOutAlert, Clipped);
                     lastClipDelta = 0;
                 }
             }
 
             // Check and flag ABC Alert
-            var clipInQueue = notify.AlertExists(FlyOutAlert, Clipped) || CheckAlert(FlyOutAlert, Clipped);
+            var clipInQueue = CheckAlert(FlyOutAlert, Clipped);
             if (conf.abcAlertEnabled && (!conf.HideAlertsOutOfCombat || inCombat) && !clipInQueue){
-                if (!(clippedOnThisGCD || clippedOnLastGCD) && checkABC && !abcBlocker && ShouldStartABC()) {
-                    notify.AddAlert(FlyOutAlert, ABC);
+                if (!(ClippedOnThisGCD || ClippedOnLastGCD) && checkABC && !abcBlocker && ShouldStartABC()) {
+                    GCDTracker.Log.Warning("ABC ACTIVATED");
+                    notify.ActivateAlert(FlyOutAlert, ABC, EventSource.Bar);
                     MarkAlert(FlyOutAlert, ABC);
-                    abcOnThisGCD = true;
+                    ABCOnThisGCD = true;
                 }
             }
         }
 
-        public void PulseCheckerWheel(Configuration conf, float wheelPos) {
+        public void WheelCheckQueueEvent(Configuration conf, float wheelPos) {
             if (wheelPos >= 0.8f - 0.025f && wheelPos > 0.2f) {
                 if (conf.QueueLockEnabled) {
-                    if (conf.pulseWheelAtQueue && !notify.AlertExists(WheelPulse, Queuelock) && !CheckAlert(WheelPulse, Queuelock)) {
-                        notify.AddAlert(WheelPulse, Queuelock);
+                    if (conf.pulseWheelAtQueue && !CheckAlert(WheelPulse, Queuelock)) {
+                        notify.ActivateAlert(WheelPulse, Queuelock, Wheel);
                         MarkAlert(WheelPulse, Queuelock);
                     }
                 }
@@ -567,15 +569,15 @@ namespace GCDTracker {
 
         public Vector4 BackgroundColor(){
             var bg = conf.backCol;
-            if (conf.ColorClipEnabled && (clippedOnLastGCD || clippedOnThisGCD))
+            if (conf.ColorClipEnabled && (ClippedOnLastGCD || ClippedOnThisGCD))
                 bg = conf.clipCol;
-            if (conf.ColorABCEnabled && (abcOnLastGCD || abcOnThisGCD))
+            if (conf.ColorABCEnabled && (ABCOnLastGCD || ABCOnThisGCD))
                 bg = conf.abcCol;
             return bg;
         }
 
         public bool CheckClip(bool iscast, float ogcd, float anlock, float gcdTotal, float gcdTime) =>
-            !iscast && !isHardCast && DateTime.Now > lastGCDEnd + TimeSpan.FromMilliseconds(50)  &&
+            !iscast && !IsHardCast && DateTime.Now > lastGCDEnd + TimeSpan.FromMilliseconds(50)  &&
             (
                 (ogcd < (gcdTotal - 0.05f) && ogcd + anlock > gcdTotal) // You will clip next GCD
                 || (gcdTime < 0.001f && ogcd < 0.001f && (anlock > (lastActionCast? 0.125:0.025))) // anlock when no gcdRolling nor CastEndAnimation
@@ -587,10 +589,10 @@ namespace GCDTracker {
             lastElapsedGCD = DataStore.Action->ElapsedGCD;
             lastGCDEnd = DateTime.Now;
             //I'm sure there's a better way to accomplish this
-            clippedOnLastGCD = clippedOnThisGCD;
-            clippedOnThisGCD = false;
-            abcOnLastGCD = abcOnThisGCD;
-            abcOnThisGCD = false;
+            ClippedOnLastGCD = ClippedOnThisGCD;
+            ClippedOnThisGCD = false;
+            ABCOnLastGCD = ABCOnThisGCD;
+            ABCOnThisGCD = false;
             shortCastFinished = false;
         }
 
