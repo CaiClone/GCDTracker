@@ -32,8 +32,11 @@ namespace GCDTracker
         public bool ColorClipEnabled = true;
         public bool abcAlertEnabled = false;
         public bool ColorABCEnabled = false;
+        public bool subtlePulses = false;
         [JsonIgnore]
         private bool showResetConfirmation = false;
+        [JsonIgnore]
+        private bool showColorConfirmation = false;
         public int ClipAlertPrecision = 0;
         public float GCDTimeout = 2f;
         public int abcDelay = 10;
@@ -55,11 +58,18 @@ namespace GCDTracker
         public bool WheelEnabled = true;
         [JsonIgnore]
         public bool WindowMoveableGW = false;
+        public bool pulseWheelAtQueue = false;
 
         //GCDBar
         public bool BarEnabled = false;
         [JsonIgnore]
         public bool BarWindowMoveable = false;
+        public bool pulseBarColorAtSlide = false;
+        public bool pulseBarWidthAtSlide = false;
+        public bool pulseBarHeightAtSlide = false;
+        public bool pulseBarColorAtQueue = false;
+        public bool pulseBarWidthAtQueue = false;
+        public bool pulseBarHeightAtQueue = false;
         public bool BarQueueLockWhenIdle = true;
         public bool BarQueueLockSlide = false;
         public bool BarRollGCDs = true;
@@ -85,7 +95,7 @@ namespace GCDTracker
         public bool ShowTrianglesOnHardCasts = true;
         public bool EnableCastText = true;
         public bool CastBarShowQueuedSpell = true;
-        public Vector4 slideCol = new(0f, 0f, 0f, 0.4f);
+        public Vector4 slideCol = new(0.6745098f, 0.0f, 0.9882353f, 0.8f);
         public int triangleSize = 6;
         public float SlidecastDelay = 0.5f;
         public float CastBarTextSize = 0.92f;
@@ -104,6 +114,13 @@ namespace GCDTracker
         public Vector4 ctComboUsed = new(0.431f, 0.431f, 0.431f, 1f);
         public Vector4 ctComboActive = new(1f, 1f, 1f, 1f);
         public Vector2 ctsep = new(23, 23);
+
+        //Floating Triangles
+        public bool FloatingTrianglesEnable = false;
+        public bool SlidecastTriangleEnable = true;
+        public bool QueuelockTriangleEnable = true;
+        [JsonIgnore]
+        public bool WindowMoveableSQI = false;
 
         //Deprecated
         public bool ShowOutOfCombatGW = false;
@@ -612,6 +629,29 @@ namespace GCDTracker
                             ImGui.EndTooltip();
                         }
                         ImGui.NewLine();
+                        ImGui.Checkbox("Pulse GCDBar Color @ Slide Lock", ref pulseBarColorAtSlide);
+                        ImGui.Checkbox("Pulse GCDBar Width @ Slide Lock", ref pulseBarWidthAtSlide);
+                        ImGui.Checkbox("Pulse GCDBar Height @ Slide Lock", ref pulseBarHeightAtSlide);
+                        ImGui.NewLine();
+                        ImGui.Checkbox("Pulse GCDBar Color @ Queue Lock", ref pulseBarColorAtQueue);
+                        ImGui.Checkbox("Pulse GCDBar Width @ Queue Lock", ref pulseBarWidthAtQueue);
+                        ImGui.Checkbox("Pulse GCDBar Height @ Queue Lock", ref pulseBarHeightAtQueue);
+                        ImGui.NewLine();
+                        ImGui.Checkbox("Pulse GCDWheel Size @ Queue Lock", ref pulseWheelAtQueue);
+                        ImGui.NewLine();
+                        ImGui.Checkbox("Reduce Pulse Magnitude (Subtle Pulses)", ref subtlePulses);
+                        ImGui.NewLine();
+                        ImGui.Checkbox("Draw Floating Triangles", ref FloatingTrianglesEnable);
+                        if (FloatingTrianglesEnable){
+                            ImGui.Indent();
+                            ImGui.Checkbox("Draw Slidecast Triangle", ref SlidecastTriangleEnable);
+                            ImGui.Checkbox("Draw Queuelock Triangle", ref QueuelockTriangleEnable);
+                            ImGui.Unindent();
+                        }
+                        ImGui.Checkbox("Move/resize Triangles", ref WindowMoveableSQI);
+                        if (WindowMoveableSQI)
+                            ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
+                        ImGui.NewLine();
                         if (ImGui.Button("Reset All Settings to Default"))
                             showResetConfirmation = true;
                         if (showResetConfirmation)
@@ -637,6 +677,91 @@ namespace GCDTracker
                             }
                             ImGui.EndPopup();
                         }
+                        if (ImGui.Button("Reset Colors to Default"))
+                            showColorConfirmation = true;
+                        if (showColorConfirmation)
+                            ImGui.OpenPopup("Color Reset Confirmation");
+                        if (ImGui.BeginPopupModal("Color Reset Confirmation", ref showColorConfirmation, ImGuiWindowFlags.AlwaysAutoResize)) {
+                            ImGui.Text("This will reset your color settings.\nPlease choose an option:");
+                            ImGui.Separator();
+                            if (ImGui.Button("Use Default Colors")) {
+                                ResetColors(new Dictionary<string, object> {
+                                    { nameof(clipCol), new Vector4(1f, 0f, 0f, 0.667f) },
+                                    { nameof(abcCol), new Vector4(1f, 0.7f, 0f, 0.667f) },
+                                    { nameof(ClipTextColor), new Vector4(0.9f, 0.9f, 0.9f, 1f) },
+                                    { nameof(ClipBackColor), new Vector4(1f, 0f, 0f, 1f) },
+                                    { nameof(abcTextColor), new Vector4(0f, 0f, 0f, 1f) },
+                                    { nameof(abcBackColor), new Vector4(1f, 0.7f, 0f, 1f) },
+                                    { nameof(backCol), new Vector4(0.376f, 0.376f, 0.376f, 1f) },
+                                    { nameof(backColBorder), new Vector4(0f, 0f, 0f, 1f) },
+                                    { nameof(frontCol), new Vector4(0.9f, 0.9f, 0.9f, 1f) },
+                                    { nameof(ogcdCol), new Vector4(1f, 1f, 1f, 1f) },
+                                    { nameof(anLockCol), new Vector4(0.334f, 0.334f, 0.334f, 0.667f) },
+                                    { nameof(BarBackColBorder), new Vector4(0f, 0f, 0f, 1f) },
+                                    { nameof(slideCol), new Vector4(0f, 0f, 0f, 0.4f) },
+                                    { nameof(ctComboUsed), new Vector4(0.431f, 0.431f, 0.431f, 1f) },
+                                    { nameof(ctComboActive), new Vector4(1f, 1f, 1f, 1f) },
+                                    { nameof(BarBackCol), new Vector4(0.376f, 0.376f, 0.376f, 0.667f) },
+                                    { nameof(BarFrontCol), new Vector4(0.9f, 0.9f, 0.9f, 1f) },
+                                    { nameof(BarOgcdCol), new Vector4(1f, 1f, 1f, 1f) },
+                                    { nameof(BarAnLockCol), new Vector4(0.334f, 0.334f, 0.334f, 0.667f) },
+                                    { nameof(BarclipCol), new Vector4(1f, 0f, 0f, 0.667f) },
+                                    { nameof(CastBarTextColor), new Vector3(1f, 1f, 1f) },
+                                    { nameof(BarHasGradient), false },
+                                    { nameof(BarGradMode), 2 },
+                                    { nameof(BarBgGradMode), 3 },
+                                    { nameof(BarGradientMul), 0.175f },
+                                    { nameof(BarBgGradientMul), 0.175f },
+                                });
+                                showColorConfirmation = false;
+                                ImGui.CloseCurrentPopup();
+                            }
+                            ImGui.SameLine();
+                            if (ImGui.Button("Use DelvUI Inspired Colors")) {
+                                ResetColors(new Dictionary<string, object> {
+                                    { nameof(clipCol), new Vector4(0.9882353f, 0.32941177f, 0.0f, 0.8f) },
+                                    { nameof(abcCol), new Vector4(0.9882353f, 0.8235294f, 0.0f, 0.8f) },
+                                    { nameof(ClipTextColor), new Vector4(0.9f, 0.9f, 0.9f, 1.0f) },
+                                    { nameof(ClipBackColor), new Vector4(0.9882353f, 0.32941177f, 0.0f, 1.0f) },
+                                    { nameof(abcTextColor), new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
+                                    { nameof(abcBackColor), new Vector4(1.0f, 0.7f, 0.0f, 1.0f) },
+                                    { nameof(backCol), new Vector4(0.3764706f, 0.3764706f, 0.3764706f, 0.8f) },
+                                    { nameof(backColBorder), new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
+                                    { nameof(frontCol), new Vector4(0.0f, 0.63529414f, 0.9882353f, 1.0f) },
+                                    { nameof(ogcdCol), new Vector4(1.0f, 1.0f, 1.0f, 1.0f) },
+                                    { nameof(anLockCol), new Vector4(1.0f, 1.0f, 1.0f, 0.26666668f) },
+                                    { nameof(BarBackColBorder), new Vector4(0.0f, 0.0f, 0.0f, 1.0f) },
+                                    { nameof(slideCol), new Vector4(0.6745098f, 0.0f, 0.9882353f, 0.8f) },
+                                    { nameof(ctComboUsed), new Vector4(0.431f, 0.431f, 0.431f, 1.0f) },
+                                    { nameof(ctComboActive), new Vector4(1.0f, 1.0f, 1.0f, 1.0f) },
+                                    { nameof(BarBackCol), new Vector4(0.376f, 0.376f, 0.376f, 0.667f) },
+                                    { nameof(BarFrontCol), new Vector4(0.9f, 0.9f, 0.9f, 1.0f) },
+                                    { nameof(BarOgcdCol), new Vector4(1.0f, 1.0f, 1.0f, 1.0f) },
+                                    { nameof(BarAnLockCol), new Vector4(0.334f, 0.334f, 0.334f, 0.667f) },
+                                    { nameof(BarclipCol), new Vector4(1.0f, 0.0f, 0.0f, 0.667f) },
+                                    { nameof(CastBarTextColor), new Vector3(1.0f, 1.0f, 1.0f) },
+                                    { nameof(BarHasGradient), true },
+                                    { nameof(BarGradMode), 2 },
+                                    { nameof(BarBgGradMode), 1 },
+                                    { nameof(BarGradientMul), 0.2f },
+                                    { nameof(BarBgGradientMul), 0.2f },
+                                    { nameof(CastBarTextSize), 1.0f },
+                                    { nameof(CastBarTextOutlineEnabled), true },
+                                    { nameof(CastTimeEnabled), true },
+                                    { nameof(castTimePosition), 1 },
+                                    { nameof(OutlineThickness), 1.2f },
+                                    { nameof(CastBarBoldText), true }
+                                });
+                                showColorConfirmation = false;
+                                ImGui.CloseCurrentPopup();
+                            }
+                            ImGui.SameLine();
+                            if (ImGui.Button("Take Me Back")) {
+                                showColorConfirmation = false;
+                                ImGui.CloseCurrentPopup();
+                            }
+                            ImGui.EndPopup();
+                        }
                     }
                     ImGui.EndTabItem();
                 }
@@ -654,6 +779,22 @@ namespace GCDTracker
                         continue; // Skip resetting these fields
                     
                     field.SetValue(this, field.GetValue(defaultConfig));
+                }
+            }
+            Save();
+        }
+
+        public void ResetColors(Dictionary<string, object> fieldValues) {
+            foreach (var fieldEntry in fieldValues)
+            {
+                var field = typeof(Configuration).GetField(fieldEntry.Key);
+                if (field != null)
+                {
+                    field.SetValue(this, fieldEntry.Value);
+                }
+                else
+                {
+                    GCDTracker.Log.Warning($"Field '{fieldEntry.Key}' not found.");
                 }
             }
             Save();

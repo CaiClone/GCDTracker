@@ -1,5 +1,4 @@
 using Dalamud.Game.ClientState.Objects.Enums;
-using Dalamud.Logging;
 using Dalamud.Plugin.Services;
 using GCDTracker.Data;
 using GCDTracker.UI;
@@ -31,20 +30,24 @@ namespace GCDTracker {
             if (GameState.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !GameState.IsCastingTeleport())
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
-            helper.FlagAlerts(ui);
-            helper.InvokeAlerts(0.5f, 0, ui);
+            helper.MiscEventChecker();
+            helper.WheelCheckQueueEvent(conf, gcdTime / gcdTotal);
+
+            var notify = GCDEventHandler.Instance;
+            notify.Update(null, conf, ui);
+
             // Background
-            ui.DrawCircSegment(0f, 1f, 6f * ui.Scale, conf.backColBorder);
-            ui.DrawCircSegment(0f, 1f, 3f * ui.Scale, helper.BackgroundColor());
+            ui.DrawCircSegment(0f, 1f, 6f * notify.WheelScale, conf.backColBorder);
+            ui.DrawCircSegment(0f, 1f, 3f * notify.WheelScale, helper.BackgroundColor());
             if (conf.QueueLockEnabled) {
-                ui.DrawCircSegment(0.8f, 1, 9f * ui.Scale, conf.backColBorder);
-                ui.DrawCircSegment(0.8f, 1, 6f * ui.Scale, helper.BackgroundColor());
+                ui.DrawCircSegment(0.8f, 1, 9f * notify.WheelScale, conf.backColBorder);
+                ui.DrawCircSegment(0.8f, 1, 6f * notify.WheelScale, helper.BackgroundColor());
             }
-            ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * ui.Scale, conf.frontCol);
+            ui.DrawCircSegment(0f, Math.Min(gcdTime / gcdTotal, 1f), 20f * notify.WheelScale, conf.frontCol);
             foreach (var (ogcd, (anlock, iscast)) in abilityManager.ogcds) {
                 var isClipping = helper.CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
-                ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * ui.Scale, isClipping ? conf.clipCol : conf.anLockCol);
-                if (!iscast) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * ui.Scale, conf.ogcdCol);
+                ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + anlock) / gcdTotal, 21f * notify.WheelScale, isClipping ? conf.clipCol : conf.anLockCol);
+                if (!iscast) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * notify.WheelScale, conf.ogcdCol);
             }
         }
 
@@ -55,8 +58,9 @@ namespace GCDTracker {
             if (GameState.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !GameState.IsCastingTeleport())
                 gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
-            helper.FlagAlerts(ui);
-            helper.InvokeAlerts((conf.BarWidthRatio + 1) / 2.1f, -0.3f, ui);
+            
+            if (!conf.WheelEnabled)
+                helper.MiscEventChecker();
 
             DrawBarElements(
                 ui,
@@ -141,13 +145,11 @@ namespace GCDTracker {
             
             var bar = BarInfo.Instance;
             bar.Update(
+                conf,
                 ui.w_size.X,
                 ui.w_cent.X,
-                conf.BarWidthRatio,
                 ui.w_size.Y,
                 ui.w_cent.Y,
-                conf.BarHeightRatio,
-                conf.BarBorderSizeInt,
                 castBarCurrentPos,
                 gcdTime_slidecastStart, 
                 gcdTotal_slidecastEnd,
@@ -166,12 +168,18 @@ namespace GCDTracker {
                 DataStore.ActionManager->CastActionType, 
                 DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None
             );
+
+            var notify = GCDEventHandler.Instance;
+            notify.Update(bar, conf, ui);
+
+            var bar_v = BarVertices.Instance;
+            bar_v.Update(bar, go, notify);
             var sc_sv = SlideCastStartVertices.Instance;
-            sc_sv.Update(bar, go);
+            sc_sv.Update(bar, bar_v, go);
             var sc_ev = SlideCastEndVertices.Instance;
-            sc_ev.Update(bar, go);
+            sc_ev.Update(bar, bar_v, go);
             var ql_v = QueueLockVertices.Instance;
-            ql_v.Update (bar, go); 
+            ql_v.Update (bar, bar_v, go); 
 
             float barGCDClipTime = 0;
             
@@ -179,13 +187,14 @@ namespace GCDTracker {
             // draw the background
             if (bar.CurrentPos < 0.2f)
                 bgCache = helper.BackgroundColor();
-            ui.DrawRectFilledNoAA(bar.StartVertex, bar.EndVertex, bgCache, conf.BarBgGradMode, conf.BarBgGradientMul);
+            ui.DrawRectFilledNoAA(bar_v.StartVertex, bar_v.EndVertex, bgCache, conf.BarBgGradMode, conf.BarBgGradientMul);
 
             // in both modes:
             // draw cast/gcd progress (main) bar
-            if(bar.CurrentPos > 0.001f)
-                ui.DrawRectFilledNoAA(bar.StartVertex, bar.ProgressVertex, conf.frontCol, conf.BarGradMode, conf.BarGradientMul);
-            
+            if(bar.CurrentPos > 0.001f){
+                var progressBarColor = notify.ProgressPulseColor;
+                ui.DrawRectFilledNoAA(bar_v.StartVertex, bar_v.ProgressVertex, progressBarColor, conf.BarGradMode, conf.BarGradientMul);
+            }
             // in Castbar mode:
             // draw the slidecast bar
             if (conf.SlideCastEnabled)
@@ -207,35 +216,37 @@ namespace GCDTracker {
                         ogcdEnd = gcdTotal;
                         barGCDClipTime += ogcdStart + anlock - gcdTotal;
                         //prevent red bar when we "clip" a hard-cast ability
-                        if (!helper.isHardCast) {
+                        if (!helper.IsHardCast) {
                             // create end vertex
                             Vector2 clipEndVector = new(
-                                (int)(bar.CenterX + ((barGCDClipTime / gcdTotal) * bar.Width) - bar.HalfWidth),
-                                (int)(bar.CenterY + bar.HalfHeight)
+                                (int)(bar.CenterX + ((barGCDClipTime / gcdTotal) * bar_v.Width) - bar_v.HalfWidth),
+                                (int)(bar.CenterY + bar_v.HalfHeight)
                             );
                             // Draw the clipped part at the beginning
-                            ui.DrawRectFilledNoAA(bar.StartVertex, clipEndVector, conf.clipCol);
+                            ui.DrawRectFilledNoAA(bar_v.StartVertex, clipEndVector, conf.clipCol);
                         }
                     }
 
                     Vector2 oGCDStartVector = new(
-                        (int)(bar.CenterX + ((ogcdStart / gcdTotal) * bar.Width) - bar.RawHalfWidth),
-                        (int)(bar.CenterY - bar.RawHalfHeight)
+                        (int)(bar.CenterX + ((ogcdStart / gcdTotal) * bar_v.Width) - bar_v.RawHalfWidth),
+                        (int)(bar.CenterY - bar_v.RawHalfHeight)
                     );
                     Vector2 oGCDEndVector = new(
-                        (int)(bar.CenterX + ((ogcdEnd / gcdTotal) * bar.Width) - bar.HalfWidth),
-                        (int)(bar.CenterY + bar.HalfHeight)
+                        (int)(bar.CenterX + ((ogcdEnd / gcdTotal) * bar_v.Width) - bar_v.HalfWidth),
+                        (int)(bar.CenterY + bar_v.HalfHeight)
                     );
 
-                    ui.DrawRectFilledNoAA(oGCDStartVector, oGCDEndVector, isClipping ? conf.clipCol : conf.anLockCol);
-                    if (!iscast && (!isClipping || ogcdStart > 0.01f)) {
-                        Vector2 clipPos = new(
-                            bar.CenterX + (ogcdStart / gcdTotal * bar.Width) - bar.RawHalfWidth,
-                            bar.CenterY - bar.RawHalfHeight + 1f
-                        );
-                        ui.DrawRectFilledNoAA(clipPos,
-                            clipPos + new Vector2(2f * ui.Scale, bar.Height - 2f),
-                            conf.ogcdCol);
+                    if(!helper.shortCastFinished || isClipping) {
+                        ui.DrawRectFilledNoAA(oGCDStartVector, oGCDEndVector, isClipping ? conf.clipCol : conf.anLockCol);
+                        if (!iscast && (!isClipping || ogcdStart > 0.01f)) {
+                            Vector2 clipPos = new(
+                                bar.CenterX + (ogcdStart / gcdTotal * bar_v.Width) - bar_v.RawHalfWidth,
+                                bar.CenterY - bar_v.RawHalfHeight + 1f
+                            );
+                            ui.DrawRectFilledNoAA(clipPos,
+                                clipPos + new Vector2(2f * ui.Scale, bar_v.Height - 2f),
+                                conf.ogcdCol);
+                    }
                     }
                 }
             }
@@ -249,8 +260,8 @@ namespace GCDTracker {
             // draw borders
             if (bar.BorderSize > 0) {
                 ui.DrawRect(
-                    bar.StartVertex - new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
-                    bar.EndVertex + new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
+                    bar_v.StartVertex - new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
+                    bar_v.EndVertex + new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
                     conf.backColBorder, bar.BorderSize);
             }
         }
@@ -298,6 +309,52 @@ namespace GCDTracker {
             if (go.Queue_Triangle) {
                 ui.DrawRightTriangle(ql_v.TL_C, ql_v.TL_X, ql_v.TL_Y, conf.backColBorder);
                 ui.DrawRightTriangle(ql_v.TR_C, ql_v.TR_X, ql_v.TR_Y, conf.backColBorder);
+            }
+        }
+
+        public void DrawFloatingTriangles(PluginUI ui) {
+            float gcdTotal = DataStore.Action->TotalGCD;
+            float gcdElapsed = DataStore.Action->ElapsedGCD;
+            float gcdPercent = gcdElapsed / gcdTotal;
+            float castTotal = DataStore.Action->TotalCastTime;
+            float castElapsed = DataStore.Action->ElapsedCastTime;
+            float castPercent = castElapsed / castTotal;
+            float slidecastStart = (castTotal - 0.5f) / castTotal;
+            int triangleSize = (int)Math.Min(ui.w_size.X / 3, ui.w_size.Y / 3);
+            int borderSize = triangleSize / 6;
+            Vector4 red = new(1f, 0f, 0f, 1f);
+            Vector4 green = new(0f, 1f, 0f, 1f);
+            Vector4 bgCol = new(0f, 0f, 0f, .6f);
+
+            // slidecast
+            Vector2 slideTop = new(ui.w_cent.X, ui.w_cent.Y - triangleSize - borderSize);
+            Vector2 slideLeft = slideTop + new Vector2(-triangleSize, triangleSize);
+            Vector2 slideRight = slideTop + new Vector2(triangleSize, triangleSize);
+            // queuelock
+            Vector2 queueBot = new(slideTop.X,  ui.w_cent.Y + triangleSize + borderSize);
+            Vector2 queueRight = queueBot - new Vector2(-triangleSize, triangleSize);
+            Vector2 queueLeft = queueBot - new Vector2(triangleSize, triangleSize);
+
+            Vector2 slideBGTop = slideTop - new Vector2(0f, borderSize);
+            Vector2 slideBGLeft = slideLeft - new Vector2(1.75f * borderSize, - borderSize / 1.5f);
+            Vector2 slideBGRight = slideRight + new Vector2(1.75f * borderSize, borderSize / 1.5f);
+
+            // queuelock background
+            Vector2 queueBGBot = queueBot + new Vector2(0f, borderSize);
+            Vector2 queueBGRight = queueRight + new Vector2(1.75f * borderSize, - borderSize / 1.5f);
+            Vector2 queueBGLeft = queueLeft - new Vector2(1.75f * borderSize, borderSize / 1.5f);
+
+
+            Vector4 slideCol = castPercent != 0 && castPercent < slidecastStart ? red : green;
+            Vector4 queueCol = gcdPercent != 0 && gcdPercent < 0.8f ? red : green;
+            
+            if (conf.SlidecastTriangleEnable){
+                ui.DrawRightTriangle(slideBGTop, slideBGLeft, slideBGRight, bgCol);
+                ui.DrawRightTriangle(slideTop, slideLeft, slideRight, slideCol);
+            }
+            if (conf.QueuelockTriangleEnable){
+                ui.DrawRightTriangle(queueBGBot, queueBGRight, queueBGLeft, bgCol);
+                ui.DrawRightTriangle(queueBot, queueRight, queueLeft, queueCol);
             }
         }
     }

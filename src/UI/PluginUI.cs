@@ -1,6 +1,5 @@
 ﻿using Dalamud.Interface;
 using Dalamud.Interface.Animation;
-using Dalamud.Interface.Animation.EasingFunctions;
 using GCDTracker.Data;
 using ImGuiNET;
 using System;
@@ -9,8 +8,6 @@ using System.Numerics;
 namespace GCDTracker.UI {
     public class PluginUI {
         public bool IsVisible { get; set; }
-        private readonly Easing alertAnimEnabled;
-        private readonly Easing alertAnimPos;
         public GCDDisplay gcd;
         public GCDHelper helper;       
         public ComboTracker ct;
@@ -20,19 +17,9 @@ namespace GCDTracker.UI {
         public Vector2 w_size;
         public float Scale;
         private ImDrawListPtr draw;
-        private readonly string[] alertText;
 
         public PluginUI(Configuration conf) {
             this.conf = conf;
-            alertAnimEnabled = new OutCubic(new(0, 0, 0, 2, 1000)) {
-                Point1 = new(0.25f, 0),
-                Point2 = new(1f, 0)
-            };
-            alertAnimPos = new OutCubic(new(0, 0, 0, 1, 500)) {
-                Point1 = new(0, 0),
-                Point2 = new(0, -20)
-            };
-            alertText = ["CLIP", "0.0", "0.00", "A-B-C"];
         }
 
         public void Draw() {
@@ -113,6 +100,14 @@ namespace GCDTracker.UI {
                 ct.DrawComboLines(this, conf);
                 ImGui.End();
             }
+
+            if (conf.FloatingTrianglesEnable || conf.WindowMoveableSQI) {
+                SetupWindow("GCDTracker_SlideQueueIndicators", conf.WindowMoveableSQI);
+                gcd.DrawFloatingTriangles(this);
+                ImGui.End();
+            }
+
+
         }
 
         private void SetupWindow(string name,bool windowMovable) {
@@ -168,55 +163,73 @@ namespace GCDTracker.UI {
             draw.AddLine(from + new Vector2(vx, -vy), to - new Vector2(circRad, 0), ImGui.GetColorU32(conf.backCol), 3f * Scale);
         }
 
-        public void StartAlert(bool isClip, float ms) {
-            if (isClip) {
-                alertText[1] = string.Format("{0:0.0}", ms);
-                alertText[2] = string.Format("{0:0.00}", ms);
-            }
-            alertAnimEnabled.Restart();
-            alertAnimPos.Restart();
-        }
+        public void DrawAlert(float relx, float rely, Alert alert) {
+            var notify = GCDEventHandler.Instance;
+            var config = alert.Reason == EventCause.Clip 
+                ? new AlertConfig {
+                    AnimEnabled = notify.clipAnimEnabled,
+                    AnimPos = notify.clipAnimPos,
+                    TextColor = conf.ClipTextColor,
+                    BackColor = conf.ClipBackColor,
+                    TextSize = conf.ClipTextSize,
+                    TextPrecision = conf.ClipAlertPrecision
+                }
+                : new AlertConfig {
+                    AnimEnabled = notify.abcAnimEnabled,
+                    AnimPos = notify.abcAnimPos,
+                    TextColor = conf.abcTextColor,
+                    BackColor = conf.abcBackColor,
+                    TextSize = conf.abcTextSize,
+                    TextPrecision = 3
+                };
 
-        public void DrawAlert(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol, int alertTextPrecision = 0) {
-            if (!alertAnimEnabled.IsRunning || alertAnimEnabled.IsDone) return;
-            if (alertTextPrecision > alertText.Length - 1){
+            // Update animations
+            if (!config.AnimEnabled.IsDone) config.AnimEnabled.Update();
+            if (!config.AnimPos.IsDone) config.AnimPos.Update();
+
+            // Validate alertTextPrecision
+            if (config.TextPrecision > notify.alertText.Length - 1) {
                 GCDTracker.Log.Error("Alert text precision invalid");
                 return;
             }
-            if (conf.OverrideDefaltFont)
-                ImGui.PushFont(UiBuilder.MonoFont);
-            ImGui.SetWindowFontScale(textSize);
 
-            var textSz = ImGui.CalcTextSize(alertText[alertTextPrecision]);
-            var textStartPos =
-                w_cent
-                - (w_size / 2)
-                + new Vector2(w_size.X * relx, w_size.Y * rely)
-                - (textSz / 2);
-            var padding = new Vector2(10, 5) * textSize;
+            float animAlpha = config.AnimEnabled.EasedPoint.X;
+            Vector2 animPos = config.AnimPos.EasedPoint;
 
-            if (!alertAnimEnabled.IsDone) alertAnimEnabled.Update();
-            if (!alertAnimPos.IsDone) alertAnimPos.Update();
-
-            var animAlpha = alertAnimEnabled.EasedPoint.X;
-            var animPos = alertAnimPos.EasedPoint;
+            var textSz = ImGui.CalcTextSize(notify.alertText[config.TextPrecision]);
+            var textStartPos = 
+                w_cent - (w_size / 2) + 
+                new Vector2(w_size.X * relx, w_size.Y * rely) - 
+                (textSz / 2);
+            var padding = new Vector2(10, 5) * config.TextSize;
 
             draw.AddRectFilled(
                 textStartPos - padding + animPos,
                 textStartPos + textSz + padding + animPos,
-                ImGui.GetColorU32(backCol.WithAlpha(1-animAlpha)), 10f);
+                ImGui.GetColorU32(config.BackColor.WithAlpha(1 - animAlpha)), 10f);
             draw.AddText(
                 textStartPos + animPos,
-                ImGui.GetColorU32(textCol.WithAlpha(1-animAlpha)),
-                alertText[alertTextPrecision]);
+                ImGui.GetColorU32(config.TextColor.WithAlpha(1 - animAlpha)),
+                notify.alertText[config.TextPrecision]);
 
             ImGui.SetWindowFontScale(1f);
             if (conf.OverrideDefaltFont)
                 ImGui.PopFont();
         }
 
+        private class AlertConfig {
+            public Easing AnimEnabled { get; set; }
+            public Easing AnimPos { get; set; }
+            public Vector4 TextColor { get; set; }
+            public Vector4 BackColor { get; set; }
+            public float TextSize { get; set; }
+            public int TextPrecision { get; set; }
+        }
+
+
+
         public void DrawTextOutline(Vector2 textPos, Vector4 textColor, string text, float outlineThickness) {
-                Vector4 calculatedOutlineColor = new Vector4(1f, 1f, 1f, textColor.W);
+            Vector4 calculatedOutlineColor = new Vector4(1f, 1f, 1f, textColor.W);
             if (((textColor.X * 0.3f) + (textColor.Y * 0.6f) + (textColor.Z * 0.2f)) > 0.7f)
                 calculatedOutlineColor = new Vector4(0f, 0f, 0f, textColor.W);
             uint outlineColor = ImGui.GetColorU32(calculatedOutlineColor);
@@ -348,37 +361,6 @@ namespace GCDTracker.UI {
             }
 
             draw.Flags = originalFlags;
-        }
-
-        public void DrawRectNoAA(Vector2 start, Vector2 end, Vector4 color, int thickness) {
-            var originalFlags = draw.Flags;
-            draw.Flags &= ~ImDrawListFlags.AntiAliasedFill;
-            draw.AddRect(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None, thickness);
-            draw.Flags = originalFlags;
-        }
-        public void DrawDebugText(float relx, float rely, float textSize, Vector4 textCol, Vector4 backCol, string debugText) {
-            ImGui.PushFont(UiBuilder.MonoFont);
-            ImGui.SetWindowFontScale(textSize);
-
-            var textSz = ImGui.CalcTextSize(debugText);
-            var textStartPos =
-                w_cent
-                - (w_size / 2)
-                + new Vector2(w_size.X * relx, w_size.Y * rely)
-                - (textSz / 2);
-            var padding = new Vector2(10, 5) * textSize;
-
-            draw.AddRectFilled(
-                textStartPos - padding,
-                textStartPos + textSz + padding,
-                ImGui.GetColorU32(backCol), 10f);
-            draw.AddText(
-                textStartPos,
-                ImGui.GetColorU32(textCol),
-                debugText);
-
-            ImGui.SetWindowFontScale(1f);
-            ImGui.PopFont();
         }
     }
 }
