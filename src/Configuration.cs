@@ -619,37 +619,54 @@ namespace GCDTracker
                     if (ShowAdvanced) {
                         ImGui.TextDisabled("\tIn addition to the options below, there are additional options");
                         ImGui.TextDisabled("\tin GCDTracker, GCDDisplay, and Castbar.");
-                        ImGui.NewLine();
+                        
                         ImGui.Checkbox("Override Default Font", ref OverrideDefaltFont);
                         if (ImGui.IsItemHovered()){
                             ImGui.BeginTooltip();
                             ImGui.Text("If enabled, use Monospace font in GCDTracker.");
                             ImGui.EndTooltip();
                         }
-                        ImGui.NewLine();
-                        ImGui.Checkbox("Pulse GCDBar Color @ Slide Lock", ref pulseBarColorAtSlide);
-                        ImGui.Checkbox("Pulse GCDBar Width @ Slide Lock", ref pulseBarWidthAtSlide);
-                        ImGui.Checkbox("Pulse GCDBar Height @ Slide Lock", ref pulseBarHeightAtSlide);
-                        ImGui.NewLine();
-                        ImGui.Checkbox("Pulse GCDBar Color @ Queue Lock", ref pulseBarColorAtQueue);
-                        ImGui.Checkbox("Pulse GCDBar Width @ Queue Lock", ref pulseBarWidthAtQueue);
-                        ImGui.Checkbox("Pulse GCDBar Height @ Queue Lock", ref pulseBarHeightAtQueue);
-                        ImGui.NewLine();
-                        ImGui.Checkbox("Pulse GCDWheel Size @ Queue Lock", ref pulseWheelAtQueue);
-                        ImGui.NewLine();
-                        ImGui.Checkbox("Reduce Pulse Magnitude (Subtle Pulses)", ref subtlePulses);
-                        ImGui.NewLine();
-                        ImGui.Checkbox("Draw Floating Triangles", ref FloatingTrianglesEnable);
-                        if (FloatingTrianglesEnable){
+
+                        if (ImGui.TreeNodeEx("Preview Features", ImGuiTreeNodeFlags.DefaultOpen)) {
+                            ImGui.TextDisabled("Pulse and Floating Triangles are currently in development.");
+                            ImGui.TextColored(new Vector4(0.9f,0.175f,0.175f,1f), "Please note that these settings will reset once they leave preview.");
+                            ImGui.NewLine();
+                            ImGui.Text("Pulse GCDBar @ Slide Lock");
                             ImGui.Indent();
-                            ImGui.Checkbox("Draw Slidecast Triangle", ref SlidecastTriangleEnable);
-                            ImGui.Checkbox("Draw Queuelock Triangle", ref QueuelockTriangleEnable);
+                            ImGui.Checkbox("Color##slide", ref pulseBarColorAtSlide);
+                            ImGui.SameLine();
+                            ImGui.Checkbox("Width##slide", ref pulseBarWidthAtSlide);
+                            ImGui.SameLine();
+                            ImGui.Checkbox("Height##slide", ref pulseBarHeightAtSlide);
                             ImGui.Unindent();
+                            ImGui.Text("Pulse GCDBar @ Queue Lock");
+                            ImGui.Indent();
+                            ImGui.Checkbox("Color##queue", ref pulseBarColorAtQueue);
+                            ImGui.SameLine();
+                            ImGui.Checkbox("Width##queue", ref pulseBarWidthAtQueue);
+                            ImGui.SameLine();
+                            ImGui.Checkbox("Height##queue", ref pulseBarHeightAtQueue);
+                            ImGui.Unindent();
+                            ImGui.Text("Pulse GCDWheel @ Queue Lock");
+                            ImGui.Indent();
+                            ImGui.Checkbox("Size", ref pulseWheelAtQueue);
+                            ImGui.Unindent();
+                            
+                            ImGui.NewLine();
+                            ImGui.Checkbox("Reduce Pulse Magnitude (Subtle Pulses)", ref subtlePulses);
+                            ImGui.NewLine();
+                            ImGui.Checkbox("Draw Floating Triangles", ref FloatingTrianglesEnable);
+                            if (FloatingTrianglesEnable){
+                                ImGui.Indent();
+                                ImGui.Checkbox("Draw Slidecast Triangle", ref SlidecastTriangleEnable);
+                                ImGui.SameLine();
+                                ImGui.Checkbox("Draw Queuelock Triangle", ref QueuelockTriangleEnable);
+                                ImGui.Unindent();
+                            }
+                            ImGui.Checkbox("Move/resize Triangles", ref WindowMoveableSQI);
+                            if (WindowMoveableSQI)
+                                ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         }
-                        ImGui.Checkbox("Move/resize Triangles", ref WindowMoveableSQI);
-                        if (WindowMoveableSQI)
-                            ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
-                        ImGui.NewLine();
                         if (ImGui.Button("Reset All Settings to Default"))
                             showResetConfirmation = true;
                         if (showResetConfirmation)
