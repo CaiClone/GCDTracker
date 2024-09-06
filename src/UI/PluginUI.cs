@@ -282,7 +282,7 @@ namespace GCDTracker.UI {
             }
         }
 
-        public void DrawRightTriangle(Vector2 p1, Vector2 p2, Vector2 p3, Vector4 color) {
+        public void DrawAATriangle(Vector2 p1, Vector2 p2, Vector2 p3, Vector4 color) {
             var originalFlags = draw.Flags;
             draw.Flags &= ~ImDrawListFlags.AntiAliasedFill;
             draw.AddTriangleFilled(p1, p2, p3, ImGui.GetColorU32(color));

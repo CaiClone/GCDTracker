@@ -2,6 +2,7 @@ using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Plugin.Services;
 using GCDTracker.Data;
 using GCDTracker.UI;
+using GCDTracker.UI.Components;
 using System;
 using System.Numerics;
 using System.Runtime.CompilerServices;
@@ -16,11 +17,16 @@ namespace GCDTracker {
         string shortCastCachedSpellName;
         Vector4 bgCache;
 
+        private readonly BarSegment queueLock;
+        private readonly BarSegment slideCast;
+
         public GCDDisplay (Configuration conf, IDataManager dataManager, GCDHelper helper) {
             this.conf = conf;
             this.dataManager = dataManager;
             this.helper = helper;
             abilityManager = AbilityManager.Instance;
+            queueLock = new BarSegment(BarInfo.Instance, true);
+            slideCast = new BarSegment(BarInfo.Instance, false);
         }
 
         public void DrawGCDWheel(PluginUI ui) {
@@ -174,12 +180,8 @@ namespace GCDTracker {
 
             var bar_v = BarVertices.Instance;
             bar_v.Update(bar, go, notify);
-            var sc_sv = SlideCastStartVertices.Instance;
-            sc_sv.Update(bar, bar_v, go);
-            var sc_ev = SlideCastEndVertices.Instance;
-            sc_ev.Update(bar, bar_v, go);
-            var ql_v = QueueLockVertices.Instance;
-            ql_v.Update (bar, bar_v, go); 
+            slideCast.Update(bar_v, go.Slide_Bar_Start, go.Slide_Bar_End);
+            queueLock.Update(bar_v, go.Queue_Lock_Start);
 
             float barGCDClipTime = 0;
             
@@ -197,8 +199,15 @@ namespace GCDTracker {
             }
             // in Castbar mode:
             // draw the slidecast bar
-            if (conf.SlideCastEnabled)
-                DrawSlideCast(ui, sc_sv, sc_ev, go);
+            if (conf.SlideCastEnabled) {
+                if (go.Slide_Background)
+                    slideCast.DrawRect(ui, conf.slideCol);
+                if (go.SlideStart_VerticalBar)
+                    slideCast.DrawVerticalLines(ui, conf.backColBorder);
+                //bottom left
+                if (go.SlideStart_LeftTri)
+                    slideCast.DrawTriangles(ui, conf.backColBorder);
+            }
 
             // in GCDBar mode:
             // draw oGCDs and clips
@@ -253,8 +262,15 @@ namespace GCDTracker {
 
             //in both modes:
             //draw the queuelock (if enabled)
-            if (conf.QueueLockEnabled)
-                DrawQueueLock(ui, ql_v, go);
+            if (conf.QueueLockEnabled) {
+                //queue vertical bar
+                if (go.Queue_VerticalBar)
+                    queueLock.DrawVerticalLines(ui, conf.backColBorder);
+                //queue triangle
+                if (go.Queue_Triangle) {
+                    queueLock.DrawTriangles(ui, conf.backColBorder);
+                }
+            }
 
             // in both modes:
             // draw borders
@@ -277,38 +293,6 @@ namespace GCDTracker {
                     ui.DrawCastBarText(abilityName, combinedText, spellNamePos, conf.CastBarTextSize, false);
                 if (!string.IsNullOrEmpty(helper.remainingCastTimeString) && conf.castTimePosition == 1 && conf.CastTimeEnabled)
                     ui.DrawCastBarText(helper.remainingCastTimeString, combinedText, spellTimePos, conf.CastBarTextSize, true);
-            }
-        }
-
-        private void DrawSlideCast(PluginUI ui, SlideCastStartVertices sc_sv, SlideCastEndVertices sc_ev, BarDecisionHelper go){
-            // draw slidecast bar
-            if (go.Slide_Background)
-                ui.DrawRectFilledNoAA(sc_sv.TL_C, sc_ev.BR_C, conf.slideCol);
-            // draw sidecast (start) vertical line
-            if (go.SlideStart_VerticalBar)
-                ui.DrawRectFilledNoAA(sc_sv.TL_C, sc_sv.BR_C, conf.backColBorder);
-            //draw sidlecast (end) vertical line
-            if (go.SlideEnd_VerticalBar)
-                ui.DrawRectFilledNoAA(sc_ev.TL_C, sc_ev.BR_C, conf.backColBorder);
-            //bottom left
-            if (go.SlideStart_LeftTri)
-                ui.DrawRightTriangle(sc_sv.BL_C, sc_sv.BL_X, sc_sv.BL_Y, conf.backColBorder);
-            //bottom right
-            if (go.SlideStart_RightTri)
-                ui.DrawRightTriangle(sc_sv.BR_C, sc_sv.BR_X, sc_sv.BR_Y, conf.backColBorder);
-            //end right
-            if (go.SlideEnd_RightTri)
-                ui.DrawRightTriangle(sc_ev.BR_C, sc_ev.BR_X, sc_ev.BR_Y, conf.backColBorder);
-        }
-
-        private void DrawQueueLock(PluginUI ui, QueueLockVertices ql_v, BarDecisionHelper go) {
-            //queue vertical bar
-            if (go.Queue_VerticalBar)
-                ui.DrawRectFilledNoAA(ql_v.TL_C, ql_v.BR_C, conf.backColBorder); 
-            //queue triangle
-            if (go.Queue_Triangle) {
-                ui.DrawRightTriangle(ql_v.TL_C, ql_v.TL_X, ql_v.TL_Y, conf.backColBorder);
-                ui.DrawRightTriangle(ql_v.TR_C, ql_v.TR_X, ql_v.TR_Y, conf.backColBorder);
             }
         }
 
@@ -349,12 +333,12 @@ namespace GCDTracker {
             Vector4 queueCol = gcdPercent != 0 && gcdPercent < 0.8f ? red : green;
             
             if (conf.SlidecastTriangleEnable){
-                ui.DrawRightTriangle(slideBGTop, slideBGLeft, slideBGRight, bgCol);
-                ui.DrawRightTriangle(slideTop, slideLeft, slideRight, slideCol);
+                ui.DrawAATriangle(slideBGTop, slideBGLeft, slideBGRight, bgCol);
+                ui.DrawAATriangle(slideTop, slideLeft, slideRight, slideCol);
             }
             if (conf.QueuelockTriangleEnable){
-                ui.DrawRightTriangle(queueBGBot, queueBGRight, queueBGLeft, bgCol);
-                ui.DrawRightTriangle(queueBot, queueRight, queueLeft, queueCol);
+                ui.DrawAATriangle(queueBGBot, queueBGRight, queueBGLeft, bgCol);
+                ui.DrawAATriangle(queueBot, queueRight, queueLeft, queueCol);
             }
         }
     }
