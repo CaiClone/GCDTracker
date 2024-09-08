@@ -81,7 +81,7 @@ namespace GCDTracker
         public int BarGradMode = 2;
         public int BarBgGradMode = 3;
 
-        public Vector4 QueuePulseCol = new(1f, 1f, 1f, 1f);
+        public Vector3 QueuePulseCol = new(1f, 1f, 1f);
 
         //CastBar
         public bool CastBarEnabled = false;
@@ -650,6 +650,10 @@ namespace GCDTracker
                             ImGui.SameLine();
                             ImGui.Checkbox("Height##queue", ref pulseBarHeightAtQueue);
                             ImGui.Unindent();
+                            if (pulseBarColorAtQueue) {
+                                ImGui.NewLine();
+                                ImGui.ColorEdit3("Queuelock Pulse Color", ref QueuePulseCol);
+                            }
                             ImGui.Text("Pulse GCDWheel @ Queue Lock");
                             ImGui.Indent();
                             ImGui.Checkbox("Size", ref pulseWheelAtQueue);
@@ -657,8 +661,6 @@ namespace GCDTracker
                             
                             ImGui.NewLine();
                             ImGui.Checkbox("Reduce Pulse Magnitude (Subtle Pulses)", ref subtlePulses);
-                            ImGui.NewLine();
-                            ImGui.ColorEdit4("Queuelock Pulse Color", ref QueuePulseCol);
                             ImGui.NewLine();
                             ImGui.Checkbox("Draw Floating Triangles", ref FloatingTrianglesEnable);
                             if (FloatingTrianglesEnable){
@@ -668,10 +670,10 @@ namespace GCDTracker
                                 ImGui.Checkbox("Draw Queuelock Triangle", ref QueuelockTriangleEnable);
                                 ImGui.Checkbox("Only Show Trianges When Green", ref OnlyGreenTriangles);
                                 ImGui.Unindent();
+                                ImGui.Checkbox("Move/resize Triangles", ref WindowMoveableSQI);
+                                if (WindowMoveableSQI)
+                                    ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                             }
-                            ImGui.Checkbox("Move/resize Triangles", ref WindowMoveableSQI);
-                            if (WindowMoveableSQI)
-                                ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         }
                         if (ImGui.Button("Reset All Settings to Default"))
                             showResetConfirmation = true;
