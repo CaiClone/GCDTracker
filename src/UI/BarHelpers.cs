@@ -88,6 +88,8 @@ namespace GCDTracker.UI {
         public int HalfHeight {get; private set; }
         public int RawHalfHeight {get; private set; }
         public float BorderWidthPercent { get; private set; } 
+        public int BorderWidth => (int)(Width * BorderWidthPercent);
+        public int RightLimit => (int)(EndVertex.X + 1);
 
         private BarVertices() { }
         public static BarVertices Instance {
