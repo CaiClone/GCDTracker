@@ -324,6 +324,7 @@ namespace GCDTracker {
             int borderSize = triangleSize / 6;
             Vector4 red = new(1f, 0f, 0f, 1f);
             Vector4 green = new(0f, 1f, 0f, 1f);
+            Vector4 clear = new(0f, 0f, 0f, 0f);
             Vector4 bgCol = new(0f, 0f, 0f, .6f);
 
             // slidecast
@@ -344,16 +345,25 @@ namespace GCDTracker {
             Vector2 queueBGRight = queueRight + new Vector2(1.75f * borderSize, - borderSize / 1.5f);
             Vector2 queueBGLeft = queueLeft - new Vector2(1.75f * borderSize, borderSize / 1.5f);
 
+            Vector4 slideCol = green;
+            Vector4 queueCol = green;
+            Vector4 slideBGCol = bgCol;
+            Vector4 queueBGCol = bgCol;
+            if (castPercent != 0 && castPercent < slidecastStart) {
+                slideCol = conf.OnlyGreenTriangles ? clear : red;
+                slideBGCol = conf.OnlyGreenTriangles ? clear : bgCol;
+            }
+            if (gcdPercent != 0 && gcdPercent < 0.8f) {
+                queueCol = conf.OnlyGreenTriangles ? clear : red;
+                queueBGCol = conf.OnlyGreenTriangles ? clear : bgCol;   
+            }
 
-            Vector4 slideCol = castPercent != 0 && castPercent < slidecastStart ? red : green;
-            Vector4 queueCol = gcdPercent != 0 && gcdPercent < 0.8f ? red : green;
-            
             if (conf.SlidecastTriangleEnable){
-                ui.DrawRightTriangle(slideBGTop, slideBGLeft, slideBGRight, bgCol);
+                ui.DrawRightTriangle(slideBGTop, slideBGLeft, slideBGRight, slideBGCol);
                 ui.DrawRightTriangle(slideTop, slideLeft, slideRight, slideCol);
             }
             if (conf.QueuelockTriangleEnable){
-                ui.DrawRightTriangle(queueBGBot, queueBGRight, queueBGLeft, bgCol);
+                ui.DrawRightTriangle(queueBGBot, queueBGRight, queueBGLeft, queueBGCol);
                 ui.DrawRightTriangle(queueBot, queueRight, queueLeft, queueCol);
             }
         }
