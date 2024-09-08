@@ -80,7 +80,8 @@ namespace GCDTracker
         public bool BarHasGradient = false;
         public int BarGradMode = 2;
         public int BarBgGradMode = 3;
-        public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
+
+        public Vector4 QueuePulseCol = new(1f, 1f, 1f, 1f);
 
         //CastBar
         public bool CastBarEnabled = false;
@@ -117,6 +118,7 @@ namespace GCDTracker
         public bool FloatingTrianglesEnable = false;
         public bool SlidecastTriangleEnable = true;
         public bool QueuelockTriangleEnable = true;
+        public bool OnlyGreenTriangles = false;
         [JsonIgnore]
         public bool WindowMoveableSQI = false;
 
@@ -132,6 +134,7 @@ namespace GCDTracker
         public Vector4 BarOgcdCol = new(1f, 1f, 1f, 1f);
         public Vector4 BarAnLockCol = new(0.334f, 0.334f, 0.334f, 0.667f);
         public Vector4 BarclipCol = new(1f, 0f, 0f, 0.667f);
+        public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
         public float BarBorderSize = 2f;
 
         //MigrationSettings
@@ -655,12 +658,15 @@ namespace GCDTracker
                             ImGui.NewLine();
                             ImGui.Checkbox("Reduce Pulse Magnitude (Subtle Pulses)", ref subtlePulses);
                             ImGui.NewLine();
+                            ImGui.ColorEdit4("Queuelock Pulse Color", ref QueuePulseCol);
+                            ImGui.NewLine();
                             ImGui.Checkbox("Draw Floating Triangles", ref FloatingTrianglesEnable);
                             if (FloatingTrianglesEnable){
                                 ImGui.Indent();
                                 ImGui.Checkbox("Draw Slidecast Triangle", ref SlidecastTriangleEnable);
                                 ImGui.SameLine();
                                 ImGui.Checkbox("Draw Queuelock Triangle", ref QueuelockTriangleEnable);
+                                ImGui.Checkbox("Only Show Trianges When Green", ref OnlyGreenTriangles);
                                 ImGui.Unindent();
                             }
                             ImGui.Checkbox("Move/resize Triangles", ref WindowMoveableSQI);

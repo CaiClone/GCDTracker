@@ -8,6 +8,7 @@ using System;
 using static GCDTracker.EventType;
 using static GCDTracker.EventCause;
 using static GCDTracker.EventSource;
+using System.Security.Cryptography;
 
 namespace GCDTracker {
 
@@ -229,7 +230,7 @@ namespace GCDTracker {
 
         private static Vector4 GetBarColor(Configuration conf, Alert alert) {
             Vector4 targetColor = alert.Reason switch {
-                EventCause.Queuelock => CalculateTargetColor(conf.frontCol),
+                EventCause.Queuelock => new Vector4(conf.QueuePulseCol.X, conf.QueuePulseCol.Y, conf.QueuePulseCol.Z, conf.frontCol.W),
                 EventCause.Slidecast => new Vector4(conf.slideCol.X, conf.slideCol.Y, conf.slideCol.Z, conf.frontCol.W),
                 _ => conf.frontCol
             };
@@ -243,12 +244,6 @@ namespace GCDTracker {
             }
 
             return ApplyColorTransition(conf.frontCol, targetColor, alert);
-
-            static Vector4 CalculateTargetColor(Vector4 color) {
-                return (color.X * 0.3f + color.Y * 0.6f + color.Z * 0.2f) > 0.7f 
-                    ? new Vector4(0f, 0f, 0f, color.W) 
-                    : new Vector4(1f, 1f, 1f, color.W);
-            }
         }
 
         private static int GetBarSize(int dimension, Alert alert, bool subtlePulses) {
