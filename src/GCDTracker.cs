@@ -47,8 +47,8 @@ namespace GCDTracker {
         private readonly Hook<HelperMethods.UseActionDelegate> UseActionHook;
         private readonly Hook<HelperMethods.ReceiveActionEffectDetour> ReceiveActionEffectHook;
 
-        private  GCDHelper helper;
-        private  GCDDisplay gcd;
+        private GCDHelper helper;
+        private GCDDisplay gcd;
         private readonly ComboTracker ct;
 
         public GCDTracker() {
@@ -61,8 +61,11 @@ namespace GCDTracker {
 
             ui = new PluginUI(config);
             helper = new GCDHelper(config);
-            gcd = new GCDDisplay(config, Data, helper);
-    
+            gcd = new GCDDisplay(config, helper, AbilityManager.Instance);
+            bool inCombat = DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
+            bool noUI = DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.OccupiedInQuestEvent]
+                        || DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas]
+                        || DataStore.ClientState.IsPvP;
             ct = new ComboTracker();
 
             ui.gcd = gcd;

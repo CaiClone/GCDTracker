@@ -102,7 +102,7 @@ namespace GCDTracker
             var lastAction = DataStore.Action->ComboID;
             lastAction = AdjustDRGCombo(lastAction);
             foreach (var (actionId, pos) in nodepos)
-                ui.DrawActionCircle(pos, circRad, actionId, lastAction);
+                ui.DrawActionCircle(pos, circRad, actionId, lastAction, this);
         }
 
         private static Vector2[] GetFollowupPos(Vector2 cpos, int nChild,float xsep, float ysep, float circRad) {

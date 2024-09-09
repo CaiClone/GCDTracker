@@ -9,8 +9,8 @@ namespace GCDTracker.UI {
     public class PluginUI {
         public bool IsVisible { get; set; }
         public GCDDisplay gcd;
-        public GCDHelper helper;       
         public ComboTracker ct;
+        public GCDHelper helper;
         public Configuration conf;
 
         public Vector2 w_cent;
@@ -20,6 +20,7 @@ namespace GCDTracker.UI {
 
         public PluginUI(Configuration conf) {
             this.conf = conf;
+            gcd = new GCDDisplay(conf, helper, AbilityManager.Instance);
         }
 
         public void Draw() {
@@ -27,66 +28,14 @@ namespace GCDTracker.UI {
 
             if (DataStore.ClientState.LocalPlayer == null)
                 return;
+            gcd.Draw(this);
 
+            //TODO: logic replicated until we figure out what to do with ComboTracker
             bool inCombat = DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
             bool noUI = DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.OccupiedInQuestEvent]
                         || DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas]
                         || DataStore.ClientState.IsPvP;
-
-            conf.EnabledGWJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGW);
-            conf.EnabledGBJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGB);
             conf.EnabledCTJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobCT);
-
-            bool shouldShowGCDWheel = conf.WheelEnabled && !noUI;
-            bool isGCDWheelMoveable = conf.WindowMoveableGW;
-            bool showGCDWheelInCombat = enabledJobGW && 
-                                        (conf.ShowOutOfCombat || inCombat);
-            bool showGCDWheelWhenGCDNotRunning = !conf.ShowOnlyGCDRunning || 
-                                                (helper.idleTimerAccum < helper.GCDTimeoutBuffer && 
-                                                !helper.lastActionTP);
-
-            if (shouldShowGCDWheel && 
-                (isGCDWheelMoveable || 
-                (showGCDWheelInCombat && 
-                showGCDWheelWhenGCDNotRunning))) 
-            {
-                SetupWindow("GCDTracker_GCDWheel", conf.WindowMoveableGW);
-                gcd.DrawGCDWheel(this);
-                ImGui.End();
-            }
-
-            bool shouldShowBar = conf.BarEnabled && 
-                                !noUI;
-            bool isBarMoveable = conf.BarWindowMoveable;
-            bool showBarInCombat = enabledJobGB && 
-                                (conf.ShowOutOfCombat || inCombat);
-            bool showBarWhenGCDNotRunning = !conf.ShowOnlyGCDRunning || 
-                                            (helper.idleTimerAccum < 
-                                            helper.GCDTimeoutBuffer);
-            bool showCastBarOrNoLastActionTP = conf.CastBarEnabled || 
-                                            !helper.lastActionTP;
-
-            if (shouldShowBar && 
-                (isBarMoveable || 
-                (showBarInCombat && 
-                showBarWhenGCDNotRunning && 
-                showCastBarOrNoLastActionTP))) 
-            {
-                SetupWindow("GCDTracker_Bar", conf.BarWindowMoveable);
-                // Hide the GCDBar if the castbar is active.
-                // This seems to work fine, but if it ever becomes a problem,
-                // might try using string.IsNullOrEmpty(GetCastbarContents())
-                // instead of GameState.IsCasting() since that comes
-                // directly from the game's castbar.
-                if (!conf.CastBarEnabled || !GameState.IsCasting()) {
-                    gcd.DrawGCDBar(this);
-                }
-                if (conf.CastBarEnabled && GameState.IsCasting()) {
-                    gcd.DrawCastBar(this);
-                }
-                ImGui.End();
-            }
-
             bool shouldShowComboTracker = conf.ComboEnabled && !noUI;
             bool isComboTrackerMoveable = conf.WindowMoveableCT;
             bool showComboTrackerInCombat = enabledJobCT && 
@@ -101,16 +50,9 @@ namespace GCDTracker.UI {
                 ImGui.End();
             }
 
-            if (conf.FloatingTrianglesEnable || conf.WindowMoveableSQI) {
-                SetupWindow("GCDTracker_SlideQueueIndicators", conf.WindowMoveableSQI);
-                gcd.DrawFloatingTriangles(this);
-                ImGui.End();
-            }
-
-
         }
 
-        private void SetupWindow(string name,bool windowMovable) {
+        public void SetupWindow(string name,bool windowMovable) {
             ImGui.SetNextWindowSize(new Vector2(100, 100), ImGuiCond.FirstUseEver);
             ImGui.SetNextWindowBgAlpha(0.45f);
             ImGui.Begin(name, GetFlags(windowMovable));
@@ -143,7 +85,7 @@ namespace GCDTracker.UI {
             draw.PathStroke(ImGui.GetColorU32(col), ImDrawFlags.None, thickness);
         }
 
-        public unsafe void DrawActionCircle(Vector2 cpos,float circRad,uint action, uint lastAction) {
+        public unsafe void DrawActionCircle(Vector2 cpos,float circRad,uint action, uint lastAction, ComboTracker ct) {
             if (lastAction == action || ct.LastComboActionUsed.Contains(action))
                 draw.AddCircleFilled(cpos, circRad, ImGui.GetColorU32(conf.ctComboActive));
             else if (ct.ComboUsed.Contains(action))
