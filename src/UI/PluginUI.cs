@@ -232,67 +232,26 @@ namespace GCDTracker.UI {
         }
 
         public void DrawRectFilledNoAA(Vector2 start, Vector2 end, Vector4 color, int gradientMode = 0, float gradientIntensity = 0f) {
+            var eGradientMode = (BarGradientMode)gradientMode;
             var originalFlags = draw.Flags;
             draw.Flags &= ~ImDrawListFlags.AntiAliasedFill;
             
-            if (!conf.BarHasGradient || gradientMode == 3) {
+            if (!conf.BarHasGradient || eGradientMode == BarGradientMode.None) {
                 draw.AddRectFilled(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None);
                 draw.Flags = originalFlags;
                 return;
             }
             
             int height = (int)(end.Y - start.Y);
-            // Unnecessary unless someone edits the config manually...
             gradientIntensity = Math.Clamp(gradientIntensity, 0f, 1f);
             for (int y = 0; y < height; y++) {
-                Vector4 lineColor;
-
-                switch (gradientMode)
-                {
-                    case 0: // White Mode
-                        lineColor = new Vector4(
-                            color.X + (gradientIntensity * (1.0f - color.X) * ((float)y / height)),
-                            color.Y + (gradientIntensity * (1.0f - color.Y) * ((float)y / height)),
-                            color.Z + (gradientIntensity * (1.0f - color.Z) * ((float)y / height)),
-                            color.W
-                        );
-                        break;
-
-                    case 1: // Black Mode
-                        lineColor = new Vector4(
-                            color.X * (1 - (gradientIntensity * ((float)y / height))),
-                            color.Y * (1 - (gradientIntensity * ((float)y / height))),
-                            color.Z * (1 - (gradientIntensity * ((float)y / height))),
-                            color.W
-                        );
-                        break;
-
-                    case 2: // Blended Mode: Top half darker, bottom half lighter
-                        if (y < height / 2)
-                        {
-                            lineColor = new Vector4(
-                                color.X * (1 - (gradientIntensity * ((float)(height / 2 - y) / (height / 2)))),
-                                color.Y * (1 - (gradientIntensity * ((float)(height / 2 - y) / (height / 2)))),
-                                color.Z * (1 - (gradientIntensity * ((float)(height / 2 - y) / (height / 2)))),
-                                color.W
-                            );
-                        }
-                        else
-                        {
-                            lineColor = new Vector4(
-                                color.X + (gradientIntensity * (1.0f - color.X) * ((float)(y - height / 2) / (height / 2))),
-                                color.Y + (gradientIntensity * (1.0f - color.Y) * ((float)(y - height / 2) / (height / 2))),
-                                color.Z + (gradientIntensity * (1.0f - color.Z) * ((float)(y - height / 2) / (height / 2))),
-                                color.W
-                            );
-                        }
-                        break;
-
-                    default:
-                        // just in case
-                        lineColor = color;
-                        break;
-                }
+                var lineColor = eGradientMode switch {
+                    BarGradientMode.White => LerpColorNoA(color, Vector4.One, gradientIntensity * y / height),
+                    BarGradientMode.Black => LerpColorNoA(color, Vector4.Zero, gradientIntensity * y / height),
+                    BarGradientMode.Blended when y < height / 2 => LerpColorNoA(color, Vector4.Zero, gradientIntensity * (height / 2 - y) / (height / 2)),
+                    BarGradientMode.Blended => LerpColorNoA(color, Vector4.One, gradientIntensity * (y - height / 2) / (height / 2)),
+                    _ => color
+                };
 
                 // Draw each line with the gradient color for that line
                 draw.AddLine(
@@ -304,5 +263,17 @@ namespace GCDTracker.UI {
 
             draw.Flags = originalFlags;
         }
+        private static Vector4 LerpColorNoA(Vector4 start, Vector4 end, float t) => new(
+                start.X + (end.X - start.X) * t,
+                start.Y + (end.Y - start.Y) * t,
+                start.Z + (end.Z - start.Z) * t,
+                start.W
+        );
+    }
+    public enum BarGradientMode {
+        White = 0,
+        Black = 1,
+        Blended = 2,
+        None = 3
     }
 }

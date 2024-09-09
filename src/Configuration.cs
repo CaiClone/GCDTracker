@@ -2,6 +2,7 @@
 using Dalamud.Interface;
 using Dalamud.Plugin;
 using GCDTracker.Data;
+using GCDTracker.UI;
 using ImGuiNET;
 using Newtonsoft.Json;
 using System;
@@ -78,8 +79,8 @@ namespace GCDTracker
         public float BarGradientMul = 0.175f;
         public float BarBgGradientMul = 0.175f;
         public bool BarHasGradient = false;
-        public int BarGradMode = 2;
-        public int BarBgGradMode = 3;
+        public int BarGradMode = (int)BarGradientMode.Blended;
+        public int BarBgGradMode = (int)BarGradientMode.None;
         public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
 
         //CastBar
