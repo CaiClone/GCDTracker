@@ -169,7 +169,6 @@ namespace GCDTracker.UI {
         }
 
 
-
         public void DrawTextOutline(Vector2 textPos, Vector4 textColor, string text, float outlineThickness) {
             Vector4 calculatedOutlineColor = new Vector4(1f, 1f, 1f, textColor.W);
             if (((textColor.X * 0.3f) + (textColor.Y * 0.6f) + (textColor.Z * 0.2f)) > 0.7f)

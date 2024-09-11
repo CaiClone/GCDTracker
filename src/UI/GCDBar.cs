@@ -7,9 +7,9 @@ using GCDTracker.UI.Components;
 
 namespace GCDTracker.UI {
     public unsafe class GCDBar {
-        protected readonly Configuration conf;
-        protected readonly GCDHelper helper;
-        protected readonly AbilityManager abilityManager;    
+        private readonly Configuration conf;
+        private readonly GCDHelper helper;
+        private readonly AbilityManager abilityManager;    
 
         private readonly QueueLock queueLock;
         private readonly SlideCast slideCast;
@@ -21,17 +21,15 @@ namespace GCDTracker.UI {
             this.conf = conf;
             this.helper = helper;
             this.abilityManager = abilityManager;
-            queueLock = new QueueLock(BarInfo.Instance, BarVertices.Instance, conf, BarDecisionHelper.Instance);
-            slideCast = new SlideCast(BarInfo.Instance, BarVertices.Instance, conf, BarDecisionHelper.Instance);
+            queueLock = new(BarInfo.Instance, BarVertices.Instance, conf, BarDecisionHelper.Instance);
+            slideCast = new(BarInfo.Instance, BarVertices.Instance, conf, BarDecisionHelper.Instance);
         }
 
         public void Draw(PluginUI ui) {
-            if (!conf.CastBarEnabled || !GameState.IsCasting()) {
-                DrawGCDBar(ui);
-            }
-            if (conf.CastBarEnabled && GameState.IsCasting()) {
+            if (conf.CastBarEnabled && GameState.IsCasting())
                 DrawCastBar(ui);
-            }
+            else 
+                DrawGCDBar(ui);
         }
 
         private void DrawGCDBar(PluginUI ui) {

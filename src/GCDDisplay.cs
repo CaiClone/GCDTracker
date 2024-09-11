@@ -10,8 +10,7 @@ namespace GCDTracker.UI {
         private readonly GCDBar gcdBar;
         private readonly GCDWheel gcdWheel;
         private readonly ComboTracker comboTracker;
-        //TODO:
-        //private FloatingAlerts floatingAlerts;
+        private readonly FloatingAlerts floatingAlerts;
 
         public GCDDisplay(Configuration conf, GCDHelper helper, AbilityManager abilityManager) {
             this.conf = conf;
@@ -20,6 +19,7 @@ namespace GCDTracker.UI {
             gcdBar = new GCDBar(conf, helper, abilityManager);
             gcdWheel = new GCDWheel(conf, helper, abilityManager);
             comboTracker = new ComboTracker();
+            floatingAlerts = new FloatingAlerts(conf);
         }
 
         public void Draw(PluginUI ui) {
@@ -79,7 +79,7 @@ namespace GCDTracker.UI {
 
             if (conf.FloatingTrianglesEnable || conf.WindowMoveableSQI) {
                 ui.SetupWindow("GCDTracker_SlideQueueIndicators", conf.WindowMoveableSQI);
-                //gcd.DrawFloatingTriangles(ui);
+                floatingAlerts.Draw(ui);
                 ImGui.End();
             }
         }
