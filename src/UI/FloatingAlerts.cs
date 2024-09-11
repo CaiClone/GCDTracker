@@ -38,17 +38,16 @@ namespace GCDTracker.UI {
             Vector2 queueBGRight = queueRight + new Vector2(1.75f * borderSize, - borderSize / 1.5f);
             Vector2 queueBGLeft = queueLeft - new Vector2(1.75f * borderSize, borderSize / 1.5f);
 
-
-            Vector4 slideCol = castPercent != 0 && castPercent < slidecastStart ? red : green;
-            Vector4 queueCol = gcdPercent != 0 && gcdPercent < 0.8f ? red : green;
+            bool cantSlide = castPercent != 0 && castPercent < slidecastStart;
+            bool cantQueue = gcdPercent != 0 && gcdPercent < 0.8f;
             
-            if (conf.SlidecastTriangleEnable){
+            if (conf.SlidecastTriangleEnable && !(conf.OnlyGreenTriangles && cantSlide)) {
                 ui.DrawAATriangle(slideBGTop, slideBGLeft, slideBGRight, bgCol);
-                ui.DrawAATriangle(slideTop, slideLeft, slideRight, slideCol);
+                ui.DrawAATriangle(slideTop, slideLeft, slideRight, cantSlide ? red : green);
             }
-            if (conf.QueuelockTriangleEnable){
+            if (conf.QueuelockTriangleEnable && !(conf.OnlyGreenTriangles && cantQueue)) {
                 ui.DrawAATriangle(queueBGBot, queueBGRight, queueBGLeft, bgCol);
-                ui.DrawAATriangle(queueBot, queueRight, queueLeft, queueCol);
+                ui.DrawAATriangle(queueBot, queueRight, queueLeft, cantQueue ? red : green);
             }
         } 
     }

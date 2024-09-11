@@ -77,13 +77,23 @@ namespace GCDTracker.UI {
                 ImGui.End();
             }
 
-            if (conf.FloatingTrianglesEnable || conf.WindowMoveableSQI) {
+            bool shouldShowTrianges = conf.FloatingTrianglesEnable && 
+                                !noUI;
+            bool isTriMoveable = conf.WindowMoveableSQI;
+            bool showTriInCombat = conf.ShowOutOfCombat || inCombat;
+            bool showTriWhenGCDNotRunning = !conf.ShowOnlyGCDRunning || 
+                                            (helper.idleTimerAccum < 
+                                            helper.GCDTimeoutBuffer);
+
+            if (shouldShowTrianges && 
+                (isTriMoveable || 
+                (showTriInCombat && 
+                showTriWhenGCDNotRunning))) 
+            {
                 ui.SetupWindow("GCDTracker_SlideQueueIndicators", conf.WindowMoveableSQI);
                 floatingAlerts.Draw(ui);
                 ImGui.End();
             }
         }
-
-
     }
 }

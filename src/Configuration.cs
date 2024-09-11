@@ -81,7 +81,8 @@ namespace GCDTracker
         public bool BarHasGradient = false;
         public int BarGradMode = (int)BarGradientMode.Blended;
         public int BarBgGradMode = (int)BarGradientMode.None;
-        public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
+
+        public Vector3 QueuePulseCol = new(1f, 1f, 1f);
 
         //CastBar
         public bool CastBarEnabled = false;
@@ -118,6 +119,7 @@ namespace GCDTracker
         public bool FloatingTrianglesEnable = false;
         public bool SlidecastTriangleEnable = true;
         public bool QueuelockTriangleEnable = true;
+        public bool OnlyGreenTriangles = false;
         [JsonIgnore]
         public bool WindowMoveableSQI = false;
 
@@ -133,6 +135,7 @@ namespace GCDTracker
         public Vector4 BarOgcdCol = new(1f, 1f, 1f, 1f);
         public Vector4 BarAnLockCol = new(0.334f, 0.334f, 0.334f, 0.667f);
         public Vector4 BarclipCol = new(1f, 0f, 0f, 0.667f);
+        public Vector4 BarBackColBorder = new(0f, 0f, 0f, 1f);
         public float BarBorderSize = 2f;
 
         //MigrationSettings
@@ -648,6 +651,10 @@ namespace GCDTracker
                             ImGui.SameLine();
                             ImGui.Checkbox("Height##queue", ref pulseBarHeightAtQueue);
                             ImGui.Unindent();
+                            if (pulseBarColorAtQueue) {
+                                ImGui.NewLine();
+                                ImGui.ColorEdit3("Queuelock Pulse Color", ref QueuePulseCol);
+                            }
                             ImGui.Text("Pulse GCDWheel @ Queue Lock");
                             ImGui.Indent();
                             ImGui.Checkbox("Size", ref pulseWheelAtQueue);
@@ -662,11 +669,12 @@ namespace GCDTracker
                                 ImGui.Checkbox("Draw Slidecast Triangle", ref SlidecastTriangleEnable);
                                 ImGui.SameLine();
                                 ImGui.Checkbox("Draw Queuelock Triangle", ref QueuelockTriangleEnable);
+                                ImGui.Checkbox("Only Show Trianges When Green", ref OnlyGreenTriangles);
                                 ImGui.Unindent();
+                                ImGui.Checkbox("Move/resize Triangles", ref WindowMoveableSQI);
+                                if (WindowMoveableSQI)
+                                    ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                             }
-                            ImGui.Checkbox("Move/resize Triangles", ref WindowMoveableSQI);
-                            if (WindowMoveableSQI)
-                                ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                         }
                         if (ImGui.Button("Reset All Settings to Default"))
                             showResetConfirmation = true;
