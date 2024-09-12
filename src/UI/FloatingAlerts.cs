@@ -3,8 +3,9 @@ using System.Numerics;
 using GCDTracker.Data;
 
 namespace GCDTracker.UI {
-    public unsafe class FloatingAlerts(Configuration conf) {
+    public unsafe class FloatingAlerts(Configuration conf, GCDHelper helper) : IWindow {
         protected readonly Configuration conf = conf;
+        protected readonly GCDHelper helper = helper;
 
         public void Draw(PluginUI ui) {
             float gcdTotal = DataStore.Action->TotalGCD;
@@ -49,6 +50,23 @@ namespace GCDTracker.UI {
                 ui.DrawAATriangle(queueBGBot, queueBGRight, queueBGLeft, bgCol);
                 ui.DrawAATriangle(queueBot, queueRight, queueLeft, cantQueue ? red : green);
             }
-        } 
+        }
+        
+        
+        public bool ShouldDraw(bool inCombat, bool noUI) {
+            bool shouldShowTrianges = conf.FloatingTrianglesEnable && 
+                                !noUI;
+            bool showTriInCombat = conf.ShowOutOfCombat || inCombat;
+            bool showTriWhenGCDNotRunning = !conf.ShowOnlyGCDRunning || 
+                                            (helper.idleTimerAccum < 
+                                            helper.GCDTimeoutBuffer);
+
+            return shouldShowTrianges && 
+                (IsMoveable || 
+                (showTriInCombat && 
+                showTriWhenGCDNotRunning));
+        }
+        public string WindowName => "GCDTracker_SlideQueueIndicators";
+        public bool IsMoveable => conf.WindowMoveableSQI;
     }
 }

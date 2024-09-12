@@ -3,53 +3,36 @@ using Dalamud.Interface.Animation;
 using GCDTracker.Data;
 using ImGuiNET;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 
 namespace GCDTracker.UI {
-    public class PluginUI {
+    public class PluginUI(Configuration conf) {
         public bool IsVisible { get; set; }
-        public GCDDisplay gcd;
         public ComboTracker ct;
         public GCDHelper helper;
-        public Configuration conf;
+        public Configuration conf = conf;
 
         public Vector2 w_cent;
         public Vector2 w_size;
         public float Scale;
         private ImDrawListPtr draw;
 
-        public PluginUI(Configuration conf) {
-            this.conf = conf;
-            gcd = new GCDDisplay(conf, helper, AbilityManager.Instance);
-        }
+        public List<IWindow> Windows;
 
         public void Draw() {
             conf.DrawConfig(w_size.X, w_size.Y);
 
             if (DataStore.ClientState.LocalPlayer == null)
                 return;
-            gcd.Draw(this);
-
-            //TODO: logic replicated until we figure out what to do with ComboTracker
+        
             bool inCombat = DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
             bool noUI = DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.OccupiedInQuestEvent]
                         || DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.BetweenAreas]
                         || DataStore.ClientState.IsPvP;
-            conf.EnabledCTJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobCT);
-            bool shouldShowComboTracker = conf.ComboEnabled && !noUI;
-            bool isComboTrackerMoveable = conf.WindowMoveableCT;
-            bool showComboTrackerInCombat = enabledJobCT && 
-                                            (conf.ShowOutOfCombatCT || inCombat);
-
-            if (shouldShowComboTracker && 
-                (isComboTrackerMoveable || 
-                showComboTrackerInCombat)) 
-            {
-                SetupWindow("GCDTracker_ComboTracker", conf.WindowMoveableCT);
-                ct.DrawComboLines(this, conf);
-                ImGui.End();
+            foreach (var window in Windows) {
+                window.DrawWindow(this, inCombat, noUI);
             }
-
         }
 
         public void SetupWindow(string name,bool windowMovable) {

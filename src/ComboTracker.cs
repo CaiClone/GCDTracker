@@ -10,17 +10,19 @@ using System.Diagnostics;
 using System.Linq;
 using System.Numerics;
 
-namespace GCDTracker
-{
-    public class ComboTracker
-    {
+namespace GCDTracker {
+    public class ComboTracker : IWindow {
+        protected readonly Configuration conf;
+        protected readonly GCDHelper helper;
         public List<uint> ComboUsed;
 
         private DateTime actTime;
         //list because last combo actio might have multiple ids (empowered/not empowered)
         public List<uint> LastComboActionUsed;
 
-        public ComboTracker() {
+        public ComboTracker(Configuration conf, GCDHelper helper) {
+            this.conf = conf;
+            this.helper = helper;
             ComboUsed = [];
             LastComboActionUsed = [0,0];
         }
@@ -76,7 +78,7 @@ namespace GCDTracker
         ///  - Reuse the stored position if it exists
         ///  - finally draw action nodes on each of the stored positions
         ///</summary>
-        public unsafe void DrawComboLines(PluginUI ui, Configuration conf) {
+        public unsafe void Draw(PluginUI ui) {
             var xsep = conf.ctsep.X * ui.Scale;
             var ysep = conf.ctsep.Y* ui.Scale;
             var circRad = 8 * ui.Scale;
@@ -119,5 +121,15 @@ namespace GCDTracker
             }
             return actionID;
         }
+        public bool ShouldDraw(bool inCombat, bool noUI) {
+            conf.EnabledCTJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobCT);
+            bool shouldShowComboTracker = conf.ComboEnabled && !noUI;
+            bool showComboTrackerInCombat = enabledJobCT &&  (conf.ShowOutOfCombatCT || inCombat);
+
+            return shouldShowComboTracker && 
+                    (IsMoveable || showComboTrackerInCombat);
+        }
+        public string WindowName => "GCDTracker_ComboTracker";
+        public bool IsMoveable => conf.WindowMoveableCT;
     }
 }

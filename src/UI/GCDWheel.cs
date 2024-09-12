@@ -3,7 +3,7 @@ using Dalamud.Plugin.Services;
 using GCDTracker.Data;
 
 namespace GCDTracker.UI {
-    public unsafe class GCDWheel(Configuration conf, GCDHelper helper, AbilityManager abilityManager) {
+    public unsafe class GCDWheel(Configuration conf, GCDHelper helper, AbilityManager abilityManager) : IWindow {
         protected readonly Configuration conf = conf;
         protected readonly GCDHelper helper = helper;
         protected readonly AbilityManager abilityManager = abilityManager;
@@ -35,5 +35,22 @@ namespace GCDTracker.UI {
                 if (!iscast) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * notify.WheelScale, conf.ogcdCol);
             }
         }
+        
+        public bool ShouldDraw(bool inCombat, bool noUI) {
+            conf.EnabledGWJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGW);
+            
+            bool shouldShowGCDWheel = conf.WheelEnabled && !noUI;
+            bool showGCDWheelInCombat = enabledJobGW && (conf.ShowOutOfCombat || inCombat);
+            bool showGCDWheelWhenGCDNotRunning = !conf.ShowOnlyGCDRunning || 
+                                                (helper.idleTimerAccum < helper.GCDTimeoutBuffer && 
+                                                !helper.lastActionTP);
+
+            return shouldShowGCDWheel && 
+                (IsMoveable || 
+                (showGCDWheelInCombat && 
+                showGCDWheelWhenGCDNotRunning));
+        }
+        public string WindowName => "GCDTracker_GCDWheel";
+        public bool IsMoveable => conf.WindowMoveableGW;
     }
 }

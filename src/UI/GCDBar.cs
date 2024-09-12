@@ -6,7 +6,7 @@ using GCDTracker.Data;
 using GCDTracker.UI.Components;
 
 namespace GCDTracker.UI {
-    public unsafe class GCDBar {
+    public unsafe class GCDBar : IWindow {
         private readonly Configuration conf;
         private readonly GCDHelper helper;
         private readonly AbilityManager abilityManager;    
@@ -256,5 +256,22 @@ namespace GCDTracker.UI {
                     ui.DrawCastBarText(helper.remainingCastTimeString, combinedText, spellTimePos, conf.CastBarTextSize, true);
             }
         }
+
+        public bool ShouldDraw(bool inCombat, bool noUI) {
+            bool shouldShowBar = conf.BarEnabled && !noUI;
+            conf.EnabledGBJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGB);
+            bool showBarInCombat = enabledJobGB && (conf.ShowOutOfCombat || inCombat);
+            bool showBarWhenGCDNotRunning = !conf.ShowOnlyGCDRunning || 
+                                            (helper.idleTimerAccum < helper.GCDTimeoutBuffer);
+            bool showCastBarOrNoLastActionTP = conf.CastBarEnabled || !helper.lastActionTP;
+
+            return shouldShowBar && 
+                (IsMoveable || 
+                (showBarInCombat && 
+                showBarWhenGCDNotRunning && 
+                showCastBarOrNoLastActionTP));
+        }
+        public string WindowName => "GCDTracker_Bar";
+        public bool IsMoveable => conf.BarWindowMoveable;
     }
 }
