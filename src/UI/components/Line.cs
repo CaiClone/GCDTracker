@@ -13,9 +13,9 @@ namespace GCDTracker.UI.Components {
         public void Update(int pos) {
             rect = new Rectangle(
                 pos,
-                (int)(bar.CenterY - bar_v.RawHalfHeight),
+                bar_v.Rect.Top,
                 bar_v.BorderWidth,
-                2 * bar_v.HalfHeight);
+                bar_v.Height);
         }
         public void Draw(PluginUI ui, Vector4 color) =>
             ui.DrawRectFilledNoAA(rect.LT(), rect.RB(), color);

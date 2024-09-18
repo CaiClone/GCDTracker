@@ -1,9 +1,9 @@
 using System;
 using System.Numerics;
 using Dalamud.Game.ClientState.Objects.Enums;
-using Dalamud.Plugin.Services;
 using GCDTracker.Data;
 using GCDTracker.UI.Components;
+using GCDTracker.Utils;
 
 namespace GCDTracker.UI {
     public unsafe class GCDBar : IWindow {
@@ -117,18 +117,17 @@ namespace GCDTracker.UI {
             queueLock.Update(bar_v);
 
             float barGCDClipTime = 0;
-            
             // in both modes:
             // draw the background
             if (bar.CurrentPos < 0.2f)
                 bgCache = helper.BackgroundColor();
-            ui.DrawRectFilledNoAA(bar_v.StartVertex, bar_v.EndVertex, bgCache, conf.BarBgGradMode, conf.BarBgGradientMul);
+            ui.DrawRectFilledNoAA(bar_v.Rect.LB(), bar_v.Rect.RT(), bgCache, conf.BarBgGradMode, conf.BarBgGradientMul);
 
             // in both modes:
             // draw cast/gcd progress (main) bar
             if(bar.CurrentPos > 0.001f){
                 var progressBarColor = notify.ProgressPulseColor;
-                ui.DrawRectFilledNoAA(bar_v.StartVertex, bar_v.ProgressVertex, progressBarColor, conf.BarGradMode, conf.BarGradientMul);
+                ui.DrawRectFilledNoAA(bar_v.Rect.LT(), bar_v.ProgressVertex, progressBarColor, conf.BarGradMode, conf.BarGradientMul);
             }
             // in Castbar mode:
             // draw the slidecast bar
@@ -153,34 +152,32 @@ namespace GCDTracker.UI {
                         if (!helper.IsHardCast) {
                             // create end vertex
                             Vector2 clipEndVector = new(
-                                (int)(bar.CenterX + ((barGCDClipTime / gcdTotal) * bar_v.Width) - bar_v.HalfWidth),
-                                (int)(bar.CenterY + bar_v.HalfHeight)
+                                bar_v.ProgToScreen(barGCDClipTime / gcdTotal),
+                                bar_v.Rect.Top
                             );
                             // Draw the clipped part at the beginning
-                            ui.DrawRectFilledNoAA(bar_v.StartVertex, clipEndVector, conf.clipCol);
+                            ui.DrawRectFilledNoAA(bar_v.Rect.LB(), clipEndVector, conf.clipCol);
                         }
                     }
-
                     Vector2 oGCDStartVector = new(
-                        (int)(bar.CenterX + ((ogcdStart / gcdTotal) * bar_v.Width) - bar_v.RawHalfWidth),
-                        (int)(bar.CenterY - bar_v.RawHalfHeight)
+                        bar_v.ProgToScreen(ogcdStart / gcdTotal),
+                        bar_v.Rect.Top
                     );
                     Vector2 oGCDEndVector = new(
-                        (int)(bar.CenterX + ((ogcdEnd / gcdTotal) * bar_v.Width) - bar_v.HalfWidth),
-                        (int)(bar.CenterY + bar_v.HalfHeight)
+                        bar_v.ProgToScreen(ogcdEnd / gcdTotal),
+                        bar_v.Rect.Bottom
                     );
 
                     if(!helper.shortCastFinished || isClipping) {
                         ui.DrawRectFilledNoAA(oGCDStartVector, oGCDEndVector, isClipping ? conf.clipCol : conf.anLockCol);
                         if (!iscast && (!isClipping || ogcdStart > 0.01f)) {
-                            Vector2 clipPos = new(
-                                bar.CenterX + (ogcdStart / gcdTotal * bar_v.Width) - bar_v.RawHalfWidth,
-                                bar.CenterY - bar_v.RawHalfHeight + 1f
-                            );
-                            ui.DrawRectFilledNoAA(clipPos,
-                                clipPos + new Vector2(2f * ui.Scale, bar_v.Height - 2f),
+                            var clipPos = bar_v.ProgToScreen(ogcdStart / gcdTotal);
+                            ui.DrawRectFilledNoAA(
+                                new Vector2(clipPos, bar_v.Rect.Top + bar_v.BorderWidth),
+                                new Vector2(clipPos + 2f * ui.Scale, bar_v.Rect.Bottom - bar_v.BorderWidth),
                                 conf.ogcdCol);
-                    }
+                            
+                        }
                     }
                 }
             }
@@ -193,8 +190,8 @@ namespace GCDTracker.UI {
             // draw borders
             if (bar.BorderSize > 0) {
                 ui.DrawRect(
-                    bar_v.StartVertex - new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
-                    bar_v.EndVertex + new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
+                    bar_v.Rect.LB() - new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
+                    bar_v.Rect.RT() + new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
                     conf.backColBorder, bar.BorderSize);
             }
         }

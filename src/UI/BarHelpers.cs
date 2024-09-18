@@ -1,9 +1,11 @@
 using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.Numerics;
 using Dalamud.Game.ClientState.Objects.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
+using GCDTracker.Utils;
 
 namespace GCDTracker.UI {
     public unsafe class BarInfo {
@@ -70,7 +72,7 @@ namespace GCDTracker.UI {
             Width = (int)(sizeX * conf.BarWidthRatio);
             Height = (int)(sizeY * conf.BarHeightRatio);
             BorderSize = conf.BarBorderSizeInt;
-            HalfBorderSize = BorderSize % 2 == 0 ? (BorderSize / 2) : (BorderSize / 2) + 1;
+            HalfBorderSize = (BorderSize + 1) / 2;
             BorderSizeAdj = BorderSize >= 1 ? BorderSize : 1;
             TriangleOffset = triangleOffset;
             ProgressBarColor = conf.frontCol;
@@ -80,19 +82,14 @@ namespace GCDTracker.UI {
 
     public class BarVertices {
         private static BarVertices instance;
-        public Vector2 StartVertex { get; private set; }
-        public Vector2 EndVertex { get; private set; }
         public Vector2 ProgressVertex { get; private set; }
 
+        public Rectangle Rect { get; private set; }
         public int Width {get; private set; }
-        public int HalfWidth {get; private set; }
-        public int RawHalfWidth {get; private set; }
         public int Height {get; private set; }
-        public int HalfHeight {get; private set; }
-        public int RawHalfHeight {get; private set; }
         public float BorderWidthPercent { get; private set; } 
         public int BorderWidth => (int)(Width * BorderWidthPercent);
-        public int RightLimit => (int)(EndVertex.X + 1);
+        public int RightLimit => Rect.Right + 1;
 
         private BarVertices() { }
         public static BarVertices Instance {
@@ -103,18 +100,20 @@ namespace GCDTracker.UI {
         }
 
         public void Update(BarInfo bar, BarDecisionHelper go, GCDEventHandler notify) {
-            Width = notify.PulseWidth;
-            HalfWidth = Width % 2 == 0 ? (Width / 2) : (Width / 2) + 1;
-            RawHalfWidth = Width / 2;
-            Height = notify.PulseHeight;
-            HalfHeight = Height % 2 == 0 ? (Height / 2) : (Height / 2) + 1;
-            RawHalfHeight = Height / 2;
-            BorderWidthPercent = (float)bar.BorderSizeAdj / (float)bar.Width;
+            Width = MakeEven(notify.PulseWidth);
+            Height = MakeEven(notify.PulseHeight);
+            Rect = new Rectangle(
+                (int)(bar.CenterX - (Width / 2)),
+                (int)(bar.CenterY - (Height / 2)),
+                Width,
+                Height
+            );
 
-            StartVertex = new((int)(bar.CenterX - RawHalfWidth), (int)(bar.CenterY - RawHalfHeight));
-            EndVertex = new((int)(bar.CenterX + HalfWidth), (int)(bar.CenterY + HalfHeight));
-            ProgressVertex = new((int)(bar.CenterX + ((bar.CurrentPos + BorderWidthPercent) * Width) - HalfWidth), (int)(bar.CenterY + HalfHeight));
+            BorderWidthPercent = (float)bar.BorderSizeAdj / (float)bar.Width;
+            ProgressVertex = new(ProgToScreen(bar.CurrentPos + BorderWidthPercent), Rect.Bottom);
         }
+        public int ProgToScreen(float progress) => (int)(Rect.Left + (progress * Width));
+        private static int MakeEven(int value) => value % 2 == 0 ? value : value + 1;
     }
     
     public class BarDecisionHelper {

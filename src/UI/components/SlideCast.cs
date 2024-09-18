@@ -13,8 +13,8 @@ using GCDTracker.Utils;
 
         public void Update(BarVertices bar_v) {
             if (!conf.SlideCastEnabled) return;
-            int xStart = (int)(info.CenterX + (go.Slide_Bar_Start * bar_v.Width) - bar_v.HalfWidth);
-            int xEnd = (int)(info.CenterX + (go.Slide_Bar_End * bar_v.Width) - bar_v.HalfWidth);
+            int xStart = (int) bar_v.ProgToScreen(go.Slide_Bar_Start);
+            int xEnd = (int) bar_v.ProgToScreen(go.Slide_Bar_End);
             xEnd = Math.Min(xEnd, bar_v.RightLimit);
 
             lineL.Update(xStart);
