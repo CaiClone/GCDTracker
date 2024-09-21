@@ -11,8 +11,7 @@ namespace GCDTracker.Data
         public static bool CastingNonAbility() {
             var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind;
 
-            return objectKind switch
-            {
+            return objectKind switch {
                 ObjectKind.Aetheryte => true,
                 ObjectKind.EventObj => true,
                 ObjectKind.EventNpc => true,

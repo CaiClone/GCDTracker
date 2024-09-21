@@ -138,8 +138,7 @@ namespace GCDTracker.UI {
                 // Handle Castbar
                 if(bar.IsCastBar){
                     if (bar.IsNonAbility) {
-                        CurrentState = objectKind switch
-                        {
+                        CurrentState = objectKind switch {
                             ObjectKind.EventObj 
                             or ObjectKind.EventNpc
                             or ObjectKind.Aetheryte => BarState.NoSlideAbility,
@@ -149,23 +148,16 @@ namespace GCDTracker.UI {
                                 _ => BarState.NonAbilityCast,
                             }
                         };
-                    }
-                    else if (bar.IsShortCast) {
+                    } else if (bar.IsShortCast) {
                         CurrentState = BarState.ShortCast;
-                    }
-                    else if (!bar.IsShortCast) {
+                    } else if (!bar.IsShortCast) {
                         CurrentState = BarState.LongCast;
                     }
-                }
-                // Handle GCDBar
-                else if (!bar.IsCastBar && !bar.IsShortCast) {
+                } else if (!bar.IsCastBar && !bar.IsShortCast) {
                     CurrentState = BarState.GCDOnly;
                 }
-            }
-            // Idle State
-            else if (!helper.IsRunning)
+            } else if (!helper.IsRunning)
                 CurrentState = BarState.Idle;
-
             previousPos = Math.Max(previousPos, bar.CurrentPos);
         }
         private void ResetBar() {

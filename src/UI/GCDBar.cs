@@ -40,10 +40,11 @@ namespace GCDTracker.UI {
         private void DrawGCDBar(PluginUI ui) {
             float gcdTotal = helper.TotalGCD;
             float gcdTime = helper.lastElapsedGCD;
-
-            if (GameState.IsCasting() && DataStore.Action->ElapsedCastTime >= gcdTotal && !GameState.IsCastingTeleport())
-                gcdTime = gcdTotal;
             if (gcdTotal < 0.1f) return;
+
+            //When cancel casting there is a frame where gcdTime still shows castTime, so check if previous frame was longCast
+            if (go.CurrentState == BarState.LongCast)
+                gcdTime = 0;
             
             if (!conf.WheelEnabled)
                 helper.MiscEventChecker();
