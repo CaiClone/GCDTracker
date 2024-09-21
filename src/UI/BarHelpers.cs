@@ -115,7 +115,15 @@ namespace GCDTracker.UI {
         public int ProgToScreen(float progress) => (int)(Rect.Left + (progress * Width));
         private static int MakeEven(int value) => value % 2 == 0 ? value : value + 1;
     }
-    
+
+    public enum BarState {
+        GCDOnly,
+        ShortCast,
+        LongCast,
+        NonAbilityCast,
+        NoSlideAbility,
+        Idle
+    }
     public class BarDecisionHelper {
         private static BarDecisionHelper instance;
         public bool Queue_VerticalBar { get; private set; }
@@ -127,11 +135,11 @@ namespace GCDTracker.UI {
         public bool SlideEnd_RightTri { get; private set; }
         public bool Slide_Background { get; private set; }
         public float Queue_Lock_Start { get; private set; }
-        public float Slide_Bar_Start { get; private set; }
-        public float Slide_Bar_End { get; private set; }
         private readonly Dictionary<string, bool> triggeredAlerts = [];
         private float previousPos = 1f;
         static readonly float epsilon = 0.02f;
+        
+        public System.Action OnReset = delegate { };
         
         private BarDecisionHelper() {
             triggeredAlerts = [];
@@ -142,15 +150,7 @@ namespace GCDTracker.UI {
                 return instance;
             }
         }
-        public enum BarState {
-            GCDOnly,
-            ShortCast,
-            LongCast,
-            NonAbilityCast,
-            NoSlideAbility,
-            Idle
-        }
-        public BarState currentState;
+        public BarState CurrentState;
 
         public void Update(BarInfo bar, Configuration conf, GCDHelper helper, ActionType actionType, ObjectKind objectKind) {                
             if (bar.CurrentPos > (epsilon / bar.TotalBarTime) && bar.CurrentPos < previousPos - epsilon) {
@@ -160,14 +160,11 @@ namespace GCDTracker.UI {
 
                 // Handle Castbar
                 if(bar.IsCastBar){
-                    Slide_Bar_Start = bar.GCDTime_SlidecastStart;
-                    Slide_Bar_End = conf.SlideCastFullBar ? 1f : bar.GCDTotal_SlidecastEnd;
                     if (bar.IsNonAbility) {
                         Queue_Lock_Start = 0f;
                         Queue_VerticalBar = false;
                         Queue_Triangle = false;
-                        Slide_Bar_End = 1f;
-                        currentState = objectKind switch
+                        CurrentState = objectKind switch
                         {
                             ObjectKind.EventObj 
                             or ObjectKind.EventNpc
@@ -181,29 +178,27 @@ namespace GCDTracker.UI {
                     }
                     else if (bar.IsShortCast) {
                         Queue_Lock_Start = bar.QueueLockStart;
-                        if (Math.Abs(Slide_Bar_End - Queue_Lock_Start) < epsilon)
-                            Slide_Bar_End = Queue_Lock_Start;
-                        currentState = BarState.ShortCast;
+                        CurrentState = BarState.ShortCast;
                     }
                     else if (!bar.IsShortCast) {
                         Queue_Lock_Start = bar.QueueLockStart;
-                        currentState = BarState.LongCast;
+                        CurrentState = BarState.LongCast;
                     }
                 }
                 // Handle GCDBar
                 else if (!bar.IsCastBar && !bar.IsShortCast) {
                     Queue_Lock_Start = bar.QueueLockStart;
-                    currentState = BarState.GCDOnly;
+                    CurrentState = BarState.GCDOnly;
                 }
             }
 
             // Idle State
             else if (!helper.IsRunning)
-                currentState = BarState.Idle;
+                CurrentState = BarState.Idle;
 
             previousPos = Math.Max(previousPos, bar.CurrentPos);
             
-            switch (currentState) {
+            switch (CurrentState) {
                 case BarState.GCDOnly:
                     if (conf.QueueLockEnabled)
                         HandleGCDOnly(bar, conf);
@@ -260,9 +255,6 @@ namespace GCDTracker.UI {
             SlideStart_LeftTri = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
             SlideStart_RightTri = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
 
-            // move lines
-            Slide_Bar_Start = Math.Max(Slide_Bar_Start, bar.CurrentPos);
-
             // draw slidecast bar
             Slide_Background = conf.SlideCastBackground;      
         }
@@ -272,8 +264,6 @@ namespace GCDTracker.UI {
             Queue_VerticalBar = false;
             Queue_Triangle = false;
 
-            Slide_Bar_Start = 0f;
-            Slide_Bar_End = 0f;
             SlideStart_VerticalBar = false;
             SlideEnd_VerticalBar = false;
             SlideStart_LeftTri = false;
@@ -297,11 +287,7 @@ namespace GCDTracker.UI {
                 HandleGCDOnly(bar, conf);
 
             // activate alerts
-            BarCheckSlideEvent(bar, conf);
 
-            // move lines
-            Slide_Bar_Start = Math.Max(Slide_Bar_Start, Math.Min(bar.CurrentPos, Queue_Lock_Start));
-            Slide_Bar_End = Math.Max(Slide_Bar_End, Math.Min(bar.CurrentPos, Queue_Lock_Start));
 
             // draw slidecast bar
             Slide_Background = conf.SlideCastBackground;
@@ -319,13 +305,6 @@ namespace GCDTracker.UI {
             if (conf.QueueLockEnabled)
                 HandleGCDOnly(bar, conf);
 
-            // activate alerts
-            BarCheckSlideEvent(bar, conf);
-
-            // move lines
-            Slide_Bar_Start = Math.Max(Slide_Bar_Start, bar.CurrentPos);
-            Queue_Lock_Start = Math.Max(Queue_Lock_Start, Math.Min(bar.CurrentPos, Slide_Bar_Start));
-
             // draw slidecast bar
             Slide_Background = conf.SlideCastBackground;                
         }
@@ -337,8 +316,6 @@ namespace GCDTracker.UI {
             Queue_VerticalBar = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle;
             Queue_Triangle = Queue_VerticalBar && conf.ShowQueuelockTriangles;
 
-            Slide_Bar_Start = 0f;
-            Slide_Bar_End = 0f;
             SlideStart_VerticalBar = false;
             SlideEnd_VerticalBar = false;
             SlideStart_LeftTri = false;
@@ -346,6 +323,14 @@ namespace GCDTracker.UI {
             SlideEnd_RightTri = false;
             Slide_Background = false;
             triggeredAlerts.Clear();
+            OnReset();
+        }
+
+        public void ActivateAlertIfNeeded(EventType type, bool cond) {
+            if (cond && !CheckAlert(type, EventCause.Slidecast)) {
+                AlertManager.Instance.ActivateAlert(type, EventCause.Slidecast, EventSource.Bar);
+                MarkAlert(type, EventCause.Slidecast);
+            }
         }
 
         private bool CheckAlert(EventType type, EventCause cause) {
@@ -356,28 +341,6 @@ namespace GCDTracker.UI {
         private void MarkAlert(EventType type, EventCause cause) {
             string key = $"{type}-{cause}";
             triggeredAlerts[key] = true;
-        }
-
-        private void BarCheckSlideEvent(BarInfo bar, Configuration conf){
-            var notify = AlertManager.Instance;
-            if (bar.CurrentPos >= Slide_Bar_Start - 0.025f && bar.CurrentPos > 0.2f) {
-                if (conf.SlideCastEnabled) {
-                    if (conf.pulseBarColorAtSlide && !CheckAlert(EventType.BarColorPulse, EventCause.Slidecast)) {
-                        notify.ActivateAlert(EventType.BarColorPulse, EventCause.Slidecast, EventSource.Bar);
-                        MarkAlert(EventType.BarColorPulse, EventCause.Slidecast);
-                    }
-
-                    if (conf.pulseBarWidthAtSlide && !CheckAlert(EventType.BarWidthPulse, EventCause.Slidecast)) {
-                        notify.ActivateAlert(EventType.BarWidthPulse, EventCause.Slidecast, EventSource.Bar);
-                        MarkAlert(EventType.BarWidthPulse, EventCause.Slidecast);
-                    }
-
-                    if (conf.pulseBarHeightAtSlide && !CheckAlert(EventType.BarHeightPulse, EventCause.Slidecast)) {
-                        notify.ActivateAlert(EventType.BarHeightPulse, EventCause.Slidecast, EventSource.Bar);
-                        MarkAlert(EventType.BarHeightPulse, EventCause.Slidecast);
-                    }
-                }
-            }
         }
 
         private void BarCheckQueueEvent(BarInfo bar, Configuration conf){
