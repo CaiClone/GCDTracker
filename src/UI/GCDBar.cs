@@ -10,6 +10,7 @@ namespace GCDTracker.UI {
         private readonly Configuration conf;
         private readonly GCDHelper helper;
         private readonly AbilityManager abilityManager;    
+        private readonly BarDecisionHelper go;
 
         private readonly QueueLock queueLock;
         private readonly SlideCast slideCast;
@@ -21,8 +22,11 @@ namespace GCDTracker.UI {
             this.conf = conf;
             this.helper = helper;
             this.abilityManager = abilityManager;
-            queueLock = new(BarInfo.Instance, BarVertices.Instance, conf, BarDecisionHelper.Instance);
-            slideCast = new(BarInfo.Instance, BarVertices.Instance, conf, BarDecisionHelper.Instance);
+            go = BarDecisionHelper.Instance;
+            queueLock = new(BarInfo.Instance, BarVertices.Instance, conf, go);
+            slideCast = new(BarInfo.Instance, BarVertices.Instance, conf, go);
+
+            slideCast.OnSlideStartReached += TriggerSlideAlert;
         }
 
         public void Draw(PluginUI ui) {
@@ -252,6 +256,12 @@ namespace GCDTracker.UI {
                 if (!string.IsNullOrEmpty(helper.remainingCastTimeString) && conf.castTimePosition == 1 && conf.CastTimeEnabled)
                     ui.DrawCastBarText(helper.remainingCastTimeString, combinedText, spellTimePos, conf.CastBarTextSize, true);
             }
+        }
+
+        private void TriggerSlideAlert() {
+            go.ActivateAlertIfNeeded(EventType.BarColorPulse, conf.pulseBarColorAtSlide);
+            go.ActivateAlertIfNeeded(EventType.BarWidthPulse, conf.pulseBarWidthAtSlide);
+            go.ActivateAlertIfNeeded(EventType.BarHeightPulse, conf.pulseBarHeightAtSlide);
         }
 
         public bool ShouldDraw(bool inCombat, bool noUI) {

@@ -128,12 +128,6 @@ namespace GCDTracker.UI {
         private static BarDecisionHelper instance;
         public bool Queue_VerticalBar { get; private set; }
         public bool Queue_Triangle { get; private set; }
-        public bool SlideStart_VerticalBar { get; private set; }
-        public bool SlideEnd_VerticalBar { get; private set; }
-        public bool SlideStart_LeftTri { get; private set; }
-        public bool SlideStart_RightTri { get; private set; }
-        public bool SlideEnd_RightTri { get; private set; }
-        public bool Slide_Background { get; private set; }
         public float Queue_Lock_Start { get; private set; }
         private readonly Dictionary<string, bool> triggeredAlerts = [];
         private float previousPos = 1f;
@@ -204,11 +198,6 @@ namespace GCDTracker.UI {
                         HandleGCDOnly(bar, conf);
                     break;
 
-                case BarState.NonAbilityCast:
-                    if (conf.SlideCastEnabled)
-                        HandleNonAbilityCast(bar, conf);
-                    break;
-
                 case BarState.NoSlideAbility:
                     if (conf.SlideCastEnabled)
                         HandleMount();
@@ -249,64 +238,22 @@ namespace GCDTracker.UI {
                 Queue_Lock_Start = Math.Max(Queue_Lock_Start, bar.CurrentPos);
         }
 
-        private void HandleNonAbilityCast(BarInfo bar, Configuration conf) {
-            // draw lines
-            SlideStart_VerticalBar = true;
-            SlideStart_LeftTri = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
-            SlideStart_RightTri = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
-
-            // draw slidecast bar
-            Slide_Background = conf.SlideCastBackground;      
-        }
-
         private void HandleMount() {
             Queue_Lock_Start = 0f;
             Queue_VerticalBar = false;
             Queue_Triangle = false;
-
-            SlideStart_VerticalBar = false;
-            SlideEnd_VerticalBar = false;
-            SlideStart_LeftTri = false;
-            SlideStart_RightTri = false;
-            SlideEnd_RightTri = false;
-            Slide_Background = false;
         }
 
-        private void HandleCastBarShort(BarInfo bar, Configuration conf) {            
-            // draw lines
-            SlideStart_VerticalBar = true;
-            SlideEnd_VerticalBar = !conf.SlideCastFullBar;
-
-            // draw triangles
-            SlideStart_LeftTri = conf.ShowSlidecastTriangles;
-            SlideStart_RightTri = conf.ShowSlidecastTriangles && conf.SlideCastFullBar;
-            SlideEnd_RightTri = conf.ShowSlidecastTriangles && !conf.SlideCastFullBar;
-
+        private void HandleCastBarShort(BarInfo bar, Configuration conf) {
             // invoke Queuelock
             if (conf.QueueLockEnabled)
                 HandleGCDOnly(bar, conf);
-
-            // activate alerts
-
-
-            // draw slidecast bar
-            Slide_Background = conf.SlideCastBackground;
         }
 
-        private void HandleCastBarLong(BarInfo bar, Configuration conf) {          
-            // draw line
-            SlideStart_VerticalBar = true;
-            
-            // draw triangles
-            SlideStart_LeftTri = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
-            SlideStart_RightTri = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
-
+        private void HandleCastBarLong(BarInfo bar, Configuration conf) {
             // invoke Queuelock
             if (conf.QueueLockEnabled)
-                HandleGCDOnly(bar, conf);
-
-            // draw slidecast bar
-            Slide_Background = conf.SlideCastBackground;                
+                HandleGCDOnly(bar, conf);          
         }
 
         private void ResetBar(Configuration conf) {
@@ -316,14 +263,8 @@ namespace GCDTracker.UI {
             Queue_VerticalBar = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle;
             Queue_Triangle = Queue_VerticalBar && conf.ShowQueuelockTriangles;
 
-            SlideStart_VerticalBar = false;
-            SlideEnd_VerticalBar = false;
-            SlideStart_LeftTri = false;
-            SlideStart_RightTri = false;
-            SlideEnd_RightTri = false;
-            Slide_Background = false;
             triggeredAlerts.Clear();
-            OnReset();
+            OnReset?.Invoke();
         }
 
         public void ActivateAlertIfNeeded(EventType type, bool cond) {
