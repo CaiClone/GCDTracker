@@ -2,13 +2,14 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Numerics;
+using System.Runtime.CompilerServices;
 using Dalamud.Game.ClientState.Objects.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
 
+[assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker.UI {
     public unsafe class BarInfo {
-        private static BarInfo instance;
         public float CenterX { get; private set; }
         public float CenterY { get; private set; }
         public int Width { get; private set; }
@@ -16,21 +17,13 @@ namespace GCDTracker.UI {
         public int BorderSize { get; private set; }
         public int HalfBorderSize { get; private set; }
         public int BorderSizeAdj { get; private set; }
-        public float CurrentPos { get; private set; }
+        public float CurrentPos { get; internal set; }
         public float TotalBarTime { get; private set; }
 
         public bool IsCastBar { get; private set; }
         public bool IsShortCast { get; private set; }
         public bool IsNonAbility { get; private set; }
         public Vector4 ProgressBarColor { get; private set; }
-
-        private BarInfo() { }
-        public static BarInfo Instance {
-            get {
-                instance ??= new BarInfo();
-                return instance;
-            }
-        }
 
         public void Update(
             Configuration conf,
@@ -60,7 +53,6 @@ namespace GCDTracker.UI {
     }
 
     public class BarVertices {
-        private static BarVertices instance;
         public Vector2 ProgressVertex { get; private set; }
 
         public Rectangle Rect { get; private set; }
@@ -69,14 +61,6 @@ namespace GCDTracker.UI {
         public float BorderWidthPercent { get; private set; } 
         public int BorderWidth => (int)(Width * BorderWidthPercent);
         public int RightLimit => Rect.Right + 1;
-
-        private BarVertices() { }
-        public static BarVertices Instance {
-            get {
-                instance ??= new BarVertices();
-                return instance;
-            }
-        }
 
         public void Update(BarInfo bar, BarDecisionHelper go, GCDEventHandler notify) {
             Width = MakeEven(notify.PulseWidth);
@@ -104,7 +88,6 @@ namespace GCDTracker.UI {
         Idle
     }
     public unsafe class BarDecisionHelper {
-        private static BarDecisionHelper instance;
         private readonly Dictionary<string, bool> triggeredAlerts = [];
         private float previousPos = 1f;
         static readonly float epsilon = 0.02f;
@@ -113,19 +96,8 @@ namespace GCDTracker.UI {
         public float GCDTotal => DataStore.Action->TotalGCD;
         public float CastTotal => DataStore.Action->TotalCastTime;
         public float BarEnd => Math.Max(GCDTotal, CastTotal);
-        public float CastEnd => GCDTotal / BarEnd;
 
         public System.Action OnReset = delegate { };
-        
-        private BarDecisionHelper() {
-            triggeredAlerts = [];
-         }
-        public static BarDecisionHelper Instance {
-            get {
-                instance ??= new BarDecisionHelper();
-                return instance;
-            }
-        }
         public void Update(BarInfo bar, GCDHelper helper, ActionType actionType, ObjectKind objectKind) {
             if (bar.CurrentPos > (epsilon / bar.TotalBarTime) && bar.CurrentPos < previousPos - epsilon) {
                 // Reset

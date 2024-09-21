@@ -1,6 +1,7 @@
 using System;
-using System.Drawing;
+using System.Runtime.CompilerServices;
 
+[assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker.UI.Components {
 public class QueueLock {
     private readonly BarInfo info;
@@ -8,7 +9,7 @@ public class QueueLock {
     private readonly BarDecisionHelper go;
     private readonly Line line;
 
-    private float lockPos = 0f;
+    internal float lockPos = 0f;
 
     public Action OnQueueLockReached = delegate { };
 

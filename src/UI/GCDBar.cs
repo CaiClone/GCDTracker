@@ -11,6 +11,8 @@ namespace GCDTracker.UI {
         private readonly GCDHelper helper;
         private readonly AbilityManager abilityManager;    
         private readonly BarDecisionHelper go;
+        private readonly BarInfo info;
+        private readonly BarVertices bar_v;
 
         private readonly QueueLock queueLock;
         private readonly SlideCast slideCast;
@@ -22,9 +24,11 @@ namespace GCDTracker.UI {
             this.conf = conf;
             this.helper = helper;
             this.abilityManager = abilityManager;
-            go = BarDecisionHelper.Instance;
-            queueLock = new(BarInfo.Instance, BarVertices.Instance, conf, go);
-            slideCast = new(BarInfo.Instance, BarVertices.Instance, conf, go);
+            go = new BarDecisionHelper();
+            info = new BarInfo();
+            bar_v = new BarVertices();
+            queueLock = new(info, bar_v, conf, go);
+            slideCast = new(info, bar_v, conf, go);
 
             slideCast.OnSlideStartReached += TriggerSlideAlert;
             queueLock.OnQueueLockReached += TriggerQueueAlert;
@@ -83,8 +87,7 @@ namespace GCDTracker.UI {
             float castBarCurrentPos,
             float totalBarTime) {
             
-            var bar = BarInfo.Instance;
-            bar.Update(
+            info.Update(
                 conf,
                 ui.w_size.X,
                 ui.w_cent.X,
@@ -98,30 +101,29 @@ namespace GCDTracker.UI {
             );
 
             go.Update(
-                bar, 
+                info, 
                 helper, 
                 DataStore.ActionManager->CastActionType, 
                 DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None
             );
 
             var notify = GCDEventHandler.Instance;
-            notify.Update(bar, conf, ui);
+            notify.Update(info, conf, ui);
 
-            var bar_v = BarVertices.Instance;
-            bar_v.Update(bar, go, notify);
+            bar_v.Update(info, go, notify);
             slideCast.Update(bar_v);
             queueLock.Update(bar_v);
 
             float barGCDClipTime = 0;
             // in both modes:
             // draw the background
-            if (bar.CurrentPos < 0.2f)
+            if (info.CurrentPos < 0.2f)
                 bgCache = helper.BackgroundColor();
             ui.DrawRectFilledNoAA(bar_v.Rect.LB(), bar_v.Rect.RT(), bgCache, conf.BarBgGradMode, conf.BarBgGradientMul);
 
             // in both modes:
             // draw cast/gcd progress (main) bar
-            if(bar.CurrentPos > 0.001f){
+            if(info.CurrentPos > 0.001f){
                 var progressBarColor = notify.ProgressPulseColor;
                 ui.DrawRectFilledNoAA(bar_v.Rect.LT(), bar_v.ProgressVertex, progressBarColor, conf.BarGradMode, conf.BarGradientMul);
             }
@@ -182,11 +184,11 @@ namespace GCDTracker.UI {
 
             // in both modes:
             // draw borders
-            if (bar.BorderSize > 0) {
+            if (info.BorderSize > 0) {
                 ui.DrawRect(
-                    bar_v.Rect.LB() - new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
-                    bar_v.Rect.RT() + new Vector2(bar.HalfBorderSize, bar.HalfBorderSize),
-                    conf.backColBorder, bar.BorderSize);
+                    bar_v.Rect.LB() - new Vector2(info.HalfBorderSize, info.HalfBorderSize),
+                    bar_v.Rect.RT() + new Vector2(info.HalfBorderSize, info.HalfBorderSize),
+                    conf.backColBorder, info.BorderSize);
             }
         }
         
