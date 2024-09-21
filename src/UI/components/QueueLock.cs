@@ -16,8 +16,7 @@ public class QueueLock {
         this.info = info;
         this.conf = conf;
         this.go = go;
-        line = new(info, bar_v);
-        go.OnReset += Reset;
+        line = new(conf, bar_v);
     }
 
     public void Update(BarVertices bar_v) {
@@ -28,7 +27,7 @@ public class QueueLock {
                 CheckEvents();
                 break;
             case BarState.LongCast:
-                lockPos = Math.Max(0.8f * (info.GCDTotal / info.CastTotal), info.CurrentPos);
+                lockPos = Math.Max(0.8f * (go.GCDTotal / go.CastTotal), info.CurrentPos);
                 CheckEvents();
                 break;
             case BarState.NonAbilityCast:
@@ -37,13 +36,12 @@ public class QueueLock {
                 break;
             case BarState.Idle:
             default:
-                Reset();
+                lockPos = conf.BarQueueLockWhenIdle ? 0.8f : 0f;
                 break;
         }
 
         line.Update(bar_v.ProgToScreen(lockPos));
     }
-    private void Reset() => lockPos = conf.BarQueueLockWhenIdle ? 0.8f : 0f;
 
     private void CheckEvents() {
         if (info.CurrentPos >= lockPos - 0.025f && info.CurrentPos > 0.2f)

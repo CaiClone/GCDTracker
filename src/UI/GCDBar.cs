@@ -75,8 +75,6 @@ namespace GCDTracker.UI {
             }
         }
 
-        
-
         private void DrawBarElements(
             PluginUI ui, 
             bool isCastBar, 
@@ -94,7 +92,6 @@ namespace GCDTracker.UI {
                 ui.w_cent.Y,
                 castBarCurrentPos,
                 totalBarTime,
-                conf.triangleSize,
                 isCastBar, 
                 isShortCast,
                 isNonAbility

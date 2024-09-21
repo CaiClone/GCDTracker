@@ -18,9 +18,7 @@ namespace GCDTracker.UI {
         public int BorderSizeAdj { get; private set; }
         public float CurrentPos { get; private set; }
         public float TotalBarTime { get; private set; }
-        public float GCDTotal { get; private set; }
-        public float CastTotal { get; private set; }
-        public int TriangleOffset { get; private set; }
+
         public bool IsCastBar { get; private set; }
         public bool IsShortCast { get; private set; }
         public bool IsNonAbility { get; private set; }
@@ -42,17 +40,13 @@ namespace GCDTracker.UI {
             float centY,
             float castBarCurrentPos,
             float totalBarTime,
-            int triangleOffset,
             bool isCastBar,
             bool isShortCast,
             bool isNonAbility) {
-
             IsCastBar = isCastBar;
             IsShortCast = isShortCast;
             IsNonAbility = isNonAbility;
             CurrentPos = castBarCurrentPos;
-            GCDTotal = DataStore.Action->TotalGCD;
-            CastTotal = DataStore.Action->TotalCastTime;
             TotalBarTime = totalBarTime;
             CenterX = centX;
             CenterY = centY;
@@ -61,9 +55,7 @@ namespace GCDTracker.UI {
             BorderSize = conf.BarBorderSizeInt;
             HalfBorderSize = (BorderSize + 1) / 2;
             BorderSizeAdj = BorderSize >= 1 ? BorderSize : 1;
-            TriangleOffset = triangleOffset;
             ProgressBarColor = conf.frontCol;
-
         }
     }
 
@@ -96,7 +88,7 @@ namespace GCDTracker.UI {
                 Height
             );
 
-            BorderWidthPercent = (float)bar.BorderSizeAdj / (float)bar.Width;
+            BorderWidthPercent = bar.BorderSizeAdj / (float)bar.Width;
             ProgressVertex = new(ProgToScreen(bar.CurrentPos + BorderWidthPercent), Rect.Bottom);
         }
         public int ProgToScreen(float progress) => (int)(Rect.Left + (progress * Width));
@@ -111,12 +103,18 @@ namespace GCDTracker.UI {
         NoSlideAbility,
         Idle
     }
-    public class BarDecisionHelper {
+    public unsafe class BarDecisionHelper {
         private static BarDecisionHelper instance;
         private readonly Dictionary<string, bool> triggeredAlerts = [];
         private float previousPos = 1f;
         static readonly float epsilon = 0.02f;
-        
+
+        public BarState CurrentState;
+        public float GCDTotal => DataStore.Action->TotalGCD;
+        public float CastTotal => DataStore.Action->TotalCastTime;
+        public float BarEnd => Math.Max(GCDTotal, CastTotal);
+        public float CastEnd => GCDTotal / BarEnd;
+
         public System.Action OnReset = delegate { };
         
         private BarDecisionHelper() {
@@ -128,8 +126,6 @@ namespace GCDTracker.UI {
                 return instance;
             }
         }
-        public BarState CurrentState;
-
         public void Update(BarInfo bar, GCDHelper helper, ActionType actionType, ObjectKind objectKind) {
             if (bar.CurrentPos > (epsilon / bar.TotalBarTime) && bar.CurrentPos < previousPos - epsilon) {
                 // Reset
@@ -148,10 +144,8 @@ namespace GCDTracker.UI {
                                 _ => BarState.NonAbilityCast,
                             }
                         };
-                    } else if (bar.IsShortCast) {
-                        CurrentState = BarState.ShortCast;
-                    } else if (!bar.IsShortCast) {
-                        CurrentState = BarState.LongCast;
+                    } else {
+                        CurrentState = bar.IsShortCast ? BarState.ShortCast : BarState.LongCast;
                     }
                 } else if (!bar.IsCastBar && !bar.IsShortCast) {
                     CurrentState = BarState.GCDOnly;
@@ -160,6 +154,7 @@ namespace GCDTracker.UI {
                 CurrentState = BarState.Idle;
             previousPos = Math.Max(previousPos, bar.CurrentPos);
         }
+
         private void ResetBar() {
             triggeredAlerts.Clear();
             OnReset?.Invoke();

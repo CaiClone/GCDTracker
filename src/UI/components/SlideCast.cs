@@ -21,25 +21,20 @@ using GCDTracker.Utils;
             this.info = info;
             this.conf = conf;
             this.go = go;
-            lineL = new(info, bar_v);
-            lineR = new(info, bar_v);
+            lineL = new(conf, bar_v);
+            lineR = new(conf, bar_v);
             bar = new(info, bar_v);
             go.OnReset += Reset;
         }
     
         public void Update(BarVertices bar_v) {
             if (!conf.SlideCastEnabled) return;
-            float castTotal = DataStore.Action->TotalCastTime;
 
             switch (go.CurrentState){
                 case BarState.ShortCast:
-                    float gcdTotal = DataStore.Action->TotalGCD;
-                    startPos = Math.Max((castTotal - conf.SlidecastDelay) / gcdTotal, 0f);
-                    endPos = castTotal / gcdTotal;
-                    break;
                 case BarState.LongCast:
-                    startPos = Math.Max((castTotal - conf.SlidecastDelay) / castTotal, 0f);
-                    endPos = 1f;
+                    startPos = Math.Max((go.CastTotal - conf.SlidecastDelay) / go.BarEnd, 0f);
+                    endPos = go.CastTotal / go.BarEnd;
                     break;
                 case BarState.NonAbilityCast:
                 case BarState.NoSlideAbility:
