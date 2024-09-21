@@ -5,7 +5,6 @@ using System.Numerics;
 using Dalamud.Game.ClientState.Objects.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Data;
-using GCDTracker.Utils;
 
 namespace GCDTracker.UI {
     public unsafe class BarInfo {
@@ -23,8 +22,6 @@ namespace GCDTracker.UI {
         public float TotalBarTime { get; private set; }
         public float GCDTotal { get; private set; }
         public float CastTotal { get; private set; }
-        public float QueueLockStart { get; private set; }
-        public float QueueLockScaleFactor { get; private set; }
         public int TriangleOffset { get; private set; }
         public bool IsCastBar { get; private set; }
         public bool IsShortCast { get; private set; }
@@ -62,10 +59,6 @@ namespace GCDTracker.UI {
             CastTotal = DataStore.Action->TotalCastTime;
             GCDTime_SlidecastStart = gcdTime_slidecastStart;
             GCDTotal_SlidecastEnd = gcdTotal_slidecastEnd;
-            QueueLockScaleFactor = IsCastBar && !isShortCast
-                ? GCDTotal / CastTotal
-                : 1f;
-            QueueLockStart = 0.8f * QueueLockScaleFactor;
             TotalBarTime = totalBarTime;
             CenterX = centX;
             CenterY = centY;
@@ -126,9 +119,6 @@ namespace GCDTracker.UI {
     }
     public class BarDecisionHelper {
         private static BarDecisionHelper instance;
-        public bool Queue_VerticalBar { get; private set; }
-        public bool Queue_Triangle { get; private set; }
-        public float Queue_Lock_Start { get; private set; }
         private readonly Dictionary<string, bool> triggeredAlerts = [];
         private float previousPos = 1f;
         static readonly float epsilon = 0.02f;
@@ -155,9 +145,6 @@ namespace GCDTracker.UI {
                 // Handle Castbar
                 if(bar.IsCastBar){
                     if (bar.IsNonAbility) {
-                        Queue_Lock_Start = 0f;
-                        Queue_VerticalBar = false;
-                        Queue_Triangle = false;
                         CurrentState = objectKind switch
                         {
                             ObjectKind.EventObj 
@@ -171,17 +158,14 @@ namespace GCDTracker.UI {
                         };
                     }
                     else if (bar.IsShortCast) {
-                        Queue_Lock_Start = bar.QueueLockStart;
                         CurrentState = BarState.ShortCast;
                     }
                     else if (!bar.IsShortCast) {
-                        Queue_Lock_Start = bar.QueueLockStart;
                         CurrentState = BarState.LongCast;
                     }
                 }
                 // Handle GCDBar
                 else if (!bar.IsCastBar && !bar.IsShortCast) {
-                    Queue_Lock_Start = bar.QueueLockStart;
                     CurrentState = BarState.GCDOnly;
                 }
             }
@@ -191,86 +175,16 @@ namespace GCDTracker.UI {
                 CurrentState = BarState.Idle;
 
             previousPos = Math.Max(previousPos, bar.CurrentPos);
-            
-            switch (CurrentState) {
-                case BarState.GCDOnly:
-                    if (conf.QueueLockEnabled)
-                        HandleGCDOnly(bar, conf);
-                    break;
-
-                case BarState.NoSlideAbility:
-                    if (conf.SlideCastEnabled)
-                        HandleMount();
-                    break;
-
-                case BarState.ShortCast:
-                    if (conf.SlideCastEnabled)
-                        HandleCastBarShort(bar, conf);
-                    else if (conf.QueueLockEnabled)
-                        HandleGCDOnly(bar, conf);
-                    break;
-
-                case BarState.LongCast:
-                    if (conf.SlideCastEnabled)
-                        HandleCastBarLong(bar, conf);
-                    else if (conf.QueueLockEnabled)
-                        HandleGCDOnly(bar, conf);
-                    break;
-
-                default:
-                    ResetBar(conf);
-                    break;
-            }
         }
-
-        private void HandleGCDOnly(BarInfo bar, Configuration conf) {            
-            // draw line
-            Queue_VerticalBar = true;      
-
-            // draw triangles
-            Queue_Triangle = conf.ShowQueuelockTriangles;
-
-            // activate alerts
-            BarCheckQueueEvent(bar, conf);
-
-            // move lines
-            if (conf.BarQueueLockSlide)
-                Queue_Lock_Start = Math.Max(Queue_Lock_Start, bar.CurrentPos);
-        }
-
-        private void HandleMount() {
-            Queue_Lock_Start = 0f;
-            Queue_VerticalBar = false;
-            Queue_Triangle = false;
-        }
-
-        private void HandleCastBarShort(BarInfo bar, Configuration conf) {
-            // invoke Queuelock
-            if (conf.QueueLockEnabled)
-                HandleGCDOnly(bar, conf);
-        }
-
-        private void HandleCastBarLong(BarInfo bar, Configuration conf) {
-            // invoke Queuelock
-            if (conf.QueueLockEnabled)
-                HandleGCDOnly(bar, conf);          
-        }
-
         private void ResetBar(Configuration conf) {
-            Queue_Lock_Start = (conf.QueueLockEnabled && conf.BarQueueLockWhenIdle)
-                ? 0.8f
-                : 0f;
-            Queue_VerticalBar = conf.QueueLockEnabled && conf.BarQueueLockWhenIdle;
-            Queue_Triangle = Queue_VerticalBar && conf.ShowQueuelockTriangles;
-
             triggeredAlerts.Clear();
             OnReset?.Invoke();
         }
 
-        public void ActivateAlertIfNeeded(EventType type, bool cond) {
-            if (cond && !CheckAlert(type, EventCause.Slidecast)) {
-                AlertManager.Instance.ActivateAlert(type, EventCause.Slidecast, EventSource.Bar);
-                MarkAlert(type, EventCause.Slidecast);
+        public void ActivateAlertIfNeeded(EventType type, bool cond, EventCause cause) {    
+            if (cond && !CheckAlert(type, cause)) {
+                AlertManager.Instance.ActivateAlert(type, cause, EventSource.Bar);
+                MarkAlert(type, cause);
             }
         }
 
@@ -282,28 +196,6 @@ namespace GCDTracker.UI {
         private void MarkAlert(EventType type, EventCause cause) {
             string key = $"{type}-{cause}";
             triggeredAlerts[key] = true;
-        }
-
-        private void BarCheckQueueEvent(BarInfo bar, Configuration conf){
-            var notify = AlertManager.Instance;
-            if (bar.CurrentPos >= Queue_Lock_Start - 0.025f && bar.CurrentPos > 0.2f) {
-                if (conf.QueueLockEnabled) {
-                    if (conf.pulseBarColorAtQueue && !CheckAlert(EventType.BarColorPulse, EventCause.Queuelock)) {
-                        notify.ActivateAlert(EventType.BarColorPulse, EventCause.Queuelock, EventSource.Bar);
-                        MarkAlert(EventType.BarColorPulse, EventCause.Queuelock);
-                    }
-
-                    if (conf.pulseBarWidthAtQueue && !CheckAlert(EventType.BarWidthPulse, EventCause.Queuelock)) {
-                        notify.ActivateAlert(EventType.BarWidthPulse, EventCause.Queuelock, EventSource.Bar);
-                        MarkAlert(EventType.BarWidthPulse, EventCause.Queuelock);
-                    }
-
-                    if (conf.pulseBarHeightAtQueue && !CheckAlert(EventType.BarHeightPulse, EventCause.Queuelock)) {
-                        notify.ActivateAlert(EventType.BarHeightPulse, EventCause.Queuelock, EventSource.Bar);
-                        MarkAlert(EventType.BarHeightPulse, EventCause.Queuelock);
-                    }
-                }
-            }
         }
     }
 }

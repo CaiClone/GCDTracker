@@ -15,7 +15,7 @@ using GCDTracker.Utils;
         private float endPos;
         private bool showTris;
 
-        public System.Action OnSlideStartReached;
+        public Action OnSlideStartReached;
 
         public SlideCast(BarInfo info, BarVertices bar_v, Configuration conf, BarDecisionHelper go) {
             this.info = info;
@@ -24,7 +24,7 @@ using GCDTracker.Utils;
             lineL = new(info, bar_v);
             lineR = new(info, bar_v);
             bar = new(info, bar_v);
-            go.OnReset += ResetSlideCast;
+            go.OnReset += Reset;
         }
     
         public void Update(BarVertices bar_v) {
@@ -40,25 +40,25 @@ using GCDTracker.Utils;
                     showTris = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
                     startPos = Math.Max(startPos, info.CurrentPos);
                     endPos = Math.Max(endPos, info.CurrentPos);
-                    BarCheckSlideEvent();
+                    CheckEvents();
                     break;
                 case BarState.NonAbilityCast:
                 case BarState.NoSlideAbility:
                 default:
-                    ResetSlideCast();
+                    Reset();
                     break;
             }
             UpdateVisualization(bar_v);
         }
 
-        private void ResetSlideCast() {
+        private void Reset() {
             startPos = endPos = 0f;
             showTris = false;
         }
         
-        private void BarCheckSlideEvent() {
+        private void CheckEvents() {
             if (info.CurrentPos >= startPos - 0.025f && info.CurrentPos > 0.2f)
-                OnSlideStartReached?.Invoke();
+                OnSlideStartReached();
         }
 
         private void UpdateVisualization(BarVertices bar_v) {

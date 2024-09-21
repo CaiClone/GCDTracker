@@ -27,6 +27,7 @@ namespace GCDTracker.UI {
             slideCast = new(BarInfo.Instance, BarVertices.Instance, conf, go);
 
             slideCast.OnSlideStartReached += TriggerSlideAlert;
+            queueLock.OnQueueLockReached += TriggerQueueAlert;
         }
 
         public void Draw(PluginUI ui) {
@@ -103,7 +104,6 @@ namespace GCDTracker.UI {
                 isNonAbility
             );
 
-            var go = BarDecisionHelper.Instance;
             go.Update(
                 bar, 
                 conf, 
@@ -133,8 +133,7 @@ namespace GCDTracker.UI {
                 var progressBarColor = notify.ProgressPulseColor;
                 ui.DrawRectFilledNoAA(bar_v.Rect.LT(), bar_v.ProgressVertex, progressBarColor, conf.BarGradMode, conf.BarGradientMul);
             }
-            // in Castbar mode:
-            // draw the slidecast bar
+
             slideCast.Draw(ui);
             // in GCDBar mode:
             // draw oGCDs and clips
@@ -187,7 +186,6 @@ namespace GCDTracker.UI {
             }
 
             //in both modes:
-            //draw the queuelock (if enabled)
             queueLock.Draw(ui);
 
             // in both modes:
@@ -259,9 +257,15 @@ namespace GCDTracker.UI {
         }
 
         private void TriggerSlideAlert() {
-            go.ActivateAlertIfNeeded(EventType.BarColorPulse, conf.pulseBarColorAtSlide);
-            go.ActivateAlertIfNeeded(EventType.BarWidthPulse, conf.pulseBarWidthAtSlide);
-            go.ActivateAlertIfNeeded(EventType.BarHeightPulse, conf.pulseBarHeightAtSlide);
+            go.ActivateAlertIfNeeded(EventType.BarColorPulse, conf.pulseBarColorAtSlide, EventCause.Slidecast);
+            go.ActivateAlertIfNeeded(EventType.BarWidthPulse, conf.pulseBarWidthAtSlide, EventCause.Slidecast);
+            go.ActivateAlertIfNeeded(EventType.BarHeightPulse, conf.pulseBarHeightAtSlide, EventCause.Slidecast);
+        }
+
+        private void TriggerQueueAlert() {
+            go.ActivateAlertIfNeeded(EventType.BarColorPulse, conf.pulseBarColorAtQueue, EventCause.Queuelock);
+            go.ActivateAlertIfNeeded(EventType.BarWidthPulse, conf.pulseBarWidthAtQueue, EventCause.Queuelock);
+            go.ActivateAlertIfNeeded(EventType.BarHeightPulse, conf.pulseBarHeightAtQueue, EventCause.Queuelock);
         }
 
         public bool ShouldDraw(bool inCombat, bool noUI) {
