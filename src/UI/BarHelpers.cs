@@ -17,8 +17,6 @@ namespace GCDTracker.UI {
         public int HalfBorderSize { get; private set; }
         public int BorderSizeAdj { get; private set; }
         public float CurrentPos { get; private set; }
-        public float GCDTime_SlidecastStart { get; private set; }
-        public float GCDTotal_SlidecastEnd { get; private set; }
         public float TotalBarTime { get; private set; }
         public float GCDTotal { get; private set; }
         public float CastTotal { get; private set; }
@@ -43,8 +41,6 @@ namespace GCDTracker.UI {
             float sizeY,
             float centY,
             float castBarCurrentPos,
-            float gcdTime_slidecastStart,
-            float gcdTotal_slidecastEnd,
             float totalBarTime,
             int triangleOffset,
             bool isCastBar,
@@ -57,8 +53,6 @@ namespace GCDTracker.UI {
             CurrentPos = castBarCurrentPos;
             GCDTotal = DataStore.Action->TotalGCD;
             CastTotal = DataStore.Action->TotalCastTime;
-            GCDTime_SlidecastStart = gcdTime_slidecastStart;
-            GCDTotal_SlidecastEnd = gcdTotal_slidecastEnd;
             TotalBarTime = totalBarTime;
             CenterX = centX;
             CenterY = centY;
@@ -136,12 +130,11 @@ namespace GCDTracker.UI {
         }
         public BarState CurrentState;
 
-        public void Update(BarInfo bar, Configuration conf, GCDHelper helper, ActionType actionType, ObjectKind objectKind) {                
+        public void Update(BarInfo bar, GCDHelper helper, ActionType actionType, ObjectKind objectKind) {
             if (bar.CurrentPos > (epsilon / bar.TotalBarTime) && bar.CurrentPos < previousPos - epsilon) {
                 // Reset
                 previousPos = 0f;
-                ResetBar(conf);
-
+                ResetBar();
                 // Handle Castbar
                 if(bar.IsCastBar){
                     if (bar.IsNonAbility) {
@@ -169,14 +162,13 @@ namespace GCDTracker.UI {
                     CurrentState = BarState.GCDOnly;
                 }
             }
-
             // Idle State
             else if (!helper.IsRunning)
                 CurrentState = BarState.Idle;
 
             previousPos = Math.Max(previousPos, bar.CurrentPos);
         }
-        private void ResetBar(Configuration conf) {
+        private void ResetBar() {
             triggeredAlerts.Clear();
             OnReset?.Invoke();
         }

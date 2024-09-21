@@ -54,8 +54,7 @@ namespace GCDTracker.UI {
                 helper.shortCastFinished,
                 false,
                 gcdTime / gcdTotal,
-                gcdTime,
-                gcdTotal, gcdTotal
+                gcdTotal
             );
 
             // Gonna re-do this, but for now, we flag when we need to carryover from the castbar to the GCDBar
@@ -82,9 +81,7 @@ namespace GCDTracker.UI {
             bool isCastBar, 
             bool isShortCast,
             bool isNonAbility,
-            float castBarCurrentPos, 
-            float gcdTime_slidecastStart, 
-            float gcdTotal_slidecastEnd,
+            float castBarCurrentPos,
             float totalBarTime) {
             
             var bar = BarInfo.Instance;
@@ -95,8 +92,6 @@ namespace GCDTracker.UI {
                 ui.w_size.Y,
                 ui.w_cent.Y,
                 castBarCurrentPos,
-                gcdTime_slidecastStart, 
-                gcdTotal_slidecastEnd,
                 totalBarTime,
                 conf.triangleSize,
                 isCastBar, 
@@ -106,7 +101,6 @@ namespace GCDTracker.UI {
 
             go.Update(
                 bar, 
-                conf, 
                 helper, 
                 DataStore.ActionManager->CastActionType, 
                 DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None
@@ -139,8 +133,8 @@ namespace GCDTracker.UI {
             // draw oGCDs and clips
 
             if (!isCastBar) {
-                float gcdTime = gcdTime_slidecastStart;
-                float gcdTotal = gcdTotal_slidecastEnd;
+                float gcdTime = helper.lastElapsedGCD;
+                float gcdTotal = helper.TotalGCD;
 
                 foreach (var (ogcd, (anlock, iscast)) in abilityManager.ogcds) {
                     var isClipping = helper.CheckClip(iscast, ogcd, anlock, gcdTotal, gcdTime);
@@ -204,14 +198,11 @@ namespace GCDTracker.UI {
             float castElapsed = DataStore.Action->ElapsedCastTime;
             float castbarProgress = castElapsed / castTotal;
             float castbarEnd = 1f;
-            float slidecastStart = Math.Max((castTotal - conf.SlidecastDelay) / castTotal, 0f);
-            float slidecastEnd = castbarEnd;
+            
             bool isTeleport = GameState.IsCastingTeleport();
             // handle short casts
             if (gcdTotal > castTotal) {
                 castbarEnd = GameState.CastingNonAbility() ? 1f : castTotal / gcdTotal;
-                slidecastStart = Math.Max((castTotal - conf.SlidecastDelay) / gcdTotal, 0f);
-                slidecastEnd = conf.SlideCastFullBar ? 1f : castbarEnd;
             }
 
             DrawBarElements(
@@ -221,8 +212,6 @@ namespace GCDTracker.UI {
                 // Maybe we don't need the gcdTotal < 0.01f anymore?
                 GameState.CastingNonAbility() || isTeleport || gcdTotal < 0.01f,
                 castbarProgress * castbarEnd,
-                slidecastStart,
-                slidecastEnd,
                 castbarEnd
             );
 

@@ -1,9 +1,10 @@
 using System;
 using System.Drawing;
+using GCDTracker.Data;
 using GCDTracker.Utils;
 
     namespace GCDTracker.UI.Components {
-    public class SlideCast {
+    public unsafe class SlideCast {
         private readonly BarInfo info;
         private readonly Configuration conf;
         private readonly BarDecisionHelper go;
@@ -13,9 +14,8 @@ using GCDTracker.Utils;
 
         private float startPos;
         private float endPos;
-        private bool showTris;
 
-        public Action OnSlideStartReached;
+        public System.Action OnSlideStartReached;
 
         public SlideCast(BarInfo info, BarVertices bar_v, Configuration conf, BarDecisionHelper go) {
             this.info = info;
@@ -29,33 +29,32 @@ using GCDTracker.Utils;
     
         public void Update(BarVertices bar_v) {
             if (!conf.SlideCastEnabled) return;
-            if (info.IsCastBar) {
-                startPos = info.GCDTime_SlidecastStart;
-                endPos = (conf.SlideCastFullBar || info.IsNonAbility) ? 1f : info.GCDTotal_SlidecastEnd;
-            }
-            
+            float castTotal = DataStore.Action->TotalCastTime;
+
             switch (go.CurrentState){
                 case BarState.ShortCast:
+                    float gcdTotal = DataStore.Action->TotalGCD;
+                    startPos = Math.Max((castTotal - conf.SlidecastDelay) / gcdTotal, 0f);
+                    endPos = castTotal / gcdTotal;
+                    break;
                 case BarState.LongCast:
-                    showTris = conf.ShowSlidecastTriangles && conf.ShowTrianglesOnHardCasts;
-                    startPos = Math.Max(startPos, info.CurrentPos);
-                    endPos = Math.Max(endPos, info.CurrentPos);
-                    CheckEvents();
+                    startPos = Math.Max((castTotal - conf.SlidecastDelay) / castTotal, 0f);
+                    endPos = 1f;
                     break;
                 case BarState.NonAbilityCast:
                 case BarState.NoSlideAbility:
                 default:
                     Reset();
-                    break;
+                    return;
             }
+            CheckEvents();
+            startPos = Math.Max(startPos, info.CurrentPos);
+            endPos = (conf.SlideCastFullBar || info.IsNonAbility) ? 1f : Math.Max(endPos, info.CurrentPos);
             UpdateVisualization(bar_v);
         }
 
-        private void Reset() {
-            startPos = endPos = 0f;
-            showTris = false;
-        }
-        
+        private void Reset() => startPos = endPos = 0f;
+
         private void CheckEvents() {
             if (info.CurrentPos >= startPos - 0.025f && info.CurrentPos > 0.2f)
                 OnSlideStartReached();
@@ -80,7 +79,7 @@ using GCDTracker.Utils;
                 lineR.Draw(ui, conf.backColBorder);
             
             // Triangles:
-            if (!showTris) return;
+            if (!conf.ShowSlidecastTriangles || (!conf.ShowTrianglesOnHardCasts && go.CurrentState == BarState.LongCast)) return;
             lineL.DrawTri(ui, isTop: false, isRight: false, conf.backColBorder);
             if (lineR.CanFitRightTri())
                 lineR.DrawTri(ui, isTop: false, isRight: true, conf.backColBorder);

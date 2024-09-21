@@ -25,6 +25,7 @@ public class QueueLock {
             case BarState.GCDOnly:
             case BarState.ShortCast:
                 lockPos = Math.Max(0.8f, info.CurrentPos);
+                CheckEvents();
                 break;
             case BarState.LongCast:
                 lockPos = Math.Max(0.8f * (info.GCDTotal / info.CastTotal), info.CurrentPos);
