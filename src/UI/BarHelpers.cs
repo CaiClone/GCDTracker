@@ -53,13 +53,10 @@ namespace GCDTracker.UI {
     }
 
     public class BarVertices {
-        public Vector2 ProgressVertex { get; private set; }
-
         public Rectangle Rect { get; private set; }
         public int Width {get; private set; }
         public int Height {get; private set; }
-        public float BorderWidthPercent { get; private set; } 
-        public int BorderWidth => (int)(Width * BorderWidthPercent);
+        public int BorderWidth {get; private set; }
         public int RightLimit => Rect.Right + 1;
 
         public void Update(BarInfo bar, BarDecisionHelper go, GCDEventHandler notify) {
@@ -72,8 +69,7 @@ namespace GCDTracker.UI {
                 Height
             );
 
-            BorderWidthPercent = bar.BorderSizeAdj / (float)bar.Width;
-            ProgressVertex = new(ProgToScreen(bar.CurrentPos + BorderWidthPercent), Rect.Bottom);
+            BorderWidth = bar.BorderSizeAdj;
         }
         public int ProgToScreen(float progress) => (int)(Rect.Left + (progress * Width));
         private static int MakeEven(int value) => value % 2 == 0 ? value : value + 1;

@@ -56,10 +56,6 @@ namespace GCDTracker.UI {
             Scale = w_size.X / 200f;
         }
 
-        public void DrawRect(Vector2 start, Vector2 end, Vector4 color, float thickness) {
-            draw.AddRect(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None, thickness);
-        }
-
         public void DrawCircSegment(float start_rad, float end_rad, float thickness,Vector4 col) {
             start_rad = Math.Clamp(Math.Min(start_rad, end_rad),0,2);
             end_rad = Math.Clamp(Math.Max(start_rad, end_rad),0,2);
@@ -213,6 +209,10 @@ namespace GCDTracker.UI {
             draw.Flags = originalFlags;
         }
 
+        public void DrawRect(Vector2 start, Vector2 end, Vector4 color, float thickness) {
+            draw.AddRect(start, end, ImGui.GetColorU32(color), 0, ImDrawFlags.None, thickness);
+        }
+
         public void DrawRectFilledNoAA(Vector2 start, Vector2 end, Vector4 color, int gradientMode = 0, float gradientIntensity = 0f) {
             var eGradientMode = (BarGradientMode)gradientMode;
             var originalFlags = draw.Flags;
@@ -245,6 +245,7 @@ namespace GCDTracker.UI {
 
             draw.Flags = originalFlags;
         }
+
         private static Vector4 LerpColorNoA(Vector4 start, Vector4 end, float t) => new(
                 start.X + (end.X - start.X) * t,
                 start.Y + (end.Y - start.Y) * t,
