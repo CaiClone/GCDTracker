@@ -66,9 +66,10 @@ namespace GCDTracker {
                         || DataStore.ClientState.IsPvP;
             ct = new ComboTracker(config, helper);
             var abilityManager = AbilityManager.Instance;
+            var gcdBar = new GCDBar(config, helper, abilityManager);
 
             ui.Windows = new(){
-                new GCDBar(config, helper, abilityManager),
+                gcdBar,
                 new GCDWheel(config, helper, abilityManager),
                 new FloatingAlerts(config, helper),
                 ct,
@@ -79,6 +80,7 @@ namespace GCDTracker {
             PluginInterface.UiBuilder.OpenMainUi += OpenConfig;
             Framework.Update += ct.Update;
             Framework.Update += helper.Update;
+            Framework.Update += gcdBar.Update;
 
             commandManager = new PluginCommandManager<GCDTracker>(this, Commands);
 

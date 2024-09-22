@@ -1,5 +1,6 @@
 using System.Numerics;
 using Dalamud.Game.ClientState.Objects.Enums;
+using Dalamud.Plugin.Services;
 using GCDTracker.Data;
 using GCDTracker.UI.Components;
 
@@ -37,12 +38,13 @@ namespace GCDTracker.UI {
             slideCast.OnSlideStartReached += TriggerSlideAlert;
             queueLock.OnQueueLockReached += TriggerQueueAlert;
         }
-  
-        public void Draw(PluginUI ui) {
-            //TODO check if we can put this inn an update frame
+
+        public void Update(IFramework _) =>
             go.Update(helper,
                 DataStore.ActionManager->CastActionType, 
                 DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None);
+  
+        public void Draw(PluginUI ui) {
             bar_v.Update(ui, notify);
             if (go.IsCastBar) {
                 DrawCastBar(ui);
@@ -61,11 +63,11 @@ namespace GCDTracker.UI {
             
             DrawBackground(ui);
             DrawProgress(ui);
-            if (!go.ShortCastFinished)
+            if (!go.IsShortCast)
                 DrawOGCDs(ui);
             queueLock.Update(bar_v);
             queueLock.Draw(ui);
-            if (go.ShortCastFinished){
+            if (go.IsShortCast){
                 slideCast.Update(bar_v);
                 slideCast.Draw(ui);
             }
@@ -73,14 +75,14 @@ namespace GCDTracker.UI {
 
             // Gonna re-do this, but for now, we flag when we need to carryover from the castbar to the GCDBar
             // and dump all the crap here to draw on top.
-            if (go.ShortCastFinished) {
+            if (go.IsShortCast) {
                 string abilityNameOutput = shortCastCachedSpellName;
                 if (!string.IsNullOrWhiteSpace(helper.queuedAbilityName) && conf.CastBarShowQueuedSpell)
                     abilityNameOutput += " -> " + helper.queuedAbilityName;
                 if (!string.IsNullOrEmpty(abilityNameOutput))
                     DrawBarText(ui, abilityNameOutput);
             }
-            if (conf.ShowQueuedSpellNameGCD && !go.ShortCastFinished) {
+            if (conf.ShowQueuedSpellNameGCD && !go.IsShortCast) {
                 if (gcdTime / gcdTotal < 0.8f)
                     helper.queuedAbilityName = " ";
                 if (!string.IsNullOrWhiteSpace(helper.queuedAbilityName))
@@ -93,7 +95,6 @@ namespace GCDTracker.UI {
             float castTotal = DataStore.Action->TotalCastTime;
             float castElapsed = DataStore.Action->ElapsedCastTime;
             float castbarProgress = castElapsed / castTotal;
-            float castbarEnd = 1f;
 
             DrawBackground(ui);
             DrawProgress(ui);
@@ -105,9 +106,7 @@ namespace GCDTracker.UI {
 
             var castName = GameState.GetCastbarContents();
             if (!string.IsNullOrEmpty(castName)) {
-                if (castbarEnd - castbarProgress <= 0.01f && gcdTotal > castTotal) {
-                    shortCastCachedSpellName = castName;
-                }
+                shortCastCachedSpellName = castName;
                 string abilityNameOutput = castName;
                 if (conf.castTimePosition == 0 && conf.CastTimeEnabled)
                     abilityNameOutput += " (" + helper.remainingCastTimeString + ")";
@@ -158,7 +157,7 @@ namespace GCDTracker.UI {
                         sclip.Draw(ui, conf.clipCol);
                     }
                 }
-                if(!go.ShortCastFinished || isClipping) {
+                if(!go.IsShortCast || isClipping) {
                     var clip = new Bar(bar_v);
                     clip.Update(bar_v.ProgToScreen(ogcdStart / gcdTotal), bar_v.ProgToScreen(ogcdEnd / gcdTotal));
                     clip.Draw(ui, isClipping ? conf.clipCol : conf.anLockCol);

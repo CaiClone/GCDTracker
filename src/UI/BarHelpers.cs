@@ -56,8 +56,6 @@ namespace GCDTracker.UI {
         public bool IsShortCast { get; private set; }
         public bool IsNonAbility { get; private set; }
 
-        public bool ShortCastFinished => IsShortCast;
-
         public BarState CurrentState;
         public float GCDTotal => DataStore.Action->TotalGCD;
         public float CastTotal => DataStore.Action->TotalCastTime;
@@ -86,13 +84,12 @@ namespace GCDTracker.UI {
                 float castbarEnd = 1f;
                 bool isTeleport = GameState.IsCastingTeleport();
 
-                // handle short casts
-                if (gcdTotal > castTotal) {
-                    castbarEnd = GameState.CastingNonAbility() ? 1f : castTotal / gcdTotal;
-                }
 
                 IsShortCast = gcdTotal > castTotal;
                 IsNonAbility = GameState.CastingNonAbility() || isTeleport || gcdTotal < 0.01f;
+                if (IsShortCast) {
+                    castbarEnd = GameState.CastingNonAbility() ? 1f : castTotal / gcdTotal;
+                }
                 CurrentPos = castbarProgress * castbarEnd;
                 TotalBarTime = castbarEnd;
             } else {
