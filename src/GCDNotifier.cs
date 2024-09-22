@@ -94,8 +94,8 @@ namespace GCDTracker {
         private const float FirstStageEnd = 100f;
         private const float SecondStageEnd = 200f;
 
-        public int PulseWidth { get; private set; }
-        public int PulseHeight { get; private set; }
+        public int? PulseWidth { get; private set; }
+        public int? PulseHeight { get; private set; }
         public Vector4 ProgressPulseColor { get; private set; }
         public float WheelScale { get; private set; }
         public readonly Easing abcAnimEnabled;
@@ -185,14 +185,15 @@ namespace GCDTracker {
 
             var widthAlert = PeekAlert(BarWidthPulse, causes, Bar).FirstOrDefault();
             PulseWidth = widthAlert != null 
-                ? GetBarSize(bar_v.Width, widthAlert, conf.subtlePulses) 
-                : bar_v.Width;
+                ? GetBarSize(bar_v.BaseWidth, widthAlert, conf.subtlePulses) 
+                : null;
 
             var heightAlert = PeekAlert(BarHeightPulse, causes, Bar).FirstOrDefault();
             PulseHeight = heightAlert != null 
-                ? GetBarSize(bar_v.Height, heightAlert, conf.subtlePulses) 
-                : bar_v.Height;
+                ? GetBarSize(bar_v.BaseHeight, heightAlert, conf.subtlePulses) 
+                : null;
         }
+
 
         private void UpdateWheelProperties(Configuration conf, float uiScale) {
             var causes = new[] { Queuelock };

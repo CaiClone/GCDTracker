@@ -19,6 +19,8 @@ namespace GCDTracker.UI {
     public class BarVertices(Configuration conf) {
         private readonly Configuration conf = conf;
         public Rectangle Rect { get; private set; }
+        public int BaseWidth {get; private set; }
+        public int BaseHeight {get; private set; }
         public int Width {get; private set; }
         public int Height {get; private set; }
         public int HalfBorderSize {get; private set; }
@@ -27,11 +29,10 @@ namespace GCDTracker.UI {
         public int BorderSize => conf.BarBorderSizeInt;
 
         public void Update(PluginUI ui, GCDEventHandler notify) {
-            Width = MakeEven((int)(ui.w_size.X * conf.BarWidthRatio));
-            Height = MakeEven((int)(ui.w_size.Y * conf.BarHeightRatio));
-            //TODO: renable notification change size
-            //Width = notify.PulseWidth);
-            //Height = MakeEven(notify.PulseHeight);
+            BaseWidth =  MakeEven((int)(ui.w_size.X * conf.BarWidthRatio));
+            BaseHeight = MakeEven((int)(ui.w_size.Y * conf.BarHeightRatio));
+            Width = notify.PulseWidth ?? BaseWidth;
+            Height = notify.PulseHeight ?? BaseHeight;
             Rect = new Rectangle(
                 (int)(ui.w_cent.X - (Width / 2)),
                 (int)(ui.w_cent.Y - (Height / 2)),

@@ -39,10 +39,13 @@ namespace GCDTracker.UI {
             queueLock.OnQueueLockReached += TriggerQueueAlert;
         }
 
-        public void Update(IFramework _) =>
+        public void Update(IFramework _) {
             go.Update(helper,
                 DataStore.ActionManager->CastActionType, 
                 DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None);
+            queueLock.Update(bar_v);
+            slideCast.Update(bar_v);
+        }
   
         public void Draw(PluginUI ui) {
             bar_v.Update(ui, notify);
@@ -65,10 +68,8 @@ namespace GCDTracker.UI {
             DrawProgress(ui);
             if (!go.IsShortCast)
                 DrawOGCDs(ui);
-            queueLock.Update(bar_v);
             queueLock.Draw(ui);
             if (go.IsShortCast){
-                slideCast.Update(bar_v);
                 slideCast.Draw(ui);
             }
             DrawBackgroundBorder(ui);
@@ -98,9 +99,7 @@ namespace GCDTracker.UI {
 
             DrawBackground(ui);
             DrawProgress(ui);
-            slideCast.Update(bar_v);
             slideCast.Draw(ui);
-            queueLock.Update(bar_v);
             queueLock.Draw(ui);
             DrawBackgroundBorder(ui);
 
