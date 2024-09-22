@@ -1,11 +1,7 @@
 using System;
-using System.Drawing;
-using GCDTracker.Data;
-using GCDTracker.Utils;
 
     namespace GCDTracker.UI.Components {
     public unsafe class SlideCast {
-        private readonly BarInfo info;
         private readonly Configuration conf;
         private readonly BarDecisionHelper go;
         private readonly Line lineL;
@@ -17,13 +13,12 @@ using GCDTracker.Utils;
 
         public System.Action OnSlideStartReached;
 
-        public SlideCast(BarInfo info, BarVertices bar_v, Configuration conf, BarDecisionHelper go) {
-            this.info = info;
+        public SlideCast(BarVertices bar_v, BarDecisionHelper go, Configuration conf) {
             this.conf = conf;
             this.go = go;
             lineL = new(conf, bar_v);
             lineR = new(conf, bar_v);
-            bar = new(info, bar_v);
+            bar = new(bar_v);
             go.OnReset += Reset;
         }
     
@@ -43,15 +38,15 @@ using GCDTracker.Utils;
                     return;
             }
             CheckEvents();
-            startPos = Math.Max(startPos, info.CurrentPos);
-            endPos = (conf.SlideCastFullBar || info.IsNonAbility) ? 1f : Math.Max(endPos, info.CurrentPos);
+            startPos = Math.Max(startPos, go.CurrentPos);
+            endPos = (conf.SlideCastFullBar || go.IsNonAbility) ? 1f : Math.Max(endPos, go.CurrentPos);
             UpdateVisualization(bar_v);
         }
 
         private void Reset() => startPos = endPos = 0f;
 
         private void CheckEvents() {
-            if (info.CurrentPos >= startPos - 0.025f && info.CurrentPos > 0.2f)
+            if (go.CurrentPos >= startPos - 0.025f && go.CurrentPos > 0.2f)
                 OnSlideStartReached();
         }
 

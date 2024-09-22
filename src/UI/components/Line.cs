@@ -14,7 +14,7 @@ namespace GCDTracker.UI.Components {
             rect = new Rectangle(
                 pos,
                 bar_v.Rect.Top,
-                bar_v.BorderWidth,
+                bar_v.BorderSize,
                 bar_v.Height);
         }
         public void Draw(PluginUI ui, Vector4 color) =>

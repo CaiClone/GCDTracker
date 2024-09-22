@@ -4,8 +4,7 @@ using System.Numerics;
 using GCDTracker.Utils;
 
 namespace GCDTracker.UI.Components {
-    public class Bar(BarInfo info, BarVertices bar_v) {
-        private readonly BarInfo info = info;
+    public class Bar(BarVertices bar_v) {
         private readonly BarVertices bar_v = bar_v;
         private Rectangle rect = new();
 
@@ -20,11 +19,11 @@ namespace GCDTracker.UI.Components {
             ui.DrawRectFilledNoAA(rect.LT(), rect.RB(), col, gradientMode, gradientIntensity);
 
         public void DrawBorder(PluginUI ui, Vector4 col) {
-            if (info.BorderSize > 0) {
+            if (bar_v.BorderSize > 0) {
                 ui.DrawRect(
-                    bar_v.Rect.LB() - new Vector2(info.HalfBorderSize, info.HalfBorderSize),
-                    bar_v.Rect.RT() + new Vector2(info.HalfBorderSize, info.HalfBorderSize),
-                    col, info.BorderSize);
+                    bar_v.Rect.LB() - new Vector2(bar_v.HalfBorderSize, bar_v.HalfBorderSize),
+                    bar_v.Rect.RT() + new Vector2(bar_v.HalfBorderSize, bar_v.HalfBorderSize),
+                    col, bar_v.BorderSize);
             }
         }
     }

@@ -66,7 +66,6 @@ namespace GCDTracker {
         private float remainingCastTime;
         public string remainingCastTimeString;
         public string queuedAbilityName = " ";
-        public bool shortCastFinished = false;
 
         public GCDHelper(Configuration conf) {
             this.conf = conf;
@@ -303,7 +302,6 @@ namespace GCDTracker {
             ClippedOnThisGCD = false;
             ABCOnLastGCD = ABCOnThisGCD;
             ABCOnThisGCD = false;
-            shortCastFinished = false;
         }
 
         public void UpdateAnlock(float oldLock, float newLock) {

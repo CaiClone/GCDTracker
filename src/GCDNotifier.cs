@@ -36,8 +36,7 @@ namespace GCDTracker {
         None
     }
 
-    public class Alert(EventType type, EventCause reason, EventSource source)
-    {
+    public class Alert(EventType type, EventCause reason, EventSource source) {
         public EventType Type { get; } = type;
         public EventCause Reason { get; } = reason;
         public EventSource Source { get; } = source;
@@ -155,9 +154,9 @@ namespace GCDTracker {
         }
         */
 
-        public void Update(BarInfo bar, Configuration conf, PluginUI ui) {
-            if (bar != null) {    
-                UpdateBarProperties(bar, conf);
+        public void Update(BarVertices bar_v, Configuration conf, PluginUI ui) {
+            if (bar_v != null) {    
+                UpdateBarProperties(bar_v, conf);
                 UpdateFlyOutAlerts(ui, conf, EventSource.Bar);
             }
             else {
@@ -176,7 +175,7 @@ namespace GCDTracker {
             return AlertManager.Instance.PeekAlert(type, causes, source);
         }
 
-        private void UpdateBarProperties(BarInfo bar, Configuration conf) {
+        private void UpdateBarProperties(BarVertices bar_v, Configuration conf) {
             var causes = new[] { Slidecast, Queuelock };
 
             var colorAlert = PeekAlert(BarColorPulse, causes, Bar).FirstOrDefault();
@@ -186,13 +185,13 @@ namespace GCDTracker {
 
             var widthAlert = PeekAlert(BarWidthPulse, causes, Bar).FirstOrDefault();
             PulseWidth = widthAlert != null 
-                ? GetBarSize(bar.Width, widthAlert, conf.subtlePulses) 
-                : bar.Width;
+                ? GetBarSize(bar_v.Width, widthAlert, conf.subtlePulses) 
+                : bar_v.Width;
 
             var heightAlert = PeekAlert(BarHeightPulse, causes, Bar).FirstOrDefault();
             PulseHeight = heightAlert != null 
-                ? GetBarSize(bar.Height, heightAlert, conf.subtlePulses) 
-                : bar.Height;
+                ? GetBarSize(bar_v.Height, heightAlert, conf.subtlePulses) 
+                : bar_v.Height;
         }
 
         private void UpdateWheelProperties(Configuration conf, float uiScale) {
