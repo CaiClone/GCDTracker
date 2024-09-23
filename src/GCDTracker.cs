@@ -68,6 +68,7 @@ namespace GCDTracker {
             var abilityManager = AbilityManager.Instance;
             var gcdBar = new GCDBar(config, helper, abilityManager);
 
+            ui.bar = gcdBar;
             ui.Windows = new(){
                 gcdBar,
                 new GCDWheel(config, helper, abilityManager),

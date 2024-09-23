@@ -9,7 +9,7 @@ using System.Numerics;
 namespace GCDTracker.UI {
     public class PluginUI(Configuration conf) {
         public bool IsVisible { get; set; }
-        public ComboTracker ct;
+        public GCDBar bar;
         public GCDHelper helper;
         public Configuration conf = conf;
 
@@ -21,7 +21,7 @@ namespace GCDTracker.UI {
         public List<IWindow> Windows;
 
         public void Draw() {
-            conf.DrawConfig(w_size.X, w_size.Y);
+            conf.DrawConfig(bar);
 
             if (DataStore.ClientState.LocalPlayer == null)
                 return;

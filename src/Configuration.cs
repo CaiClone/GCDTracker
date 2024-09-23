@@ -323,7 +323,7 @@ namespace GCDTracker
             }
             ImGui.End();
         }
-        public void DrawConfig(float x_size, float y_size) {
+        public void DrawConfig(GCDBar bar) {
             if (Migration4to5) DrawMigration4to5();
             if (!configEnabled) return;
             var scale = ImGui.GetIO().FontGlobalScale;
@@ -448,7 +448,8 @@ namespace GCDTracker
                         ImGui.Checkbox("Move/resize GCDBar", ref BarWindowMoveable);
                         if (BarWindowMoveable) {
                             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
-                            ImGui.TextDisabled("\tCurent Dimensions (in pixels): " + ((int)(x_size * BarWidthRatio + 2 * BarBorderSizeInt)).ToString()+ "x" +((int)(y_size * BarHeightRatio + 2 * BarBorderSizeInt)).ToString());
+                            var barSize = bar.GetBarSize();
+                            ImGui.TextDisabled($"Current Dimensions (in pixels): {barSize.X}x{barSize.Y}");
                         }
                         ImGui.Checkbox("Roll GCDs", ref BarRollGCDs);
                         if (ImGui.IsItemHovered()){

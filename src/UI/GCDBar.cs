@@ -197,6 +197,8 @@ namespace GCDTracker.UI {
             go.ActivateAlertIfNeeded(EventType.BarHeightPulse, conf.pulseBarHeightAtQueue, EventCause.Queuelock);
         }
 
+        public Vector2 GetBarSize() => new (bar_v.Width, bar_v.Height);
+
         public bool ShouldDraw(bool inCombat, bool noUI) {
             bool shouldShowBar = conf.BarEnabled && !noUI;
             conf.EnabledGBJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGB);
