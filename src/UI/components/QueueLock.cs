@@ -12,7 +12,7 @@ public class QueueLock(BarVertices bar_v, BarDecisionHelper go, Configuration co
 
     public Action OnQueueLockReached = delegate { };
 
-        public void Update(BarVertices bar_v) {
+    public void Update(BarVertices bar_v) {
         switch (go.CurrentState){
             case BarState.GCDOnly:
             case BarState.ShortCast:

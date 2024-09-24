@@ -58,8 +58,8 @@ namespace GCDTracker.UI {
         public bool IsNonAbility { get; private set; }
 
         public BarState CurrentState;
-        public float GCDTotal => DataStore.Action->TotalGCD;
-        public float CastTotal => DataStore.Action->TotalCastTime;
+        public virtual float GCDTotal => DataStore.Action->TotalGCD;
+        public virtual float CastTotal => DataStore.Action->TotalCastTime;
         public float BarEnd => Math.Max(GCDTotal, CastTotal);
 
         public System.Action OnReset = delegate { };
