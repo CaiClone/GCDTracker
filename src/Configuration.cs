@@ -70,7 +70,6 @@ namespace GCDTracker
         public bool pulseBarWidthAtQueue = false;
         public bool pulseBarHeightAtQueue = false;
         public bool BarQueueLockWhenIdle = true;
-        public bool BarQueueLockSlide = false;
         public bool BarRollGCDs = true;
         public bool ShowQueuedSpellNameGCD = false;
         public int BarBorderSizeInt = 2;
@@ -360,7 +359,6 @@ namespace GCDTracker
                     }
                     if (QueueLockEnabled && BarEnabled && ShowAdvanced){
                         ImGui.Indent();
-                        ImGui.Checkbox("(Bar Only) Progress Bar Pushes Queue Lock", ref BarQueueLockSlide);
                         ImGui.Checkbox("(Bar Only) Show Queue Lock When Idle", ref BarQueueLockWhenIdle);
                         ImGui.Checkbox("(Bar Only) Show Queue Lock Triangles", ref ShowQueuelockTriangles);
                         if (ImGui.IsItemHovered()){
