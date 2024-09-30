@@ -11,6 +11,7 @@ using System.Runtime.CompilerServices;
 using static GCDTracker.EventType;
 using static GCDTracker.EventCause;
 using static GCDTracker.EventSource;
+using GCDTracker.Config;
 
 [assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker {

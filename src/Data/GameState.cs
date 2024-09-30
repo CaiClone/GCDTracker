@@ -7,7 +7,7 @@ namespace GCDTracker.Data
 {
     public unsafe static class GameState {
         public static bool IsCasting() => DataStore.ClientState.LocalPlayer.CurrentCastTime > 0;
-        
+        public static bool InBattle() => DataStore.Condition[Dalamud.Game.ClientState.Conditions.ConditionFlag.InCombat];
         public static bool CastingNonAbility() {
             var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind;
 

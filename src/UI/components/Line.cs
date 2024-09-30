@@ -1,6 +1,7 @@
 using System;
 using System.Drawing;
 using System.Numerics;
+using GCDTracker.Config;
 using GCDTracker.Utils;
 
 namespace GCDTracker.UI.Components {

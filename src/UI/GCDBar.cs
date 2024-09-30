@@ -1,6 +1,7 @@
 using System.Numerics;
 using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Plugin.Services;
+using GCDTracker.Config;
 using GCDTracker.Data;
 using GCDTracker.UI.Components;
 

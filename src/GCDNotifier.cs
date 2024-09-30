@@ -9,6 +9,7 @@ using static GCDTracker.EventType;
 using static GCDTracker.EventCause;
 using static GCDTracker.EventSource;
 using System.Security.Cryptography;
+using GCDTracker.Config;
 
 namespace GCDTracker {
 

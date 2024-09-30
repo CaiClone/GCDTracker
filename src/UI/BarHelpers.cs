@@ -4,6 +4,7 @@ using System.Drawing;
 using System.Runtime.CompilerServices;
 using Dalamud.Game.ClientState.Objects.Enums;
 using FFXIVClientStructs.FFXIV.Client.Game;
+using GCDTracker.Config;
 using GCDTracker.Data;
 
 [assembly: InternalsVisibleTo("Tests")]

@@ -6,6 +6,7 @@ using Dalamud.Plugin;
 using Dalamud.Plugin.Services;
 using FFXIVClientStructs.FFXIV.Client.Game;
 using GCDTracker.Attributes;
+using GCDTracker.Config;
 using GCDTracker.Data;
 using GCDTracker.UI;
 

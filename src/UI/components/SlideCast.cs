@@ -1,3 +1,4 @@
+using GCDTracker.Config;
 using System;
 
     namespace GCDTracker.UI.Components {

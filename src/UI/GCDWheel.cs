@@ -1,5 +1,6 @@
 using System;
 using Dalamud.Plugin.Services;
+using GCDTracker.Config;
 using GCDTracker.Data;
 
 namespace GCDTracker.UI {

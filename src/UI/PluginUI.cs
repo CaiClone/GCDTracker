@@ -1,5 +1,6 @@
 ﻿using Dalamud.Interface;
 using Dalamud.Interface.Animation;
+using GCDTracker.Config;
 using GCDTracker.Data;
 using ImGuiNET;
 using System;
