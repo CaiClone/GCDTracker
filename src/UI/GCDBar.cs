@@ -201,8 +201,9 @@ namespace GCDTracker.UI {
         public Vector2 GetBarSize() => new (bar_v.Width, bar_v.Height);
 
         public bool ShouldDraw(bool inCombat, bool noUI) {
-            bool shouldShowBar = conf.BarEnabled && !noUI;
             conf.EnabledGBJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGB);
+
+            bool shouldShowBar = conf.BarEnabled && !noUI;
             bool showBarInCombat = enabledJobGB && (conf.ShowOutOfCombat || inCombat);
             bool showBarWhenGCDNotRunning = !conf.ShowOnlyGCDRunning || 
                                             (helper.idleTimerAccum < helper.GCDTimeoutBuffer);
