@@ -106,6 +106,10 @@ public partial class Configuration {
             DrawCastBarSettings();
             ImGui.TreePop();
         }
+        if (ImGui.TreeNodeEx("Slidecast")) {
+            DrawSlideCastBarConfig();
+            ImGui.TreePop();
+        }
         if (ImGui.TreeNodeEx("GCDBar Job Settings")) {
             DrawJobGrid(ref EnabledGBJobs, true);
             ImGui.TreePop();
@@ -149,11 +153,11 @@ public partial class Configuration {
 
     private void DrawCastBarSettings() {
         ImGui.Checkbox("Enable Castbar", ref CastBarEnabled);
+        if (!EnableCastText) return;
         var inBattle = GameState.IsCasting() || GameState.InBattle();
         if (inBattle) ImGui.BeginDisabled();
         ImGui.Checkbox("Enable Spell Name/Time Text", ref EnableCastText);
         if (inBattle) ImGui.EndDisabled();
-        if (!EnableCastText) return;
         ImGui.Indent();
         ImGui.ColorEdit3("Text Color", ref CastBarTextColor, ImGuiColorEditFlags.NoInputs);
         var CastBarTextInt = (int)(CastBarTextSize * 12f);

@@ -57,16 +57,10 @@ namespace GCDTracker.Config {
 
         public Vector3 QueuePulseCol = new(1f, 1f, 1f);
 
-        public bool SlideCastEnabled = true;
-        public bool SlideCastFullBar = false;
-        public bool SlideCastBackground = false;
         public bool OverrideDefaltFont = false;
         public bool ShowQueuelockTriangles = true;
-        public bool ShowSlidecastTriangles = true;
-        public bool ShowTrianglesOnHardCasts = true;
         public Vector4 slideCol = new(0.6745098f, 0.0f, 0.9882353f, 0.8f);
-        public int triangleSize = 6;
-        public float SlidecastDelay = 0.5f;
+
 
         //Combo
         public bool ComboEnabled = false;
@@ -129,38 +123,6 @@ namespace GCDTracker.Config {
             (42,"PCT",true,false)
         ];
 
-        public Dictionary<uint, bool> EnabledGWJobs = new() {
-            {1,true},
-            {19,true},
-            {3,true},
-            {21,true},
-            {32,true},
-            {37,true},
-            {26,true},
-            {28,true},
-            {6,true},
-            {24,true},
-            {33,true},
-            {2,true},
-            {20,true},
-            {4,true},
-            {22,true},
-            {29,true},
-            {30,true},
-            {34,true},
-            {7,true},
-            {25,true},
-            {27,true},
-            {35,true},
-            {5,true},
-            {23,true},
-            {31,true},
-            {38,true},
-            {39,true},
-            {40,true},
-            {41,true},
-            {42,true},
-        };
 
         public Dictionary<uint, bool> EnabledCTJobs = new() {
             { 1, true },
