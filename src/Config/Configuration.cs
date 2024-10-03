@@ -25,7 +25,6 @@ namespace GCDTracker.Config {
         public bool ShowAdvanced = false;
         public bool HideAlertsOutOfCombat = true;
         public bool HideIfTP = true; //Not exposed in the UI
-        public bool QueueLockEnabled = true;
         public bool ClipAlertEnabled = true;
         public bool ColorClipEnabled = true;
         public bool abcAlertEnabled = false;
@@ -53,12 +52,10 @@ namespace GCDTracker.Config {
         public bool pulseBarColorAtQueue = false;
         public bool pulseBarWidthAtQueue = false;
         public bool pulseBarHeightAtQueue = false;
-        public bool BarQueueLockWhenIdle = true;
 
         public Vector3 QueuePulseCol = new(1f, 1f, 1f);
 
         public bool OverrideDefaltFont = false;
-        public bool ShowQueuelockTriangles = true;
         public Vector4 slideCol = new(0.6745098f, 0.0f, 0.9882353f, 0.8f);
 
 

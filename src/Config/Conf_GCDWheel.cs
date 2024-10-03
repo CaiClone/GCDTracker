@@ -46,6 +46,10 @@ public partial class Configuration {
         ImGui.Checkbox("Move/resize GCDWheel", ref WindowMoveableGW);
         if (WindowMoveableGW)
             ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
+        if (ImGui.TreeNodeEx("QueueLock")) {
+            DrawQueueLockWheelConfig();
+            ImGui.TreePop();
+        }
         if (ImGui.TreeNodeEx("GCDWheel Job Setting")) {
             DrawJobGrid(ref EnabledGWJobs, false);
             ImGui.TreePop();

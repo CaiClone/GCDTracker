@@ -106,6 +106,10 @@ public partial class Configuration {
             DrawCastBarSettings();
             ImGui.TreePop();
         }
+        if (ImGui.TreeNodeEx("QueueLock")) {
+            DrawQueueLockBarConfig();
+            ImGui.TreePop();
+        }
         if (ImGui.TreeNodeEx("Slidecast")) {
             DrawSlideCastBarConfig();
             ImGui.TreePop();
