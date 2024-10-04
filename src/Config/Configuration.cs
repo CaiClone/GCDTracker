@@ -59,14 +59,6 @@ namespace GCDTracker.Config {
         public Vector4 slideCol = new(0.6745098f, 0.0f, 0.9882353f, 0.8f);
 
 
-        //Combo
-        public bool ComboEnabled = false;
-        [JsonIgnore]
-        public bool WindowMoveableCT = false;
-        public bool ShowOutOfCombatCT = false;
-        public Vector4 ctComboUsed = new(0.431f, 0.431f, 0.431f, 1f);
-        public Vector4 ctComboActive = new(1f, 1f, 1f, 1f);
-        public Vector2 ctsep = new(23, 23);
 
         //Floating Triangles
         public bool FloatingTrianglesEnable = false;
@@ -93,66 +85,6 @@ namespace GCDTracker.Config {
 
         //MigrationSettings
         public bool Migration4to5 = false;
-
-        // ID Main Class, Name, Supported in GW, Supported in CT
-        [JsonIgnore]
-        private readonly List<(uint, string,bool,bool)> infoJobs = [
-            (19,"PLD",true,true),
-            (21,"WAR",true,true),
-            (32,"DRK",true,true),
-            (37,"GNB",true,true),
-            (28,"SCH",true,false),
-            (24,"WHM",true,false),
-            (33,"AST",true,false),
-            (20,"MNK",true,false),
-            (22,"DRG",true,true),
-            (30,"NIN",true,true),
-            (34,"SAM",true,true),
-            (25,"BLM",true,false),
-            (27,"SMN",true,true),
-            (35,"RDM",true,true),
-            (23,"BRD",true,false),
-            (31,"MCH",true,true),
-            (38,"DNC",true,false),
-            (39,"RPR",true,true),
-            (40,"SGE",true,false),
-            (41,"VPR",true,false),
-            (42,"PCT",true,false)
-        ];
-
-
-        public Dictionary<uint, bool> EnabledCTJobs = new() {
-            { 1, true },
-            { 19, true },
-            { 3, true },
-            { 21, true },
-            { 32, true },
-            { 37, true },
-            { 26, false },
-            { 28, false },
-            { 6, false },
-            { 24, false },
-            { 33, false },
-            { 2, true },
-            { 20, false },
-            { 4, true },
-            { 22, true },
-            { 29, true },
-            { 30, true },
-            { 34, true },
-            { 7, false },
-            { 25, false },
-            { 27, true },
-            { 35, true },
-            { 5, true },
-            { 23, false },
-            { 31, true },
-            { 38, false },
-            { 39, true },
-            { 40, false },
-            { 41, false },
-            { 42, false },
-        };
 
         [JsonIgnore] private IDalamudPluginInterface pluginInterface;
 
@@ -225,6 +157,10 @@ namespace GCDTracker.Config {
                 }
                 if (ImGui.BeginTabItem("GCDDisplay")) {
                     DrawGCDDisplayConfig(bar);
+                    ImGui.EndTabItem();
+                }
+                if (ImGui.BeginTabItem("ComboTracker")) {
+                    DrawComboTrackerConfig();
                     ImGui.EndTabItem();
                 }
             }

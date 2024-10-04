@@ -12,7 +12,7 @@ public partial class Configuration {
     public Vector4 anLockCol = new(0.334f, 0.334f, 0.334f, 0.667f);
 
     private void DrawGCDDisplayConfig(GCDBar bar) {
-        if (ImGui.TreeNode("Display")) {
+        if (ImGui.TreeNodeEx("Display")) {
             ImGui.Columns(2);
             ImGui.ColorEdit4("Background color", ref backCol, ImGuiColorEditFlags.NoInputs);
             ImGui.ColorEdit4("Border color", ref backColBorder, ImGuiColorEditFlags.NoInputs);

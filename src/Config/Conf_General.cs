@@ -21,6 +21,7 @@ public partial class Configuration {
                 }
                 ImGui.Unindent();
             }
+            ImGui.TreePop();
         }
     }       
 }
