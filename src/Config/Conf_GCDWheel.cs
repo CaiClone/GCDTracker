@@ -42,31 +42,31 @@ public partial class Configuration {
     };
 
     
-        // ID Main Class, Name, Supported in GW, Supported in CT
-        [JsonIgnore]
-        private readonly List<(uint, string,bool,bool)> infoJobs = [
-            (19,"PLD",true,true),
-            (21,"WAR",true,true),
-            (32,"DRK",true,true),
-            (37,"GNB",true,true),
-            (28,"SCH",true,false),
-            (24,"WHM",true,false),
-            (33,"AST",true,false),
-            (20,"MNK",true,false),
-            (22,"DRG",true,true),
-            (30,"NIN",true,true),
-            (34,"SAM",true,true),
-            (25,"BLM",true,false),
-            (27,"SMN",true,true),
-            (35,"RDM",true,true),
-            (23,"BRD",true,false),
-            (31,"MCH",true,true),
-            (38,"DNC",true,false),
-            (39,"RPR",true,true),
-            (40,"SGE",true,false),
-            (41,"VPR",true,false),
-            (42,"PCT",true,false)
-        ];
+    // ID Main Class, Name, Supported in GW, Supported in CT
+    [JsonIgnore]
+    private readonly List<(uint, string,bool,bool)> infoJobs = [
+        (19,"PLD",true,true),
+        (21,"WAR",true,true),
+        (32,"DRK",true,true),
+        (37,"GNB",true,true),
+        (28,"SCH",true,false),
+        (24,"WHM",true,false),
+        (33,"AST",true,false),
+        (20,"MNK",true,false),
+        (22,"DRG",true,true),
+        (30,"NIN",true,true),
+        (34,"SAM",true,true),
+        (25,"BLM",true,false),
+        (27,"SMN",true,true),
+        (35,"RDM",true,true),
+        (23,"BRD",true,false),
+        (31,"MCH",true,true),
+        (38,"DNC",true,false),
+        (39,"RPR",true,true),
+        (40,"SGE",true,false),
+        (41,"VPR",true,false),
+        (42,"PCT",true,false)
+    ];
     private void DrawGCDWheelConfig() {
         ImGui.Checkbox("Enable GCDWheel", ref WheelEnabled);
         if (!WheelEnabled) return;

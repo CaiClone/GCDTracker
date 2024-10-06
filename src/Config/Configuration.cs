@@ -22,18 +22,14 @@ namespace GCDTracker.Config {
         public bool configEnabled;
 
         //Common
-        public bool ShowAdvanced = false;
         public bool HideAlertsOutOfCombat = true;
-        public bool HideIfTP = true; //Not exposed in the UI
         public bool ClipAlertEnabled = true;
         public bool ColorClipEnabled = true;
         public bool abcAlertEnabled = false;
         public bool ColorABCEnabled = false;
-        public bool subtlePulses = false;
         [JsonIgnore]
         private bool showResetConfirmation = false;
         public int ClipAlertPrecision = 0;
-        public int abcDelay = 10;
         public float ClipTextSize = 0.86f;
         public float abcTextSize = 0.86f;
         public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
@@ -43,30 +39,17 @@ namespace GCDTracker.Config {
         public Vector4 abcTextColor = new(0f, 0f, 0f, 1f);
         public Vector4 abcBackColor = new(1f, .7f, 0f, 1f);
 
-        public bool pulseWheelAtQueue = false;
-
         //GCDBar
-        public bool pulseBarColorAtSlide = false;
-        public bool pulseBarWidthAtSlide = false;
-        public bool pulseBarHeightAtSlide = false;
-        public bool pulseBarColorAtQueue = false;
-        public bool pulseBarWidthAtQueue = false;
-        public bool pulseBarHeightAtQueue = false;
 
-        public Vector3 QueuePulseCol = new(1f, 1f, 1f);
-
-        public bool OverrideDefaltFont = false;
         public Vector4 slideCol = new(0.6745098f, 0.0f, 0.9882353f, 0.8f);
 
 
-
-        //Floating Triangles
-        public bool FloatingTrianglesEnable = false;
-        public bool SlidecastTriangleEnable = true;
-        public bool QueuelockTriangleEnable = true;
-        public bool OnlyGreenTriangles = false;
         [JsonIgnore]
         public bool WindowMoveableSQI = false;
+
+        //Not Exposed in the UI
+        public int abcDelay = 10;
+        public bool HideIfTP = true;
 
         //Deprecated
         public bool ShowOutOfCombatGW = false;
