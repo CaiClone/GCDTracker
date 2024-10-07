@@ -20,7 +20,7 @@ public partial class Configuration {
     public bool pulseBarWidthAtQueue = false;
     public bool pulseBarHeightAtQueue = false;
     public bool pulseWheelAtQueue = false;
-        public bool subtlePulses = false;
+    public bool subtlePulses = false;
     public Vector3 QueuePulseCol = new(1f, 1f, 1f);
 
     
@@ -103,6 +103,7 @@ public partial class Configuration {
                     if (WindowMoveableSQI)
                         ImGui.TextDisabled("\tWindow being edited, may ignore further visibility options.");
                 }
+                ImGui.TreePop();
             }
         }
         if (ImGui.Button("Reset All Settings to Default"))

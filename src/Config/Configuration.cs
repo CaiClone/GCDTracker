@@ -29,7 +29,6 @@ namespace GCDTracker.Config {
         public bool ColorABCEnabled = false;
         [JsonIgnore]
         private bool showResetConfirmation = false;
-        public int ClipAlertPrecision = 0;
         public float ClipTextSize = 0.86f;
         public float abcTextSize = 0.86f;
         public Vector4 clipCol = new(1f, 0f, 0f, 0.667f);
@@ -52,6 +51,7 @@ namespace GCDTracker.Config {
         public bool HideIfTP = true;
 
         //Deprecated
+        public int ClipAlertPrecision = 0;
         public bool ShowOutOfCombatGW = false;
         public bool BarShowOutOfCombat = false;
         public bool BarColorClipEnabled = true;
@@ -86,6 +86,12 @@ namespace GCDTracker.Config {
                         break;
                     case 5:
                         BarBorderSizeInt = (int)BarBorderSize;
+                        break;
+                    case 6:
+                        //TODO: TextSize
+                        // ClipTextColor
+                        // ClipAlertPrecision
+                        //ClipAlertEnabled
                         break;
                         
                 }
@@ -144,6 +150,10 @@ namespace GCDTracker.Config {
                 }
                 if (ImGui.BeginTabItem("ComboTracker")) {
                     DrawComboTrackerConfig();
+                    ImGui.EndTabItem();
+                }
+                if (ImGui.BeginTabItem("Alerts")) {
+                    DrawAlertConfig();
                     ImGui.EndTabItem();
                 }
             }
