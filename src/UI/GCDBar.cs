@@ -8,7 +8,7 @@ namespace GCDTracker.UI {
     public unsafe class GCDBar : IWindow {
         private readonly Configuration conf;
         private readonly GCDHelper helper;
-        private readonly AbilityManager abilityManager;    
+        private readonly AbilityManager abilityManager;
         private readonly BarDecisionHelper go;
         private readonly BarVertices bar_v;
         private readonly GCDEventHandler notify;
@@ -41,12 +41,12 @@ namespace GCDTracker.UI {
 
         public void Update(IFramework _) {
             go.Update(helper,
-                DataStore.ActionManager->CastActionType, 
+                DataStore.ActionManager->CastActionType,
                 DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None);
             queueLock.Update(bar_v);
             slideCast.Update(bar_v);
         }
-  
+
         public void Draw(PluginUI ui) {
             bar_v.Update(ui, notify);
             if (go.IsCastBar) {
@@ -63,13 +63,13 @@ namespace GCDTracker.UI {
             float gcdTotal = helper.TotalGCD;
             float gcdTime = helper.lastElapsedGCD;
             if (gcdTotal < 0.1f) return;
-            
+
             DrawBackground(ui);
             DrawProgress(ui);
             if (!go.IsShortCast)
                 DrawOGCDs(ui);
             queueLock.Draw(ui);
-            if (go.IsShortCast){
+            if (go.IsShortCast) {
                 slideCast.Draw(ui);
             }
             DrawBackgroundBorder(ui);
@@ -90,8 +90,8 @@ namespace GCDTracker.UI {
                     DrawBarText(ui, " -> " + helper.queuedAbilityName);
             }
         }
-        
-        public void DrawCastBar (PluginUI ui) {
+
+        public void DrawCastBar(PluginUI ui) {
             float gcdTotal = DataStore.Action->TotalGCD;
             float castTotal = DataStore.Action->TotalCastTime;
             float castElapsed = DataStore.Action->ElapsedCastTime;
@@ -111,7 +111,7 @@ namespace GCDTracker.UI {
                     abilityNameOutput += " (" + helper.remainingCastTimeString + ")";
                 if (helper.queuedAbilityName != " " && conf.CastBarShowQueuedSpell)
                     abilityNameOutput += " -> " + helper.queuedAbilityName;
-                    
+
                 DrawBarText(ui, abilityNameOutput);
             }
         }
@@ -126,13 +126,13 @@ namespace GCDTracker.UI {
         private void DrawBackgroundBorder(PluginUI ui) => background.DrawBorder(ui, conf.backColBorder);
 
         private void DrawProgress(PluginUI ui) {
-            if(go.CurrentPos > 0.001f){
+            if (go.CurrentPos > 0.001f) {
                 var progressBarColor = notify.ProgressPulseColor;
                 progressBar.Update(bar_v.Rect.Left, bar_v.ProgToScreen(go.CurrentPos) + bar_v.BorderSize);
                 progressBar.Draw(ui, progressBarColor, conf.BarGradMode, conf.BarGradientMul);
             }
         }
-        
+
         private void DrawOGCDs(PluginUI ui) {
             float gcdTotal = helper.TotalGCD;
             float gcdTime = helper.lastElapsedGCD;
@@ -156,7 +156,7 @@ namespace GCDTracker.UI {
                         sclip.Draw(ui, conf.clipCol);
                     }
                 }
-                if(!go.IsShortCast || isClipping) {
+                if (!go.IsShortCast || isClipping) {
                     var clip = new Bar(bar_v);
                     clip.Update(bar_v.ProgToScreen(ogcdStart / gcdTotal), bar_v.ProgToScreen(ogcdEnd / gcdTotal));
                     clip.Draw(ui, isClipping ? conf.clipCol : conf.anLockCol);
@@ -171,7 +171,7 @@ namespace GCDTracker.UI {
             }
         }
 
-        private void DrawBarText(PluginUI ui, string abilityName){
+        private void DrawBarText(PluginUI ui, string abilityName) {
             int barWidth = (int)(ui.w_size.X * conf.BarWidthRatio);
             string combinedText = abilityName + helper.remainingCastTimeString + "!)/|";
             Vector2 spellNamePos = new(ui.w_cent.X - ((float)barWidth / 2.05f), ui.w_cent.Y);
@@ -197,20 +197,20 @@ namespace GCDTracker.UI {
             go.ActivateAlertIfNeeded(EventType.BarHeightPulse, conf.pulseBarHeightAtQueue, EventCause.Queuelock);
         }
 
-        public Vector2 GetBarSize() => new (bar_v.Width, bar_v.Height);
+        public Vector2 GetBarSize() => new(bar_v.Width, bar_v.Height);
 
         public bool ShouldDraw(bool inCombat, bool noUI) {
             bool shouldShowBar = conf.BarEnabled && !noUI;
-            conf.EnabledGBJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGB);
+            conf.EnabledGBJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.RowId, out var enabledJobGB);
             bool showBarInCombat = enabledJobGB && (conf.ShowOutOfCombat || inCombat);
-            bool showBarWhenGCDNotRunning = !conf.ShowOnlyGCDRunning || 
+            bool showBarWhenGCDNotRunning = !conf.ShowOnlyGCDRunning ||
                                             (helper.idleTimerAccum < helper.GCDTimeoutBuffer);
             bool showCastBarOrNoLastActionTP = conf.CastBarEnabled || !helper.lastActionTP;
 
-            return shouldShowBar && 
-                (IsMoveable || 
-                (showBarInCombat && 
-                showBarWhenGCDNotRunning && 
+            return shouldShowBar &&
+                (IsMoveable ||
+                (showBarInCombat &&
+                showBarWhenGCDNotRunning &&
                 showCastBarOrNoLastActionTP));
         }
         public string WindowName => "GCDTracker_Bar";

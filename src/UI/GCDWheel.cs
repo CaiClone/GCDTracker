@@ -35,19 +35,19 @@ namespace GCDTracker.UI {
                 if (!iscast) ui.DrawCircSegment(ogcd / gcdTotal, (ogcd + 0.04f) / gcdTotal, 23f * notify.WheelScale, conf.ogcdCol);
             }
         }
-        
+
         public bool ShouldDraw(bool inCombat, bool noUI) {
-            conf.EnabledGWJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobGW);
-            
+            conf.EnabledGWJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.RowId, out var enabledJobGW);
+
             bool shouldShowGCDWheel = conf.WheelEnabled && !noUI;
             bool showGCDWheelInCombat = enabledJobGW && (conf.ShowOutOfCombat || inCombat);
-            bool showGCDWheelWhenGCDNotRunning = !conf.ShowOnlyGCDRunning || 
-                                                (helper.idleTimerAccum < helper.GCDTimeoutBuffer && 
+            bool showGCDWheelWhenGCDNotRunning = !conf.ShowOnlyGCDRunning ||
+                                                (helper.idleTimerAccum < helper.GCDTimeoutBuffer &&
                                                 !helper.lastActionTP);
 
-            return shouldShowGCDWheel && 
-                (IsMoveable || 
-                (showGCDWheelInCombat && 
+            return shouldShowGCDWheel &&
+                (IsMoveable ||
+                (showGCDWheelInCombat &&
                 showGCDWheelWhenGCDNotRunning));
         }
         public string WindowName => "GCDTracker_GCDWheel";
