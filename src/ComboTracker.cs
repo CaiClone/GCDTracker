@@ -122,7 +122,7 @@ namespace GCDTracker {
             return actionID;
         }
         public bool ShouldDraw(bool inCombat, bool noUI) {
-            conf.EnabledCTJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.Id, out var enabledJobCT);
+            conf.EnabledCTJobs.TryGetValue(DataStore.ClientState.LocalPlayer.ClassJob.RowId, out var enabledJobCT);
             bool shouldShowComboTracker = conf.ComboEnabled && !noUI;
             bool showComboTrackerInCombat = enabledJobCT &&  (conf.ShowOutOfCombatCT || inCombat);
 
