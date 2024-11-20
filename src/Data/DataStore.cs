@@ -7,10 +7,8 @@ using Lumina.Excel;
 using System.Linq;
 using Dalamud.Plugin.Services;
 
-namespace GCDTracker.Data
-{
-    static unsafe class DataStore
-    {
+namespace GCDTracker.Data {
+    static unsafe class DataStore {
         public static IDataManager Lumina;
         public static ComboDetail Combo;
         public static Action* Action;
@@ -18,15 +16,15 @@ namespace GCDTracker.Data
         public static AtkStage* AtkStage;
         public static IClientState ClientState;
         public static ICondition Condition;
-        public static ExcelSheet<Lumina.Excel.GeneratedSheets.Action> ActionSheet;
-        public static ExcelSheet<Lumina.Excel.GeneratedSheets.ClassJob> ClassSheet;
+        public static ExcelSheet<Lumina.Excel.Sheets.Action> ActionSheet;
+        public static ExcelSheet<Lumina.Excel.Sheets.ClassJob> ClassSheet;
 
         public static Dictionary<int, bool> ComboPreserving;
 
         public static void Init(IDataManager data, IClientState cs, ICondition cond) {
             Lumina = data;
-            ActionSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.Action>();
-            ClassSheet = data.Excel.GetSheet<Lumina.Excel.GeneratedSheets.ClassJob>();
+            ActionSheet = data.Excel.GetSheet<Lumina.Excel.Sheets.Action>();
+            ClassSheet = data.Excel.GetSheet<Lumina.Excel.Sheets.ClassJob>();
 
             ActionManager = FFXIVClientStructs.FFXIV.Client.Game.ActionManager.Instance();
             AtkStage = FFXIVClientStructs.FFXIV.Component.GUI.AtkStage.Instance();
@@ -77,12 +75,11 @@ namespace GCDTracker.Data
                 }
             }
         };
-        public static readonly List<uint> TeleportIds = [5,6];
+        public static readonly List<uint> TeleportIds = [5, 6];
     }
 
     [StructLayout(LayoutKind.Explicit)]
-    public readonly unsafe struct Action
-    {
+    public readonly unsafe struct Action {
         [FieldOffset(0x0)] public readonly void* ActionManager;
         [FieldOffset(0x8)] public readonly float AnimationLock;
         [FieldOffset(0x24)] public readonly uint CastId;

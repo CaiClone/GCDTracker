@@ -7,10 +7,8 @@ using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 [assembly: InternalsVisibleTo("Tests")]
-namespace GCDTracker.Data
-{
-    public unsafe static class HelperMethods
-    {
+namespace GCDTracker.Data {
+    public unsafe static class HelperMethods {
         public delegate byte UseActionDelegate(ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetID, uint param, uint useType, int pvp, nint a7);
         public delegate void ReceiveActionEffectDetour(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail);
 
@@ -52,51 +50,49 @@ namespace GCDTracker.Data
                     (!isWeaponSkill && AnimationLock != 0.5f && AnimationLock != 0.64000005f)); //OGCDS
         }
 
-        public static uint? GetParentJob(uint jobId) => DataStore.ClassSheet.GetRow(jobId).ClassJobParent.Value?.RowId;
+        public static uint? GetParentJob(uint jobId) => DataStore.ClassSheet.GetRow(jobId).ClassJobParent.ValueNullable?.RowId;
 
-        public static string ReadStringFromPointer(byte** ptr) { 
+        public static string ReadStringFromPointer(byte** ptr) {
             if (ptr == null || *ptr == null) return "";
             return MemoryHelper.ReadSeStringNullTerminated(new nint(*ptr)).TextValue;
         }
-        
+
         public static string GetAbilityName(uint actionID, ActionType actionType) {
             var lumina = DataStore.Lumina;
             var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None;
 
-            return objectKind switch
-            {
+            return objectKind switch {
                 ObjectKind.Aetheryte => "Attuning...",
                 ObjectKind.EventObj or ObjectKind.EventNpc => "Interacting...",
                 _ when actionID == 1 && actionType != ActionType.Mount => "Interacting...",
-                _ => actionType switch
-                {
+                _ => actionType switch {
                     ActionType.Ability
                     or ActionType.Action
                     or ActionType.BgcArmyAction
                     or ActionType.CraftAction
                     or ActionType.PetAction
                     or ActionType.PvPAction =>
-                        lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Action>()?.GetRow(actionID)?.Name ?? "Unknown Ability",
+                        lumina?.GetExcelSheet<Lumina.Excel.Sheets.Action>()?.GetRow(actionID).Name.ExtractText() ?? "Unknown Ability",
 
                     ActionType.Companion =>
-                        lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Companion>()?.GetRow(actionID) is var companion && companion != null
-                        ? CapitalizeOutput(companion.Singular)
+                        lumina?.GetExcelSheet<Lumina.Excel.Sheets.Companion>()?.GetRow(actionID) is var companion && companion != null
+                        ? CapitalizeOutput(companion.Value.Singular.ExtractText())
                         : "Unknown Companion",
 
                     ActionType.Item
                     or ActionType.KeyItem =>
-                        lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Item>()?.GetRow(actionID)?.Name ?? "Unknown Item",
+                        lumina?.GetExcelSheet<Lumina.Excel.Sheets.Item>()?.GetRow(actionID).Name.ExtractText() ?? "Unknown Item",
 
                     ActionType.Mount =>
-                        lumina?.GetExcelSheet<Lumina.Excel.GeneratedSheets.Mount>()?.GetRow(actionID) is var mount && mount != null
-                        ? CapitalizeOutput(mount.Singular)
+                        lumina?.GetExcelSheet<Lumina.Excel.Sheets.Mount>()?.GetRow(actionID) is var mount && mount != null
+                        ? CapitalizeOutput(mount.Value.Singular.ExtractText())
                         : "Unknown Mount",
 
                     _ => "Casting..."
                 }
             };
         }
-        
+
         private static string CapitalizeOutput(string input) {
             if (string.IsNullOrEmpty(input))
                 return input;
