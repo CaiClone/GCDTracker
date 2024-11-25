@@ -113,6 +113,8 @@ namespace GCDTracker.UI {
                 GCDTracker.Log.Error("Alert text precision invalid");
                 return;
             }
+            if (conf.OverrideDefaltFont)
+                ImGui.PushFont(UiBuilder.MonoFont);
 
             float animAlpha = config.AnimEnabled.EasedPoint.X;
             Vector2 animPos = config.AnimPos.EasedPoint;
@@ -198,7 +200,7 @@ namespace GCDTracker.UI {
                 
                 ImGui.SetWindowFontScale(1f);
                 if (conf.OverrideDefaltFont)
-                ImGui.PopFont();
+                    ImGui.PopFont();
             }
         }
 
