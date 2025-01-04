@@ -68,10 +68,10 @@ namespace GCDTracker.UI {
             DrawProgress(ui);
             if (!go.IsShortCast)
                 DrawOGCDs(ui);
-            queueLock.Draw(ui);
             if (go.IsShortCast) {
                 slideCast.Draw(ui);
             }
+            queueLock.Draw(ui);
             DrawBackgroundBorder(ui);
 
             // Gonna re-do this, but for now, we flag when we need to carryover from the castbar to the GCDBar
