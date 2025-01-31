@@ -62,12 +62,12 @@ namespace GCDTracker.UI.Components {
             lineL.Update(xStart);
             bar.Update(xStart, xEnd);
             lineR.Update(xEnd);
-            GCDTracker.Log.Warning($"SlideCast: {startPos} -> {endPos}");
         }
 
         public void Draw(PluginUI ui) {
             if (!conf.SlideCastEnabled || endPos == 0f) return;
-            bar.Draw(ui, conf.slideCol);
+            if (conf.SlideCastBackground)
+                bar.Draw(ui, conf.slideCol);
             // Vertical lines:
             lineL.Draw(ui, conf.backColBorder);
             if(lineR.Left - lineL.Left > 1)
