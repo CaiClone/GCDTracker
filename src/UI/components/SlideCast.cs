@@ -1,6 +1,6 @@
 using System;
 
-    namespace GCDTracker.UI.Components {
+namespace GCDTracker.UI.Components {
     public unsafe class SlideCast {
         private readonly Configuration conf;
         private readonly BarDecisionHelper go;
@@ -30,6 +30,10 @@ using System;
                 case BarState.LongCast:
                     startPos = Math.Max((go.CastTotal - conf.SlidecastDelay) / go.BarEnd, 0f);
                     endPos = go.CastTotal / go.BarEnd;
+                    // If the cast is almost near 0.8, let's round it up so it matches the queuelock exactly
+                    // This is technically not exactly correct, but moving one pixel the bar so it can be read easier is worth it
+                    if (endPos - 0.8f < 0.025f)
+                        endPos = 0.8f;
                     break;
                 case BarState.NonAbilityCast:
                 case BarState.NoSlideAbility:
@@ -58,6 +62,7 @@ using System;
             lineL.Update(xStart);
             bar.Update(xStart, xEnd);
             lineR.Update(xEnd);
+            GCDTracker.Log.Warning($"SlideCast: {startPos} -> {endPos}");
         }
 
         public void Draw(PluginUI ui) {
