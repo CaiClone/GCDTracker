@@ -91,8 +91,8 @@ namespace GCDTracker.Data {
         [FieldOffset(0x68)] public readonly bool InQueue;
         [FieldOffset(0x70)] public readonly uint QueuedAction;
         [FieldOffset(0x78)] public readonly float dunno; //always 2.01 when queuing stuff
-        [FieldOffset(0x5F0)] public readonly float ElapsedGCD;
-        [FieldOffset(0x5F4)] public readonly float TotalGCD;
-        [FieldOffset(0x7E8)] public readonly float AnimationTimer;
+        [FieldOffset(0x600)] public readonly float ElapsedGCD;
+        [FieldOffset(0x604)] public readonly float TotalGCD;
+        [FieldOffset(0x7F8)] public readonly float AnimationTimer;
     }
 }

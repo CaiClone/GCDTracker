@@ -1,16 +1,19 @@
 ﻿using Dalamud.Game.ClientState.Objects.Enums;
 using Dalamud.Memory;
 using FFXIVClientStructs.FFXIV.Client.Game;
-using System;
+using FFXIVClientStructs.FFXIV.Client.Game.Character;
+using FFXIVClientStructs.FFXIV.Client.Game.Object;
+using FFXIVClientStructs.FFXIV.Common.Math;
 using System.Globalization;
 using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
+using static FFXIVClientStructs.FFXIV.Client.Game.Character.ActionEffectHandler;
+using ObjectKind = Dalamud.Game.ClientState.Objects.Enums.ObjectKind;
 
 [assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker.Data {
     public unsafe static class HelperMethods {
         public delegate byte UseActionDelegate(ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetID, uint param, uint useType, int pvp, nint a7);
-        public delegate void ReceiveActionEffectDetour(int sourceActorID, IntPtr sourceActor, IntPtr vectorPosition, IntPtr effectHeader, IntPtr effectArray, IntPtr effectTrail);
+        public delegate void ReceiveActionEffectDetour(uint casterEntityId, Character* casterPtr, Vector3* targetPos, Header* header, TargetEffects* effects, GameObjectId* targetEntityIds);
 
         private static readonly TextInfo textInfo = new CultureInfo("en-US", false).TextInfo;
         public static bool IsWeaponSkill(ActionType actionType, uint actionID) {
