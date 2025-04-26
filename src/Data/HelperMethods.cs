@@ -62,6 +62,8 @@ namespace GCDTracker.Data {
 
         public static string GetAbilityName(uint actionID, ActionType actionType) {
             var lumina = DataStore.Lumina;
+            if (lumina == null) return "Unknown";
+
             var objectKind = DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None;
 
             return objectKind switch {
@@ -75,19 +77,19 @@ namespace GCDTracker.Data {
                     or ActionType.CraftAction
                     or ActionType.PetAction
                     or ActionType.PvPAction =>
-                        lumina?.GetExcelSheet<Lumina.Excel.Sheets.Action>()?.GetRow(actionID).Name.ExtractText() ?? "Unknown Ability",
+                        lumina?.GetExcelSheet<Lumina.Excel.Sheets.Action>()?.GetRowOrDefault(actionID)?.Name.ExtractText() ?? "Unknown Ability",
 
                     ActionType.Companion =>
-                        lumina?.GetExcelSheet<Lumina.Excel.Sheets.Companion>()?.GetRow(actionID) is var companion && companion != null
+                        lumina?.GetExcelSheet<Lumina.Excel.Sheets.Companion>()?.GetRowOrDefault(actionID) is var companion && companion != null
                         ? CapitalizeOutput(companion.Value.Singular.ExtractText())
                         : "Unknown Companion",
 
                     ActionType.Item
                     or ActionType.KeyItem =>
-                        lumina?.GetExcelSheet<Lumina.Excel.Sheets.Item>()?.GetRow(actionID).Name.ExtractText() ?? "Unknown Item",
+                        lumina?.GetExcelSheet<Lumina.Excel.Sheets.Item>()?.GetRowOrDefault(actionID)?.Name.ExtractText() ?? "Unknown Item",
 
                     ActionType.Mount =>
-                        lumina?.GetExcelSheet<Lumina.Excel.Sheets.Mount>()?.GetRow(actionID) is var mount && mount != null
+                        lumina?.GetExcelSheet<Lumina.Excel.Sheets.Mount>()?.GetRowOrDefault(actionID) is var mount && mount != null
                         ? CapitalizeOutput(mount.Value.Singular.ExtractText())
                         : "Unknown Mount",
 

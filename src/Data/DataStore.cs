@@ -9,7 +9,7 @@ using Dalamud.Plugin.Services;
 
 namespace GCDTracker.Data {
     static unsafe class DataStore {
-        public static IDataManager Lumina;
+        public static IDataManager? Lumina;
         public static ComboDetail Combo;
         public static Action* Action;
         public static ActionManager* ActionManager;
