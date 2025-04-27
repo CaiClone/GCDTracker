@@ -53,7 +53,7 @@ namespace GCDTracker.Data {
                     (!isWeaponSkill && AnimationLock != 0.5f && AnimationLock != 0.64000005f)); //OGCDS
         }
 
-        public static uint? GetParentJob(uint jobId) => DataStore.ClassSheet.GetRow(jobId).ClassJobParent.ValueNullable?.RowId;
+        public static uint? GetParentJob(uint jobId) => DataStore.ClassSheet.GetRowOrDefault(jobId)?.ClassJobParent.ValueNullable?.RowId;
 
         public static string ReadStringFromPointer(byte** ptr) {
             if (ptr == null || *ptr == null) return "";

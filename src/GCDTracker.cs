@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics.CodeAnalysis;
 using Dalamud.Game;
 using Dalamud.Hooking;
 using Dalamud.IoC;
@@ -12,6 +13,7 @@ using GCDTracker.Attributes;
 using GCDTracker.Data;
 using GCDTracker.UI;
 
+#pragma warning disable CS8618,CS8600,CS8602,CS8604 // Properties with [PluginService] are initialized by Dalamud.
 namespace GCDTracker {
     public unsafe class GCDTracker : IDalamudPlugin {
         [PluginService]
@@ -58,7 +60,7 @@ namespace GCDTracker {
             config.Initialize(PluginInterface);
             config.Migrate();
 
-            DataStore.Init(Data,ClientState,Condition);
+            DataStore.Init(Data, ClientState, Condition);
             ComboStore.Init(config);
 
             ui = new PluginUI(config);
@@ -72,7 +74,7 @@ namespace GCDTracker {
             var gcdBar = new GCDBar(config, helper, abilityManager);
 
             ui.bar = gcdBar;
-            ui.Windows = new(){
+            ui.Windows = new() {
                 gcdBar,
                 new GCDWheel(config, helper, abilityManager),
                 new FloatingAlerts(config, helper),
@@ -97,7 +99,7 @@ namespace GCDTracker {
         private byte UseActionDetour(ActionManager* actionManager, ActionType actionType, uint actionID, ulong targetedActorID, uint param, uint useType, int pvp, nint a7) {
             var ret = UseActionHook.Original(actionManager, actionType, actionID, targetedActorID, param, useType, pvp, a7);
             helper.OnActionUse(ret, actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
-            ct.OnActionUse(ret,actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
+            ct.OnActionUse(ret, actionManager, actionType, actionID, targetedActorID, param, useType, pvp);
             return ret;
         }
 
@@ -140,3 +142,4 @@ namespace GCDTracker {
         #endregion
     }
 }
+#pragma warning restore CS8618,CS8600,CS8602,CS8604 
