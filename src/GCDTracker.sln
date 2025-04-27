@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio Version 16
-VisualStudioVersion = 16.0.30011.22
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197 d17.13
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "GCDTracker", "GCDTracker.csproj", "{517A4352-7F10-48B9-B332-BB592157E377}"
 EndProject
@@ -15,8 +15,8 @@ Global
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{517A4352-7F10-48B9-B332-BB592157E377}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{517A4352-7F10-48B9-B332-BB592157E377}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{517A4352-7F10-48B9-B332-BB592157E377}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{517A4352-7F10-48B9-B332-BB592157E377}.Release|Any CPU.Build.0 = Release|Any CPU
+		{517A4352-7F10-48B9-B332-BB592157E377}.Release|Any CPU.ActiveCfg = Release|x64
+		{517A4352-7F10-48B9-B332-BB592157E377}.Release|Any CPU.Build.0 = Release|x64
 		{158A8072-62E4-4091-A6E3-93B996FB9787}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{158A8072-62E4-4091-A6E3-93B996FB9787}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{158A8072-62E4-4091-A6E3-93B996FB9787}.Release|Any CPU.ActiveCfg = Release|Any CPU

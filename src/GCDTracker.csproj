@@ -28,10 +28,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DalamudPackager" Version="12.0.0" />
-  </ItemGroup>
-  
-	<ItemGroup>
 		<!--You may need to adjust these paths yourself. These assume that you have Dalamud pulled and built near your plugin project folder.-->
 		<Reference Include="Dalamud">
       <HintPath>$(DalamudLibPath)Dalamud.dll</HintPath>

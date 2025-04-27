@@ -342,3 +342,5 @@ healthchecksdb
 *.psd
 *.ai
 .vscode
+
+localsettings.json
