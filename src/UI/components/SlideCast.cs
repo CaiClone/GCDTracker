@@ -32,7 +32,7 @@ namespace GCDTracker.UI.Components {
                     endPos = go.CastTotal / go.BarEnd;
                     // If the cast is almost near 0.8, let's round it up so it matches the queuelock exactly
                     // This is technically not exactly correct, but moving one pixel the bar so it can be read easier is worth it
-                    if (endPos - 0.8f < 0.025f)
+                    if (Math.Abs(endPos - 0.8f) < 0.015f)
                         endPos = 0.8f;
                     break;
                 case BarState.NonAbilityCast:

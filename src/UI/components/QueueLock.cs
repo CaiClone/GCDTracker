@@ -16,7 +16,11 @@ public class QueueLock(BarVertices bar_v, BarDecisionHelper go, Configuration co
         switch (go.CurrentState){
             case BarState.GCDOnly:
             case BarState.ShortCast:
-                lockPos = Math.Max(0.8f, go.CurrentPos);
+                float lockThresh = Math.Min(0.8f * go.GCDTotal, go.GCDTotal - 0.5f) / go.GCDTotal;
+                // As in the slidecast, match to 0.8f if close enough so both lines match.
+                if (Math.Abs(lockThresh - 0.8f) < 0.025f)
+                    lockThresh = 0.8f;
+                lockPos = Math.Max(lockThresh, go.CurrentPos);
                 CheckEvents();
                 break;
             case BarState.LongCast:
