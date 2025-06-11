@@ -89,7 +89,7 @@ namespace GCDTracker.UI {
                 DrawBarText(ui, text);
                 return;
             }
-            if (conf.ShowQueuedSpellNameGCD && hasQueuedSpell) {
+            if (conf.ShowQueuedSpellNameGCD && hasQueuedSpell && go.CurrentPos >= queueLock.LockPos) {
                 DrawBarText(ui, $" -> {helper.queuedAbilityName}");
             }
         }

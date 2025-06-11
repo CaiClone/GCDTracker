@@ -20,7 +20,7 @@ public class Tests_QueueLock
         var queueLock = new QueueLock(bar_v, go, conf);
 
         queueLock.Update(bar_v);
-        Assert.AreEqual(0.8f, queueLock.lockPos);
+        Assert.AreEqual(0.8f, queueLock.LockPos);
     }
 
     [TestMethod]
@@ -34,7 +34,7 @@ public class Tests_QueueLock
         var queueLock = new QueueLock(bar_v, go, conf);
 
         queueLock.Update(bar_v);
-        Assert.AreEqual(0.9f, queueLock.lockPos);
+        Assert.AreEqual(0.9f, queueLock.LockPos);
     }
 
     [TestMethod]
@@ -51,7 +51,7 @@ public class Tests_QueueLock
 
         queueLock.Update(bar_v);
         float expectedLockPos = Math.Max(0.8f * (go.GCDTotal / go.CastTotal), go.CurrentPos);
-        Assert.AreEqual(expectedLockPos, queueLock.lockPos);
+        Assert.AreEqual(expectedLockPos, queueLock.LockPos);
     }
 
     [TestMethod]
@@ -65,7 +65,7 @@ public class Tests_QueueLock
         var queueLock = new QueueLock(bar_v, go, conf);
 
         queueLock.Update(bar_v);
-        Assert.AreEqual(0f, queueLock.lockPos);
+        Assert.AreEqual(0f, queueLock.LockPos);
     }
 
     [TestMethod]
@@ -79,7 +79,7 @@ public class Tests_QueueLock
         var queueLock = new QueueLock(bar_v, go, conf);
 
         queueLock.Update(bar_v);
-        Assert.AreEqual(0.8f, queueLock.lockPos);
+        Assert.AreEqual(0.8f, queueLock.LockPos);
     }
 
     [TestMethod]
@@ -92,7 +92,7 @@ public class Tests_QueueLock
         var queueLock = new QueueLock(bar_v, go, conf);
 
         queueLock.Update(bar_v);
-        Assert.AreEqual(0f, queueLock.lockPos);
+        Assert.AreEqual(0f, queueLock.LockPos);
     }
 
     [TestMethod]

@@ -1,14 +1,13 @@
 using System;
 using System.Runtime.CompilerServices;
 
-[assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker.UI.Components {
 public class QueueLock(BarVertices bar_v, BarDecisionHelper go, Configuration conf) {
     private readonly Configuration conf = conf;
     private readonly BarDecisionHelper go = go;
     private readonly Line line = new(conf, bar_v);
 
-    internal float lockPos = 0f;
+    public float LockPos { get; private set; }
 
     public Action OnQueueLockReached = delegate { };
 
@@ -20,33 +19,33 @@ public class QueueLock(BarVertices bar_v, BarDecisionHelper go, Configuration co
                 // As in the slidecast, match to 0.8f if close enough so both lines match.
                 if (Math.Abs(lockThresh - 0.8f) < 0.025f)
                     lockThresh = 0.8f;
-                lockPos = Math.Max(lockThresh, go.CurrentPos);
+                LockPos = Math.Max(lockThresh, go.CurrentPos);
                 CheckEvents();
                 break;
             case BarState.LongCast:
-                lockPos = Math.Max(0.8f * (go.GCDTotal / go.CastTotal), go.CurrentPos);
+                LockPos = Math.Max(0.8f * (go.GCDTotal / go.CastTotal), go.CurrentPos);
                 CheckEvents();
                 break;
             case BarState.NonAbilityCast:
             case BarState.NoSlideAbility:
-                lockPos = 0f;
+                LockPos = 0f;
                 break;
             case BarState.Idle:
             default:
-                lockPos = conf.BarQueueLockWhenIdle ? 0.8f : 0f;
+                LockPos = conf.BarQueueLockWhenIdle ? 0.8f : 0f;
                 break;
         }
 
-        line.Update(bar_v.ProgToScreen(lockPos));
+        line.Update(bar_v.ProgToScreen(LockPos));
     }
 
     private void CheckEvents() {
-        if (go.CurrentPos >= lockPos - 0.025f && go.CurrentPos > 0.2f)
+        if (go.CurrentPos >= LockPos - 0.025f && go.CurrentPos > 0.2f)
             OnQueueLockReached();
     }
 
     public void Draw(PluginUI ui) {
-        if (!conf.QueueLockEnabled || lockPos == 0f) return;
+        if (!conf.QueueLockEnabled || LockPos == 0f) return;
         line.Draw(ui, conf.backColBorder);
 
         if (!conf.ShowQueuelockTriangles) return;
