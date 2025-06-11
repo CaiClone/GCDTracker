@@ -66,30 +66,34 @@ namespace GCDTracker.UI {
 
             DrawBackground(ui);
             DrawProgress(ui);
-            if (!go.IsShortCast)
+            if (go.CurrentState != BarState.ShortCast) {
                 DrawOGCDs(ui);
-            if (go.IsShortCast) {
+            } else {
                 slideCast.Draw(ui);
             }
             queueLock.Draw(ui);
             DrawBackgroundBorder(ui);
+            DrawTextGCDBar(ui);
+        }
 
-            // Gonna re-do this, but for now, we flag when we need to carryover from the castbar to the GCDBar
-            // and dump all the crap here to draw on top.
-            if (go.IsShortCast) {
-                string abilityNameOutput = shortCastCachedSpellName;
-                if (!string.IsNullOrWhiteSpace(helper.queuedAbilityName) && conf.CastBarShowQueuedSpell)
-                    abilityNameOutput += " -> " + helper.queuedAbilityName;
-                if (!string.IsNullOrEmpty(abilityNameOutput))
-                    DrawBarText(ui, abilityNameOutput);
+        private void DrawTextGCDBar(PluginUI ui) {
+            if (go.CurrentState == BarState.Idle) return;
+            bool hasQueuedSpell = !string.IsNullOrWhiteSpace(helper.queuedAbilityName);
+
+            // We need to handle the case where we just switched from the castbar because it ended, we want to still keep it until
+            // the next GCD
+            if (go.CurrentState == BarState.ShortCast) {
+                var text = shortCastCachedSpellName;
+                if (conf.CastBarShowQueuedSpell && hasQueuedSpell)
+                    text += $" -> {helper.queuedAbilityName}";
+                DrawBarText(ui, text);
+                return;
             }
-            if (conf.ShowQueuedSpellNameGCD && !go.IsShortCast) {
-                if (gcdTime / gcdTotal < 0.8f)
-                    helper.queuedAbilityName = " ";
-                if (!string.IsNullOrWhiteSpace(helper.queuedAbilityName))
-                    DrawBarText(ui, " -> " + helper.queuedAbilityName);
+            if (conf.ShowQueuedSpellNameGCD && hasQueuedSpell) {
+                DrawBarText(ui, $" -> {helper.queuedAbilityName}");
             }
         }
+
 
         public void DrawCastBar(PluginUI ui) {
             float gcdTotal = DataStore.Action->TotalGCD;
@@ -156,7 +160,7 @@ namespace GCDTracker.UI {
                         sclip.Draw(ui, conf.clipCol);
                     }
                 }
-                if (!go.IsShortCast || isClipping) {
+                if (go.CurrentState != BarState.ShortCast || isClipping) {
                     var clip = new Bar(bar_v);
                     clip.Update(bar_v.ProgToScreen(ogcdStart / gcdTotal), bar_v.ProgToScreen(ogcdEnd / gcdTotal));
                     clip.Draw(ui, isClipping ? conf.clipCol : conf.anLockCol);

@@ -66,8 +66,8 @@ namespace GCDTracker.UI {
         public void Update(GCDHelper helper, ActionType actionType, ObjectKind objectKind) {
             UpdateProgress(helper);
             if (CurrentPos > (epsilon / TotalBarTime) && CurrentPos < previousPos - epsilon) {
-                CurrentState = CheckActiveState(actionType, objectKind);
                 ResetBar();
+                CurrentState = CheckActiveState(actionType, objectKind);
             } else if (!helper.IsRunning) {
                 CurrentState = BarState.Idle;
                 IsShortCast = false;
@@ -108,7 +108,7 @@ namespace GCDTracker.UI {
         }
 
         private BarState CheckActiveState(ActionType actionType, ObjectKind objectKind) {
-            if(IsCastBar){
+            if (IsCastBar){
                 if (IsNonAbility) {
                     return objectKind switch {
                         ObjectKind.EventObj 
@@ -123,7 +123,7 @@ namespace GCDTracker.UI {
                 } else {
                     return IsShortCast ? BarState.ShortCast : BarState.LongCast;
                 }
-            } else if (!IsCastBar && !IsShortCast) {
+            } else if (!IsCastBar) {
                 return BarState.GCDOnly;
             }
             return BarState.Idle;
@@ -131,7 +131,9 @@ namespace GCDTracker.UI {
 
         private void ResetBar() {
             previousPos = 0f;
-            IsShortCast = false;
+            float gcdTotal = DataStore.Action->TotalGCD;
+            float castTotal = DataStore.Action->TotalCastTime;
+            IsShortCast = gcdTotal > castTotal;
             triggeredAlerts.Clear();
             OnReset?.Invoke();
         }
