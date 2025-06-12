@@ -17,7 +17,7 @@ public class Tests_QueueLock
             CurrentPos = 0.5f
         };
         var bar_v = new BarVertices(conf);
-        var queueLock = new QueueLock(bar_v, go, conf);
+        var queueLock = new QueueLockComponent(bar_v, go, conf, new MockGCDBar());
 
         queueLock.Update(bar_v);
         Assert.AreEqual(0.8f, queueLock.LockPos);
@@ -31,10 +31,10 @@ public class Tests_QueueLock
             CurrentPos = 0.9f
         };
         var bar_v = new BarVertices(conf);
-        var queueLock = new QueueLock(bar_v, go, conf);
+        var queueLock = new QueueLockComponent(bar_v, go, conf, new MockGCDBar());
 
         queueLock.Update(bar_v);
-        Assert.AreEqual(0.9f, queueLock.LockPos);
+        Assert.AreEqual(0.9f, queueLock.vizLockPos);
     }
 
     [TestMethod]
@@ -47,7 +47,7 @@ public class Tests_QueueLock
             CurrentPos = 0.3f 
         };
         var bar_v = new BarVertices(conf);
-        var queueLock = new QueueLock(bar_v, go, conf);
+        var queueLock = new QueueLockComponent(bar_v, go, conf, new MockGCDBar());
 
         queueLock.Update(bar_v);
         float expectedLockPos = Math.Max(0.8f * (go.GCDTotal / go.CastTotal), go.CurrentPos);
@@ -62,7 +62,7 @@ public class Tests_QueueLock
             CurrentPos = 0.5f
         };
         var bar_v = new BarVertices(conf);
-        var queueLock = new QueueLock(bar_v, go, conf);
+        var queueLock = new QueueLockComponent(bar_v, go, conf, new MockGCDBar());
 
         queueLock.Update(bar_v);
         Assert.AreEqual(0f, queueLock.LockPos);
@@ -76,10 +76,10 @@ public class Tests_QueueLock
             CurrentPos = 0.5f 
         };
         var bar_v = new BarVertices(conf);
-        var queueLock = new QueueLock(bar_v, go, conf);
+        var queueLock = new QueueLockComponent(bar_v, go, conf, new MockGCDBar());
 
         queueLock.Update(bar_v);
-        Assert.AreEqual(0.8f, queueLock.LockPos);
+        Assert.AreEqual(0.8f, queueLock.vizLockPos);
     }
 
     [TestMethod]
@@ -89,7 +89,7 @@ public class Tests_QueueLock
             CurrentState = BarState.Idle
         };
         var bar_v = new BarVertices(conf);
-        var queueLock = new QueueLock(bar_v, go, conf);
+        var queueLock = new QueueLockComponent(bar_v, go, conf, new MockGCDBar());
 
         queueLock.Update(bar_v);
         Assert.AreEqual(0f, queueLock.LockPos);
@@ -103,7 +103,7 @@ public class Tests_QueueLock
             CurrentPos = 0.65f
         };
         var bar_v = new BarVertices(conf);
-        var queueLock = new QueueLock(bar_v, go, conf);
+        var queueLock = new QueueLockComponent(bar_v, go, conf, new MockGCDBar());
 
         bool eventCalled = false;
         queueLock.OnQueueLockReached += () => eventCalled = true;
@@ -121,4 +121,11 @@ public class MockBarDecisionHelper(Configuration conf) : BarDecisionHelper(conf)
     public float _CastTotal = 2.5f;
     public override float GCDTotal => _GCDTotal;
     public override float CastTotal => _CastTotal;
+}
+public class MockGCDBar : GCDBar {
+    public MockGCDBar() : base(null, null, null) { }
+    public new SlideCastComponent SlideCast { get; } = new();
+    public class SlideCastComponent {
+        public float EndPos { get; set; } = 0.8f;
+    }
 }

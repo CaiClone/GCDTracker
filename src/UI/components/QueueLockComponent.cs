@@ -1,7 +1,7 @@
 using System;
 using System.Runtime.CompilerServices;
-using System.Threading;
 
+[assembly: InternalsVisibleTo("Tests")]
 namespace GCDTracker.UI.Components {
 public class QueueLockComponent(BarVertices bar_v, BarDecisionHelper go, Configuration conf, GCDBar gcdBar) {
     private readonly Configuration conf = conf;
@@ -10,11 +10,11 @@ public class QueueLockComponent(BarVertices bar_v, BarDecisionHelper go, Configu
     private readonly GCDBar gcdBar = gcdBar;
 
     public float LockPos { get; private set; }
+    internal float vizLockPos;
 
     public Action OnQueueLockReached = delegate { };
 
     public void Update(BarVertices bar_v) {
-        float vizLockPos;
         switch (go.CurrentState){
             case BarState.GCDOnly:
             case BarState.ShortCast:
