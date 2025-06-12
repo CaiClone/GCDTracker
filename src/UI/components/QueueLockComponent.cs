@@ -1,5 +1,6 @@
 using System;
 using System.Runtime.CompilerServices;
+using System.Threading;
 
 namespace GCDTracker.UI.Components {
 public class QueueLockComponent(BarVertices bar_v, BarDecisionHelper go, Configuration conf, GCDBar gcdBar) {
@@ -13,33 +14,37 @@ public class QueueLockComponent(BarVertices bar_v, BarDecisionHelper go, Configu
     public Action OnQueueLockReached = delegate { };
 
     public void Update(BarVertices bar_v) {
+        float vizLockPos;
         switch (go.CurrentState){
             case BarState.GCDOnly:
             case BarState.ShortCast:
-                float lockThresh = Math.Min(0.8f * go.GCDTotal, go.GCDTotal - 0.5f) / go.GCDTotal;
-                LockPos = Math.Max(lockThresh, go.CurrentPos);
+                LockPos = Math.Min(0.8f * go.GCDTotal, go.GCDTotal - 0.5f) / go.GCDTotal;
+                vizLockPos = Math.Max(LockPos, go.CurrentPos);
                 CheckEvents();
                 
                 // If near the SlideCast end, let's round it up so it matches exactly
                 // This is technically not correct, but moving one pixel the bar so it can be read easier is worth it
                 if (Math.Abs(LockPos - gcdBar.SlideCast.EndPos) < 0.025f)
-                    LockPos = gcdBar.SlideCast.EndPos;
+                    vizLockPos = gcdBar.SlideCast.EndPos;
                 break;
             case BarState.LongCast:
-                LockPos = Math.Max(0.8f * (go.GCDTotal / go.CastTotal), go.CurrentPos);
+                LockPos = 0.8f * (go.GCDTotal / go.CastTotal);
+                vizLockPos = Math.Max(LockPos, go.CurrentPos);
                 CheckEvents();
                 break;
             case BarState.NonAbilityCast:
             case BarState.NoSlideAbility:
                 LockPos = 0f;
+                vizLockPos = 0f;
                 break;
             case BarState.Idle:
             default:
-                LockPos = conf.BarQueueLockWhenIdle ? 0.8f : 0f;
+                LockPos = 0f;
+                vizLockPos = conf.BarQueueLockWhenIdle ? 0.8f : 0f;
                 break;
         }
 
-        line.Update(bar_v.ProgToScreen(LockPos));
+        line.Update(bar_v.ProgToScreen(vizLockPos));
     }
 
     private void CheckEvents() {

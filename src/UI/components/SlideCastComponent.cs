@@ -10,6 +10,7 @@ namespace GCDTracker.UI.Components {
 
         private float startPos;
         public float EndPos;
+        private float vizEndPos;
 
         public System.Action OnSlideStartReached;
 
@@ -39,7 +40,8 @@ namespace GCDTracker.UI.Components {
             }
             CheckEvents();
             startPos = Math.Max(startPos, go.CurrentPos);
-            EndPos = (conf.SlideCastFullBar || go.IsNonAbility) ? 1f : Math.Max(EndPos, go.CurrentPos);
+            EndPos = (conf.SlideCastFullBar || go.IsNonAbility) ? 1f : EndPos;
+            vizEndPos = Math.Max(EndPos, go.CurrentPos);
             UpdateVisualization(bar_v);
         }
 
@@ -52,7 +54,7 @@ namespace GCDTracker.UI.Components {
 
         private void UpdateVisualization(BarVertices bar_v) {
             int xStart = bar_v.ProgToScreen(startPos);
-            int xEnd = bar_v.ProgToScreen(EndPos);
+            int xEnd = bar_v.ProgToScreen(vizEndPos);
             xEnd = Math.Min(xEnd, bar_v.RightLimit);
 
             lineL.Update(xStart);
