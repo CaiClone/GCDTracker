@@ -2,10 +2,11 @@ using System;
 using System.Runtime.CompilerServices;
 
 namespace GCDTracker.UI.Components {
-public class QueueLock(BarVertices bar_v, BarDecisionHelper go, Configuration conf) {
+public class QueueLockComponent(BarVertices bar_v, BarDecisionHelper go, Configuration conf, GCDBar gcdBar) {
     private readonly Configuration conf = conf;
     private readonly BarDecisionHelper go = go;
     private readonly Line line = new(conf, bar_v);
+    private readonly GCDBar gcdBar = gcdBar;
 
     public float LockPos { get; private set; }
 
@@ -16,11 +17,13 @@ public class QueueLock(BarVertices bar_v, BarDecisionHelper go, Configuration co
             case BarState.GCDOnly:
             case BarState.ShortCast:
                 float lockThresh = Math.Min(0.8f * go.GCDTotal, go.GCDTotal - 0.5f) / go.GCDTotal;
-                // As in the slidecast, match to 0.8f if close enough so both lines match.
-                if (Math.Abs(lockThresh - 0.8f) < 0.025f)
-                    lockThresh = 0.8f;
                 LockPos = Math.Max(lockThresh, go.CurrentPos);
                 CheckEvents();
+                
+                // If near the SlideCast end, let's round it up so it matches exactly
+                // This is technically not correct, but moving one pixel the bar so it can be read easier is worth it
+                if (Math.Abs(LockPos - gcdBar.SlideCast.EndPos) < 0.025f)
+                    LockPos = gcdBar.SlideCast.EndPos;
                 break;
             case BarState.LongCast:
                 LockPos = Math.Max(0.8f * (go.GCDTotal / go.CastTotal), go.CurrentPos);

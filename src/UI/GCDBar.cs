@@ -13,8 +13,8 @@ namespace GCDTracker.UI {
         private readonly BarVertices bar_v;
         private readonly GCDEventHandler notify;
 
-        private readonly QueueLock queueLock;
-        private readonly SlideCast slideCast;
+        public readonly QueueLockComponent QueueLock;
+        public readonly SlideCastComponent SlideCast;
 
         private readonly Bar background;
         private readonly Bar progressBar;
@@ -29,22 +29,22 @@ namespace GCDTracker.UI {
             notify = GCDEventHandler.Instance;
             go = new BarDecisionHelper(conf);
             bar_v = new BarVertices(conf);
-            queueLock = new(bar_v, go, conf);
-            slideCast = new(bar_v, go, conf);
+            QueueLock = new(bar_v, go, conf, this);
+            SlideCast = new(bar_v, go, conf);
 
             background = new Bar(bar_v);
             progressBar = new Bar(bar_v);
 
-            slideCast.OnSlideStartReached += TriggerSlideAlert;
-            queueLock.OnQueueLockReached += TriggerQueueAlert;
+            SlideCast.OnSlideStartReached += TriggerSlideAlert;
+            QueueLock.OnQueueLockReached += TriggerQueueAlert;
         }
 
         public void Update(IFramework _) {
             go.Update(helper,
                 DataStore.ActionManager->CastActionType,
                 DataStore.ClientState?.LocalPlayer?.TargetObject?.ObjectKind ?? ObjectKind.None);
-            queueLock.Update(bar_v);
-            slideCast.Update(bar_v);
+            SlideCast.Update(bar_v);
+            QueueLock.Update(bar_v);
         }
 
         public void Draw(PluginUI ui) {
@@ -69,9 +69,9 @@ namespace GCDTracker.UI {
             if (go.CurrentState != BarState.ShortCast) {
                 DrawOGCDs(ui);
             } else {
-                slideCast.Draw(ui);
+                SlideCast.Draw(ui);
             }
-            queueLock.Draw(ui);
+            QueueLock.Draw(ui);
             DrawBackgroundBorder(ui);
             DrawTextGCDBar(ui);
         }
@@ -89,7 +89,7 @@ namespace GCDTracker.UI {
                 DrawBarText(ui, text);
                 return;
             }
-            if (conf.ShowQueuedSpellNameGCD && hasQueuedSpell && go.CurrentPos >= queueLock.LockPos) {
+            if (conf.ShowQueuedSpellNameGCD && hasQueuedSpell && go.CurrentPos >= QueueLock.LockPos) {
                 DrawBarText(ui, $" -> {helper.queuedAbilityName}");
             }
         }
@@ -103,8 +103,8 @@ namespace GCDTracker.UI {
 
             DrawBackground(ui);
             DrawProgress(ui);
-            slideCast.Draw(ui);
-            queueLock.Draw(ui);
+            SlideCast.Draw(ui);
+            QueueLock.Draw(ui);
             DrawBackgroundBorder(ui);
 
             var castName = GameState.GetCastbarContents();

@@ -1,11 +1,13 @@
 using System;
 using System.Numerics;
 using GCDTracker.Data;
+using GCDTracker.UI.Components;
 
 namespace GCDTracker.UI {
-    public unsafe class FloatingAlerts(Configuration conf, GCDHelper helper) : IWindow {
+    public unsafe class FloatingAlerts(Configuration conf, GCDHelper helper, GCDBar gcdBar) : IWindow {
         protected readonly Configuration conf = conf;
         protected readonly GCDHelper helper = helper;
+        protected readonly GCDBar bar = gcdBar;
 
         public void Draw(PluginUI ui) {
             float gcdTotal = DataStore.Action->TotalGCD;
@@ -40,7 +42,7 @@ namespace GCDTracker.UI {
             Vector2 queueBGLeft = queueLeft - new Vector2(1.75f * borderSize, borderSize / 1.5f);
 
             bool cantSlide = castPercent != 0 && castPercent < slidecastStart;
-            bool cantQueue = gcdPercent != 0 && gcdPercent < 0.8f;
+            bool cantQueue = gcdPercent != 0 && gcdPercent < bar.QueueLock.LockPos;
             
             if (conf.SlidecastTriangleEnable && !(conf.OnlyGreenTriangles && cantSlide)) {
                 ui.DrawAATriangle(slideBGTop, slideBGLeft, slideBGRight, bgCol);

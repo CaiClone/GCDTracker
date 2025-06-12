@@ -1,7 +1,7 @@
 using System;
 
 namespace GCDTracker.UI.Components {
-    public unsafe class SlideCast {
+    public unsafe class SlideCastComponent {
         private readonly Configuration conf;
         private readonly BarDecisionHelper go;
         private readonly Line lineL;
@@ -9,11 +9,11 @@ namespace GCDTracker.UI.Components {
         private readonly Bar bar;
 
         private float startPos;
-        private float endPos;
+        public float EndPos;
 
         public System.Action OnSlideStartReached;
 
-        public SlideCast(BarVertices bar_v, BarDecisionHelper go, Configuration conf) {
+        public SlideCastComponent(BarVertices bar_v, BarDecisionHelper go, Configuration conf) {
             this.conf = conf;
             this.go = go;
             lineL = new(conf, bar_v);
@@ -29,11 +29,7 @@ namespace GCDTracker.UI.Components {
                 case BarState.ShortCast:
                 case BarState.LongCast:
                     startPos = Math.Max((go.CastTotal - conf.SlidecastDelay) / go.BarEnd, 0f);
-                    endPos = go.CastTotal / go.BarEnd;
-                    // If the cast is almost near 0.8, let's round it up so it matches the queuelock exactly
-                    // This is technically not exactly correct, but moving one pixel the bar so it can be read easier is worth it
-                    if (Math.Abs(endPos - 0.8f) < 0.015f)
-                        endPos = 0.8f;
+                    EndPos = go.CastTotal / go.BarEnd;
                     break;
                 case BarState.NonAbilityCast:
                 case BarState.NoSlideAbility:
@@ -43,11 +39,11 @@ namespace GCDTracker.UI.Components {
             }
             CheckEvents();
             startPos = Math.Max(startPos, go.CurrentPos);
-            endPos = (conf.SlideCastFullBar || go.IsNonAbility) ? 1f : Math.Max(endPos, go.CurrentPos);
+            EndPos = (conf.SlideCastFullBar || go.IsNonAbility) ? 1f : Math.Max(EndPos, go.CurrentPos);
             UpdateVisualization(bar_v);
         }
 
-        private void Reset() => startPos = endPos = 0f;
+        private void Reset() => startPos = EndPos = 0f;
 
         private void CheckEvents() {
             if (go.CurrentPos >= startPos - 0.025f && go.CurrentPos > 0.2f)
@@ -56,7 +52,7 @@ namespace GCDTracker.UI.Components {
 
         private void UpdateVisualization(BarVertices bar_v) {
             int xStart = bar_v.ProgToScreen(startPos);
-            int xEnd = bar_v.ProgToScreen(endPos);
+            int xEnd = bar_v.ProgToScreen(EndPos);
             xEnd = Math.Min(xEnd, bar_v.RightLimit);
 
             lineL.Update(xStart);
@@ -65,7 +61,7 @@ namespace GCDTracker.UI.Components {
         }
 
         public void Draw(PluginUI ui) {
-            if (!conf.SlideCastEnabled || endPos == 0f) return;
+            if (!conf.SlideCastEnabled || EndPos == 0f) return;
             if (conf.SlideCastBackground)
                 bar.Draw(ui, conf.slideCol);
             // Vertical lines:

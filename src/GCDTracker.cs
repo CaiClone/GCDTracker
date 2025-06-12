@@ -12,6 +12,7 @@ using FFXIVClientStructs.FFXIV.Common.Math;
 using GCDTracker.Attributes;
 using GCDTracker.Data;
 using GCDTracker.UI;
+using GCDTracker.UI.Components;
 
 #pragma warning disable CS8618,CS8600,CS8602,CS8604 // Properties with [PluginService] are initialized by Dalamud.
 namespace GCDTracker {
@@ -77,7 +78,7 @@ namespace GCDTracker {
             ui.Windows = new() {
                 gcdBar,
                 new GCDWheel(config, helper, abilityManager),
-                new FloatingAlerts(config, helper),
+                new FloatingAlerts(config, helper, gcdBar),
                 ct,
             };
 
