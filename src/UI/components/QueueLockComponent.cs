@@ -19,18 +19,24 @@ public class QueueLockComponent(BarVertices bar_v, BarDecisionHelper go, Configu
             case BarState.GCDOnly:
             case BarState.ShortCast:
                 LockPos = Math.Min(0.8f * go.GCDTotal, go.GCDTotal - 0.5f) / go.GCDTotal;
-                vizLockPos = Math.Max(LockPos, go.CurrentPos);
-                CheckEvents();
-                
+                vizLockPos = LockPos;
                 // If near the SlideCast end, let's round it up so it matches exactly
                 // This is technically not correct, but moving one pixel the bar so it can be read easier is worth it
                 if (Math.Abs(LockPos - gcdBar.SlideCast.EndPos) < 0.025f)
                     vizLockPos = gcdBar.SlideCast.EndPos;
+                vizLockPos = Math.Max(vizLockPos, go.CurrentPos);
+                CheckEvents();
+                
                 break;
             case BarState.LongCast:
                 LockPos = 0.8f * (go.GCDTotal / go.CastTotal);
-                vizLockPos = Math.Max(LockPos, go.CurrentPos);
+                vizLockPos = LockPos;
+                // Do the same on the SlideCast Start
+                if (Math.Abs(LockPos - gcdBar.SlideCast.StartPos) < 0.025f)
+                    vizLockPos = gcdBar.SlideCast.StartPos;
+                vizLockPos = Math.Max(vizLockPos, go.CurrentPos);
                 CheckEvents();
+
                 break;
             case BarState.NonAbilityCast:
             case BarState.NoSlideAbility:

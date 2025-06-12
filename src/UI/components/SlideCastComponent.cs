@@ -8,8 +8,9 @@ namespace GCDTracker.UI.Components {
         private readonly Line lineR;
         private readonly Bar bar;
 
-        private float startPos;
+        public float StartPos;
         public float EndPos;
+        private float vizStartPos;
         private float vizEndPos;
 
         public System.Action OnSlideStartReached;
@@ -29,7 +30,7 @@ namespace GCDTracker.UI.Components {
             switch (go.CurrentState){
                 case BarState.ShortCast:
                 case BarState.LongCast:
-                    startPos = Math.Max((go.CastTotal - conf.SlidecastDelay) / go.BarEnd, 0f);
+                    StartPos = Math.Max((go.CastTotal - conf.SlidecastDelay) / go.BarEnd, 0f);
                     EndPos = go.CastTotal / go.BarEnd;
                     break;
                 case BarState.NonAbilityCast:
@@ -39,21 +40,21 @@ namespace GCDTracker.UI.Components {
                     return;
             }
             CheckEvents();
-            startPos = Math.Max(startPos, go.CurrentPos);
             EndPos = (conf.SlideCastFullBar || go.IsNonAbility) ? 1f : EndPos;
+            vizStartPos = Math.Max(StartPos, go.CurrentPos);
             vizEndPos = Math.Max(EndPos, go.CurrentPos);
             UpdateVisualization(bar_v);
         }
 
-        private void Reset() => startPos = EndPos = 0f;
+        private void Reset() => StartPos = EndPos = 0f;
 
         private void CheckEvents() {
-            if (go.CurrentPos >= startPos - 0.025f && go.CurrentPos > 0.2f)
+            if (go.CurrentPos >= StartPos - 0.025f && go.CurrentPos > 0.2f)
                 OnSlideStartReached();
         }
 
         private void UpdateVisualization(BarVertices bar_v) {
-            int xStart = bar_v.ProgToScreen(startPos);
+            int xStart = bar_v.ProgToScreen(vizStartPos);
             int xEnd = bar_v.ProgToScreen(vizEndPos);
             xEnd = Math.Min(xEnd, bar_v.RightLimit);
 
