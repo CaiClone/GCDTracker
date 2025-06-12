@@ -19,29 +19,19 @@ public class QueueLockComponent(BarVertices bar_v, BarDecisionHelper go, Configu
             case BarState.GCDOnly:
             case BarState.ShortCast:
                 LockPos = Math.Min(0.8f * go.GCDTotal, go.GCDTotal - 0.5f) / go.GCDTotal;
-                vizLockPos = LockPos;
-                // If near the SlideCast end, let's round it up so it matches exactly
-                // This is technically not correct, but moving one pixel the bar so it can be read easier is worth it
-                if (Math.Abs(LockPos - gcdBar.SlideCast.EndPos) < 0.025f)
-                    vizLockPos = gcdBar.SlideCast.EndPos;
-                vizLockPos = Math.Max(vizLockPos, go.CurrentPos);
+                vizLockPos = Math.Max(SnapToPos(LockPos, gcdBar.SlideCast.EndPos), go.CurrentPos);
                 CheckEvents();
                 
                 break;
             case BarState.LongCast:
                 LockPos = 0.8f * (go.GCDTotal / go.CastTotal);
-                vizLockPos = LockPos;
-                // Do the same on the SlideCast Start
-                if (Math.Abs(LockPos - gcdBar.SlideCast.StartPos) < 0.025f)
-                    vizLockPos = gcdBar.SlideCast.StartPos;
-                vizLockPos = Math.Max(vizLockPos, go.CurrentPos);
+                vizLockPos = Math.Max(SnapToPos(LockPos, gcdBar.SlideCast.StartPos), go.CurrentPos);
                 CheckEvents();
 
                 break;
             case BarState.NonAbilityCast:
             case BarState.NoSlideAbility:
-                LockPos = 0f;
-                vizLockPos = 0f;
+                LockPos = vizLockPos = 0f;
                 break;
             case BarState.Idle:
             default:
@@ -52,6 +42,9 @@ public class QueueLockComponent(BarVertices bar_v, BarDecisionHelper go, Configu
 
         line.Update(bar_v.ProgToScreen(vizLockPos));
     }
+
+    private static float SnapToPos(float val, float target, float margin = 0.025f)
+       => Math.Abs(val - target) < margin ? target : val;
 
     private void CheckEvents() {
         if (go.CurrentPos >= LockPos - 0.025f && go.CurrentPos > 0.2f)
